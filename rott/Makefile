@@ -16,9 +16,9 @@ ROTT ?= rott
 
 CC ?= gcc
 
-CFLAGS ?= -g -O2
-CFLAGS += -Wall -Wno-unused
-CFLAGS += $(shell sdl-config --cflags)
+CFLAGS ?= -g -O0
+CFLAGS += -Wall
+CFLAGS += $(shell sdl2-config --cflags)
 CFLAGS += $(EXTRACFLAGS)
 
 CPPFLAGS += -DUSE_SDL=1
@@ -27,8 +27,8 @@ CPPFLAGS += $(EXTRACPPFLAGS)
 
 LDFLAGS += $(EXTRALDFLAGS)
 
-LDLIBS += $(shell sdl-config --libs)
-LDLIBS += -lSDL_mixer
+LDLIBS += $(shell sdl2-config --libs)
+LDLIBS += -lSDL2_mixer
 LDLIBS += $(EXTRALDLIBS)
 
 OBJS :=

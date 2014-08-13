@@ -374,7 +374,7 @@ char *colorname[] =
 CP_MenuNames MainMenuNames[] =
    {
    "NEW GAME",
-   "COMM-BATÅ GAME",
+   "COMM-BATÔøΩ GAME",
    "RESTORE GAME",
    "SAVE GAME",
    "OPTIONS",
@@ -1524,7 +1524,7 @@ void SetUpControlPanel (void)
    //bna--savedscreen = SafeMalloc (16000);
    savedscreen = SafeMalloc (16000*8);
 
-   // Copy the current save game screen (Ω size) to this buffer
+   // Copy the current save game screen (ÔøΩ size) to this buffer
 
    if (RefreshPause==false)
       {
@@ -3606,7 +3606,7 @@ int CP_SaveGame ( void )
             if (SaveGamesAvail[which])
                DrawMenuBufPropString (PrintX, PrintY, SaveGameNames[which]);
             else
-               DrawMenuBufPropString (PrintX, PrintY, "     - Å -");
+               DrawMenuBufPropString (PrintX, PrintY, "     - ÔøΩ -");
 
 //            MN_PlayMenuSnd (SD_ESCPRESSEDSND);
             continue;
@@ -4389,7 +4389,7 @@ void PrintLSEntry (int w)
    if (SaveGamesAvail[w])
       DrawMenuBufPropString (PrintX, PrintY, SaveGameNames[w]);
    else
-      DrawMenuBufPropString (PrintX, PrintY, "     - Å -");
+      DrawMenuBufPropString (PrintX, PrintY, "     - ÔøΩ -");
 }
 
 
@@ -5364,6 +5364,7 @@ extern boolean usemouselook;
 extern boolean iG_aimCross;
 extern boolean usejump;
 extern boolean sdl_fullscreen;
+extern SDL_Window *sdl_window;
 
 void CP_ExtOptionsMenu (void)
 {
@@ -5388,7 +5389,7 @@ void CP_ExtOptionsMenu (void)
          case 2: iG_aimCross   ^= 1; DrawExtOptionsButtons (); break;
          case 3: usejump       ^= 1; DrawExtOptionsButtons (); break;
          case 4:
-            if (SDL_WM_ToggleFullScreen(SDL_GetVideoSurface()))
+            if (SDL_SetWindowFullscreen(sdl_window, 0))
             {
                sdl_fullscreen ^= 1;
                DrawExtOptionsButtons ();

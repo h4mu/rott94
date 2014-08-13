@@ -87,7 +87,7 @@ static unsigned char egargb[48]={ 0x00,0x00,0x00,
 									 0xff,0xff,0xff};
 
 extern const byte * ROTT_ERR;
-
+extern SDL_Surface *sdl_surface;
 #if (DEVELOPMENT == 1)
 int TotalStaticMemory=0;
 #endif
@@ -356,7 +356,7 @@ void Error (char *error, ...)
    px = ERRORVERSIONCOL;
    py = ERRORVERSIONROW;
 #if (BETA == 1)
-   UL_printf ("á");
+   UL_printf ("ï¿½");
 #else
    UL_printf (itoa(ROTTMAJORVERSION,&buf[0],10));
 #endif
@@ -1249,9 +1249,9 @@ void GetaPalette (byte *palette)
 		palette[i] = inp (PEL_DATA)<<2;
 #else
 	int i;
-	SDL_Palette *pal = SDL_GetVideoSurface()->format->palette;
+	SDL_Palette *pal = sdl_surface->format->palette;
 	
-	for (i = 0; i < 256; i++) {
+	for (i = 0; i < sdl_surface->format->palette->ncolors; i++) {
 		palette[0] = pal->colors[i].r;
 		palette[1] = pal->colors[i].g;
 		palette[2] = pal->colors[i].b;
@@ -1280,17 +1280,17 @@ void SetaPalette (byte *pal)
 	for (i=0 ; i<768 ; i++)
 		OUTP (PEL_DATA, pal[i]>>2);
 #else
-   SDL_Color cmap[256];
+   SDL_Color* cmap = sdl_surface->format->palette->colors;
    int i;
 
-   for (i = 0; i < 256; i++)
+   for (i = 0; i < sdl_surface->format->palette->ncolors; i++)
    {
 	   cmap[i].r = pal[i*3+0];
 	   cmap[i].g = pal[i*3+1];
 	   cmap[i].b = pal[i*3+2];
    }
 
-   SDL_SetColors (SDL_GetVideoSurface (), cmap, 0, 256);
+//   SDL_SetColors (sdl_surface, cmap, 0, 256);
 #endif
 }
 
@@ -1304,9 +1304,9 @@ void GetPalette(char * palette)
      *(palette+(unsigned char)i)=inp(0x3c9)<<2;
 #else
 	int i;
-	SDL_Palette *pal = SDL_GetVideoSurface()->format->palette;
+	SDL_Palette *pal = sdl_surface->format->palette;
 	
-	for (i = 0; i < 256; i++) {
+	for (i = 0; i < pal->ncolors; i++) {
 		palette[0] = pal->colors[i].r;
 		palette[1] = pal->colors[i].g;
 		palette[2] = pal->colors[i].b;
@@ -1395,17 +1395,15 @@ void VL_FillPalette (int red, int green, int blue)
       OUTP (PEL_DATA,blue);
    }
 #else
-   SDL_Color cmap[256];
+   SDL_Color* cmap = sdl_surface->format->palette->colors;
    int i;
 
-   for (i = 0; i < 256; i++)
+   for (i = 0; i < sdl_surface->format->palette->ncolors; i++)
    {
            cmap[i].r = red << 2;
            cmap[i].g = green << 2;
            cmap[i].b = blue << 2;
    }
-
-   SDL_SetColors (SDL_GetVideoSurface (), cmap, 0, 256);
 #endif
 }
 
@@ -1495,17 +1493,17 @@ void VL_SetPalette (byte *palette)
       OUTP (PEL_DATA, gammatable[(gammaindex<<6)+(*palette++)]);
       }
 #else
-   SDL_Color cmap[256];
+   SDL_Color* cmap = sdl_surface->format->palette->colors;
    int i;
 
-   for (i = 0; i < 256; i++)
+   for (i = 0; i < sdl_surface->format->palette->ncolors; i++)
    {
 	   cmap[i].r = gammatable[(gammaindex<<6)+(*palette++)] << 2;
 	   cmap[i].g = gammatable[(gammaindex<<6)+(*palette++)] << 2;
 	   cmap[i].b = gammatable[(gammaindex<<6)+(*palette++)] << 2;
    }
 
-   SDL_SetColors (SDL_GetVideoSurface (), cmap, 0, 256);
+//   SDL_SetColors (SDL_GetVideoSurface (), cmap, 0, 256);
 #endif
 }
 
@@ -1534,9 +1532,9 @@ void VL_GetPalette (byte *palette)
       *palette++ = inp (PEL_DATA);
 #else
 	int i;
-	SDL_Palette *pal = SDL_GetVideoSurface()->format->palette;
+	SDL_Palette *pal = sdl_surface->format->palette;
 	
-	for (i = 0; i < 256; i++) {
+	for (i = 0; i < pal->ncolors; i++) {
 		palette[0] = pal->colors[i].r >> 2;
 		palette[1] = pal->colors[i].g >> 2;
 		palette[2] = pal->colors[i].b >> 2;
@@ -1573,7 +1571,7 @@ void UL_DisplayMemoryError ( int memneeded )
    px = ERRORVERSIONCOL;
    py = ERRORVERSIONROW;
 #if (BETA == 1)
-   UL_printf ("á");
+   UL_printf ("ï¿½");
 #else
    UL_printf (itoa(ROTTMAJORVERSION,&buf[0],10));
 #endif

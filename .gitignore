@@ -186,6 +186,7 @@ rott-rottsite
 *.dmo
 *.rtl
 *.rtc
+*.rts
 *.pck
 *.rtr
 *.exe
