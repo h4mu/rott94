@@ -172,3 +172,21 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
+
+# Linux
+*.o
+*.so
+*.a
+rott/rott
+rott-darkwar
+rott-rottcd
+rott-huntbgin
+rott-rottsite
+*.wad
+*.dmo
+*.rtl
+*.rtc
+*.pck
+*.rtr
+*.exe
+*.dll
