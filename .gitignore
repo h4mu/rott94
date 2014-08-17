@@ -192,3 +192,5 @@ rott-rottsite
 *.exe
 *.dll
 android/obj
+android/gen
+android/libs

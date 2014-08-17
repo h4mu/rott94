@@ -32,7 +32,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "cin_glob.h"
 #include <errno.h>
 #include <string.h>
-#include <io.h>
+#ifndef __ANDROID__
+	#include <io.h>
+#endif
 #include "fli_type.h"
 #include "fli_util.h"
 #include "fli_def.h"

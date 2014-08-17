@@ -168,13 +168,15 @@ int G_weaponscale;
 extern int iDropDemo;
 extern boolean iG_aimCross;
 extern boolean sdl_fullscreen;
+extern byte     *updateptr;
+extern byte     update[UPDATESIZE];
+
 
 extern void ComSetTime ( void );
 extern void VH_UpdateScreen (void);
 extern void RottConsole ( void );
 extern void	ReadDelay(long delay);
 extern void RecordDemoQuery ( void );
-
 
 int main (int argc, char *argv[])
 {
@@ -205,7 +207,9 @@ int main (int argc, char *argv[])
 #endif
 
 #ifndef DOS
+#	ifndef __ANDROID__
    signal (11, crash_print);
+#	endif
 
    if (setup_homedir() == -1) return 1;
 #endif

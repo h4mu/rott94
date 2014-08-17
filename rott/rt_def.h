@@ -85,7 +85,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //***************************************************************************
 
 #ifndef DATADIR
-#define DATADIR	""
+#	ifdef __ANDROID__
+#		define DATADIR	"/sdcard/Android/data/io.github.h4mu.andrott/files/"
+#	else
+#		define DATADIR	""
+#	endif
 #endif
 
 #undef PI

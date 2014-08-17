@@ -131,7 +131,7 @@ int setup_homedir (void)
 	if (home == NULL)
 	{
 #ifdef __ANDROID__
-		home = "/sdcard/Android/data/io.github.h4mu.andrott/files/";
+		home = DATADIR;
 #else
 		home = ".";
 #endif
