@@ -1,4 +1,4 @@
-#include <stdio.h>
+	#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -127,16 +127,24 @@ int setup_homedir (void)
 {
 #if PLATFORM_UNIX && !defined(__MINGW32__)
 	int err;
-
+	char * home = getenv ("HOME");
+	if (home == NULL)
+	{
+#ifdef __ANDROID__
+		home = "/sdcard/Android/data/io.github.h4mu.andrott/files/";
+#else
+		home = ".";
+#endif
+	}
 	/* try to create the root directory */
-	snprintf (ApogeePath, sizeof (ApogeePath), "%s/.rott/", getenv ("HOME"));
+	snprintf (ApogeePath, sizeof (ApogeePath), "%s/.rott/", home);
 	err = mkdir (ApogeePath, S_IRWXU);
 	
 /* keep the shareware and registered game data separated */
 #if (SHAREWARE == 1)
-	snprintf (ApogeePath, sizeof (ApogeePath), "%s/.rott/", getenv ("HOME"));
+	snprintf (ApogeePath, sizeof (ApogeePath), "%s/.rott/", home);
 #else
-	snprintf (ApogeePath, sizeof (ApogeePath), "%s/.rott/darkwar/", getenv ("HOME"));
+	snprintf (ApogeePath, sizeof (ApogeePath), "%s/.rott/darkwar/", home);
 #endif
 
 	err = mkdir (ApogeePath, S_IRWXU);
@@ -197,7 +205,7 @@ void DisplayTextSplash(byte *text, int l)
 	printf ("\033[m");
 }
 
-#if !defined(__CYGWIN__) && !defined(__MINGW32__)
+#if !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(__ANDROID__)
 #include <execinfo.h>
 
 void print_stack (int level)
