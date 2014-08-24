@@ -29,6 +29,7 @@ LDFLAGS += $(EXTRALDFLAGS)
 
 LDLIBS += $(shell sdl2-config --libs)
 LDLIBS += -lSDL2_mixer
+LDLIBS += -lm
 LDLIBS += $(EXTRALDLIBS)
 
 OBJS :=

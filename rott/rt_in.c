@@ -29,6 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #if USE_SDL
 #include "SDL.h"
+#include "SDL_touch.h"
 #endif
 
 #include "rt_main.h"
@@ -370,6 +371,33 @@ static int sdl_key_filter(const SDL_Event *event)
     return(0);
 } /* sdl_key_filter */
 
+static int sdl_finger_filter(const SDL_Event *event)
+{
+	// nw	-> left
+	// n	-> fwd
+	// ne	-> right
+	// w	-> strafeleft
+	// mid	-> back
+	// sw	-> open
+	// s	-> nextweapon
+	// se	-> shoot
+
+	SDL_Keycode keysymMapping[3][3] = {
+			{SDLK_LEFT, SDLK_UP, SDLK_RIGHT},
+			{SDLK_COMMA, SDLK_DOWN, SDLK_PERIOD},
+			{SDLK_SPACE, SDLK_RETURN, SDLK_RCTRL}
+	};
+	SDL_Event keyEvent;
+	keyEvent.type = event->type == SDL_FINGERUP ? SDL_KEYUP : SDL_KEYDOWN;
+	keyEvent.key.state = event->type == SDL_FINGERUP ? SDL_RELEASED : SDL_PRESSED;
+	keyEvent.key.keysym.mod = 0;
+	int x = (int)floor(event->tfinger.x / .333f);
+	int y = (int)floor(event->tfinger.y / .333f);
+	keyEvent.key.keysym.sym = keysymMapping[x][y];
+	SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Touch x %.3f y %.3f row %d col %d", event->tfinger.x, event->tfinger.y, x, y);
+	return sdl_key_filter(&keyEvent);
+} /* sdl_finger_filter */
+
 
 static int root_sdl_event_filter(const SDL_Event *event)
 {
@@ -377,13 +405,21 @@ static int root_sdl_event_filter(const SDL_Event *event)
     {
         case SDL_KEYUP:
         case SDL_KEYDOWN:
-            return(sdl_key_filter(event));
-        case SDL_JOYBALLMOTION:
+            return sdl_key_filter(event);
         case SDL_MOUSEMOTION:
-            return(sdl_mouse_motion_filter(event));
+            if (event->motion.which == SDL_TOUCH_MOUSEID)
+            	break;
+        case SDL_JOYBALLMOTION:
+            return sdl_mouse_motion_filter(event);
         case SDL_MOUSEBUTTONUP:
         case SDL_MOUSEBUTTONDOWN:
-            return(sdl_mouse_button_filter(event));
+            if (event->button.which == SDL_TOUCH_MOUSEID)
+            	break;
+            return sdl_mouse_button_filter(event);
+        case SDL_FINGERMOTION:
+        case SDL_FINGERDOWN:
+        case SDL_FINGERUP:
+        	return sdl_finger_filter(event);
         case SDL_QUIT:
             /* !!! rcg TEMP */
             fprintf(stderr, "\n\n\nSDL_QUIT!\n\n\n");
