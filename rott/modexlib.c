@@ -452,8 +452,7 @@ void GraphicsMode ( void )
 	{
 		Error ("Could not open window: %s\n", SDL_GetError());
 	}
-	sdl_renderer = SDL_CreateRenderer(sdl_window, -1, 0);
-//    sdl_surface = SDL_SetVideoMode (iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, 8, flags);
+	sdl_renderer = SDL_CreateRenderer(sdl_window, -1, /*SDL_RENDERER_SOFTWARE*/ 0);
 	if (sdl_renderer == NULL)
 	{
 		Error ("Could not create renderer: %s\n", SDL_GetError());
