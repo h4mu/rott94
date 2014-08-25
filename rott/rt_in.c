@@ -326,7 +326,7 @@ static int sdl_key_filter(const SDL_Event *event)
     k = handle_keypad_enter_hack(event);
     if (!k)
     {
-        k = scancodes[event->key.keysym.sym];
+        k = scancodes[event->key.keysym.sym == SDLK_AC_BACK ? SDLK_ESCAPE : event->key.keysym.sym];
         if (!k)   /* No DOS equivalent defined. */
             return(0);
     } /* if */
@@ -373,28 +373,18 @@ static int sdl_key_filter(const SDL_Event *event)
 
 static int sdl_finger_filter(const SDL_Event *event)
 {
-	// nw	-> left
-	// n	-> fwd
-	// ne	-> right
-	// w	-> strafeleft
-	// mid	-> back
-	// sw	-> open
-	// s	-> nextweapon
-	// se	-> shoot
-
 	SDL_Keycode keysymMapping[3][3] = {
-			{SDLK_LEFT, SDLK_UP, SDLK_RIGHT},
-			{SDLK_COMMA, SDLK_DOWN, SDLK_PERIOD},
-			{SDLK_SPACE, SDLK_RETURN, SDLK_RCTRL}
+			{SDLK_UP, SDLK_RETURN, SDLK_UP},
+			{SDLK_LEFT, SDLK_SPACE, SDLK_RIGHT},
+			{SDLK_DOWN, SDLK_ESCAPE, SDLK_RCTRL}
 	};
 	SDL_Event keyEvent;
 	keyEvent.type = event->type == SDL_FINGERUP ? SDL_KEYUP : SDL_KEYDOWN;
 	keyEvent.key.state = event->type == SDL_FINGERUP ? SDL_RELEASED : SDL_PRESSED;
 	keyEvent.key.keysym.mod = 0;
-	int x = (int)floor(event->tfinger.x / .333f);
-	int y = (int)floor(event->tfinger.y / .333f);
-	keyEvent.key.keysym.sym = keysymMapping[x][y];
-	SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Touch x %.3f y %.3f row %d col %d", event->tfinger.x, event->tfinger.y, x, y);
+	int column = (int)floor(event->tfinger.x / .333f);
+	int row = (int)floor(event->tfinger.y / .333f);
+	keyEvent.key.keysym.sym = keysymMapping[row][column];
 	return sdl_key_filter(&keyEvent);
 } /* sdl_finger_filter */
 
