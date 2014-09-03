@@ -371,23 +371,50 @@ static int sdl_key_filter(const SDL_Event *event)
     return(0);
 } /* sdl_key_filter */
 
+static const SDL_Keycode keysymMapping[3][3] = {
+		{SDLK_UP, SDLK_RETURN, SDLK_UP},
+		{SDLK_LEFT, SDLK_SPACE, SDLK_RIGHT},
+		{SDLK_DOWN, SDLK_ESCAPE, SDLK_RCTRL}
+};
+
+static int fingersDown[10] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+
 static int sdl_finger_filter(const SDL_Event *event)
 {
-	SDL_Keycode keysymMapping[3][3] = {
-			{SDLK_UP, SDLK_RETURN, SDLK_UP},
-			{SDLK_LEFT, SDLK_SPACE, SDLK_RIGHT},
-			{SDLK_DOWN, SDLK_ESCAPE, SDLK_RCTRL}
-	};
 	SDL_Event keyEvent;
-	keyEvent.type = event->type == SDL_FINGERUP ? SDL_KEYUP : SDL_KEYDOWN;
-	keyEvent.key.state = event->type == SDL_FINGERUP ? SDL_RELEASED : SDL_PRESSED;
 	keyEvent.key.keysym.mod = 0;
 	int column = (int)floor(event->tfinger.x / .333f);
 	int row = (int)floor(event->tfinger.y / .333f);
+	if (event->type == SDL_FINGERUP)
+	{
+		keyEvent.type = SDL_KEYUP;
+		keyEvent.key.state = SDL_RELEASED;
+		fingersDown[event->tfinger.fingerId] = -1;
+	}
+	else
+	{
+		int linearCoord = row * 3 + column;
+		if (fingersDown[event->tfinger.fingerId] == -1)
+		{
+			fingersDown[event->tfinger.fingerId] = linearCoord;
+		}
+		else if (fingersDown[event->tfinger.fingerId] != linearCoord)
+		{
+			keyEvent.type = SDL_KEYUP;
+			keyEvent.key.state = SDL_RELEASED;
+			int oldRow = fingersDown[event->tfinger.fingerId] / 3;
+			int oldColumn = fingersDown[event->tfinger.fingerId] % 3;
+			keyEvent.key.keysym.sym = keysymMapping[oldRow][oldColumn];
+			sdl_key_filter(&keyEvent);
+			fingersDown[event->tfinger.fingerId] = linearCoord;
+		}
+		keyEvent.type = SDL_KEYDOWN;
+		keyEvent.key.state = SDL_PRESSED;
+	}
 	keyEvent.key.keysym.sym = keysymMapping[row][column];
+	SDL_Log("x\t%.3f\ty\t%.3f\trow\t%d\tcol\t%d\tsym\t%d\t%s\tfid\t%d", event->tfinger.x, event->tfinger.y, row, column, keysymMapping[row][column], event->type == SDL_FINGERUP ? "up" : event->type == SDL_FINGERDOWN ? "down" : "move", event->tfinger.fingerId);
 	return sdl_key_filter(&keyEvent);
 } /* sdl_finger_filter */
-
 
 static int root_sdl_event_filter(const SDL_Event *event)
 {
