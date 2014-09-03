@@ -542,9 +542,9 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
         mDisplay = ((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
         mSensorManager = (SensorManager)context.getSystemService(Context.SENSOR_SERVICE);
         
-//        if(Build.VERSION.SDK_INT >= 12) {
-//            setOnGenericMotionListener(new SDLGenericMotionListener_API12());
-//        }
+        if(Build.VERSION.SDK_INT >= 12) {
+            setOnGenericMotionListener(new SDLGenericMotionListener_API12());
+        }
 
         // Some arbitrary defaults to avoid a potential division by zero
         mWidth = 1.0f;
@@ -945,13 +945,13 @@ class SDLJoystickHandler_API12 extends SDLJoystickHandler {
         public ArrayList<InputDevice.MotionRange> axes;
         public ArrayList<InputDevice.MotionRange> hats;
     }
-//    class RangeComparator implements Comparator<InputDevice.MotionRange>
-//    {
-//        @Override
-//        public int compare(InputDevice.MotionRange arg0, InputDevice.MotionRange arg1) {
-//            return arg0.getAxis() - arg1.getAxis();
-//        }
-//    }
+    class RangeComparator implements Comparator<InputDevice.MotionRange>
+    {
+        @Override
+        public int compare(InputDevice.MotionRange arg0, InputDevice.MotionRange arg1) {
+            return arg0.getAxis() - arg1.getAxis();
+        }
+    }
     
     private ArrayList<SDLJoystick> mJoysticks;
     
@@ -973,30 +973,30 @@ class SDLJoystickHandler_API12 extends SDLJoystickHandler {
             if (joystick == null) {
                 joystick = new SDLJoystick();
                 InputDevice joystickDevice = InputDevice.getDevice(deviceIds[i]);
-//                if( (joystickDevice.getSources() & InputDevice.SOURCE_CLASS_JOYSTICK) != 0) {
-//                    joystick.device_id = deviceIds[i];
-//                    joystick.name = joystickDevice.getName();
-//                    joystick.axes = new ArrayList<InputDevice.MotionRange>();
-//                    joystick.hats = new ArrayList<InputDevice.MotionRange>();
-//                    
-//                    List<InputDevice.MotionRange> ranges = joystickDevice.getMotionRanges();
-//                    Collections.sort(ranges, new RangeComparator());
-//                    for (InputDevice.MotionRange range : ranges ) {
-//                        if ((range.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) != 0 ) {
-//                            if (range.getAxis() == MotionEvent.AXIS_HAT_X ||
-//                                range.getAxis() == MotionEvent.AXIS_HAT_Y) {
-//                                joystick.hats.add(range);
-//                            }
-//                            else {
-//                                joystick.axes.add(range);
-//                            }
-//                        }
-//                    }
-//                    
-//                    mJoysticks.add(joystick);
-//                    SDLActivity.nativeAddJoystick(joystick.device_id, joystick.name, 0, -1, 
-//                                                  joystick.axes.size(), joystick.hats.size()/2, 0);
-//                }
+                if( (joystickDevice.getSources() & InputDevice.SOURCE_CLASS_JOYSTICK) != 0) {
+                    joystick.device_id = deviceIds[i];
+                    joystick.name = joystickDevice.getName();
+                    joystick.axes = new ArrayList<InputDevice.MotionRange>();
+                    joystick.hats = new ArrayList<InputDevice.MotionRange>();
+                    
+                    List<InputDevice.MotionRange> ranges = joystickDevice.getMotionRanges();
+                    Collections.sort(ranges, new RangeComparator());
+                    for (InputDevice.MotionRange range : ranges ) {
+                        if ((range.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) != 0 ) {
+                            if (range.getAxis() == MotionEvent.AXIS_HAT_X ||
+                                range.getAxis() == MotionEvent.AXIS_HAT_Y) {
+                                joystick.hats.add(range);
+                            }
+                            else {
+                                joystick.axes.add(range);
+                            }
+                        }
+                    }
+                    
+                    mJoysticks.add(joystick);
+                    SDLActivity.nativeAddJoystick(joystick.device_id, joystick.name, 0, -1, 
+                                                  joystick.axes.size(), joystick.hats.size()/2, 0);
+                }
             }
         }
         
@@ -1036,39 +1036,39 @@ class SDLJoystickHandler_API12 extends SDLJoystickHandler {
     
     @Override        
     public boolean handleMotionEvent(MotionEvent event) {
-//        if ( (event.getSource() & InputDevice.SOURCE_JOYSTICK) != 0) {
-//            int actionPointerIndex = event.getActionIndex();
-//            int action = event.getActionMasked();
-//            switch(action) {
-//                case MotionEvent.ACTION_MOVE:
-//                    SDLJoystick joystick = getJoystick(event.getDeviceId());
-//                    if ( joystick != null ) {
-//                        for (int i = 0; i < joystick.axes.size(); i++) {
-//                            InputDevice.MotionRange range = joystick.axes.get(i);
-//                            /* Normalize the value to -1...1 */
-//                            float value = ( event.getAxisValue( range.getAxis(), actionPointerIndex) - range.getMin() ) / range.getRange() * 2.0f - 1.0f;
-//                            SDLActivity.onNativeJoy(joystick.device_id, i, value );
-//                        }          
-//                        for (int i = 0; i < joystick.hats.size(); i+=2) {
-//                            int hatX = Math.round(event.getAxisValue( joystick.hats.get(i).getAxis(), actionPointerIndex ) );
-//                            int hatY = Math.round(event.getAxisValue( joystick.hats.get(i+1).getAxis(), actionPointerIndex ) );
-//                            SDLActivity.onNativeHat(joystick.device_id, i/2, hatX, hatY );
-//                        }
-//                    }
-//                    break;
-//                default:
-//                    break;
-//            }
-//        }
+        if ( (event.getSource() & InputDevice.SOURCE_JOYSTICK) != 0) {
+            int actionPointerIndex = event.getActionIndex();
+            int action = event.getActionMasked();
+            switch(action) {
+                case MotionEvent.ACTION_MOVE:
+                    SDLJoystick joystick = getJoystick(event.getDeviceId());
+                    if ( joystick != null ) {
+                        for (int i = 0; i < joystick.axes.size(); i++) {
+                            InputDevice.MotionRange range = joystick.axes.get(i);
+                            /* Normalize the value to -1...1 */
+                            float value = ( event.getAxisValue( range.getAxis(), actionPointerIndex) - range.getMin() ) / range.getRange() * 2.0f - 1.0f;
+                            SDLActivity.onNativeJoy(joystick.device_id, i, value );
+                        }          
+                        for (int i = 0; i < joystick.hats.size(); i+=2) {
+                            int hatX = Math.round(event.getAxisValue( joystick.hats.get(i).getAxis(), actionPointerIndex ) );
+                            int hatY = Math.round(event.getAxisValue( joystick.hats.get(i+1).getAxis(), actionPointerIndex ) );
+                            SDLActivity.onNativeHat(joystick.device_id, i/2, hatX, hatY );
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
         return true;
     }            
 }
 
-//class SDLGenericMotionListener_API12 implements View.OnGenericMotionListener {
-//    // Generic Motion (mouse hover, joystick...) events go here
-//    // We only have joysticks yet
-//    @Override
-//    public boolean onGenericMotion(View v, MotionEvent event) {
-//        return SDLActivity.handleJoystickMotionEvent(event);
-//    }
-//}
+class SDLGenericMotionListener_API12 implements View.OnGenericMotionListener {
+    // Generic Motion (mouse hover, joystick...) events go here
+    // We only have joysticks yet
+    @Override
+    public boolean onGenericMotion(View v, MotionEvent event) {
+        return SDLActivity.handleJoystickMotionEvent(event);
+    }
+}
