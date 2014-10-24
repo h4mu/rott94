@@ -19,6 +19,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #ifndef __MYPRINT_H
 #define __MYPRINT_H
+#ifndef _GNUC
+#	define __attribute__(A)
+#endif
 
 enum COLORS
    {

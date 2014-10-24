@@ -1134,7 +1134,7 @@ void DrawGameString (int x, int y, const char * str, boolean bufferofsonly)
 void DrawNumber (int x, int y, int width, int which, boolean bufferofsonly)
 {
    unsigned length,c;
-   char  *str;
+   char  *str = NULL;
    byte z;
 
    switch (which)

@@ -146,7 +146,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
     #error please define for your platform.
   #endif
 
-#if !defined(ANSIESC)
+#if !defined(ANSIESC) && defined(MSDOS)
 #define STUB_FUNCTION fprintf(stderr,"STUB: %s at " __FILE__ ", line %d, thread %d\n",__FUNCTION__,__LINE__,getpid())
 #else
 #define STUB_FUNCTION

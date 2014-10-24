@@ -435,7 +435,7 @@ void GraphicsMode ( void )
 	    Error ("Could not initialize SDL: %s\n", SDL_GetError());
 	}
 
-    #if defined(PLATFORM_WIN32) || defined(PLATFORM_MACOSX)
+    #if defined(PLATFORM_MACOSX)
         // FIXME: remove this.  --ryan.
         flags = SDL_WINDOW_FULLSCREEN;
         SDL_WM_GrabInput(SDL_GRAB_ON);
@@ -814,7 +814,7 @@ void EnableScreenStretch(void)
          iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, 8, 0, 0, 0, 0);
    }
 
-   displayofs = unstretch_sdl_surface->pixels +
+   displayofs = (byte*)unstretch_sdl_surface->pixels +
 	(displayofs - (byte *)sdl_surface->pixels);
    bufferofs  = unstretch_sdl_surface->pixels;
    page1start = unstretch_sdl_surface->pixels;
@@ -827,7 +827,7 @@ void DisableScreenStretch(void)
 {
    if (iGLOBAL_SCREENWIDTH <= 320 || !StretchScreen) return;
 
-   displayofs = sdl_surface->pixels +
+   displayofs = (byte*)sdl_surface->pixels +
 	(displayofs - (byte *)unstretch_sdl_surface->pixels);
    bufferofs  = sdl_surface->pixels;
    page1start = sdl_surface->pixels;
