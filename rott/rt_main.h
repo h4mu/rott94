@@ -162,6 +162,6 @@ extern boolean HUD;
 extern boolean SOUNDSETUP;
 #endif
 
-extern char CWD[40];
+extern char CWD[256];
 
 #endif

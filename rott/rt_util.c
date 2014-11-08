@@ -1849,6 +1849,7 @@ boolean UL_ChangeDirectory (char *path)
 
    return (true);
 #else
+#	ifndef __WINRT__
 	if (!*path) {
 		return true;
 	}
@@ -1856,7 +1857,7 @@ boolean UL_ChangeDirectory (char *path)
 	if (chdir (path) == -1) {
 	         return (false);
 	}
-	
+#	endif	
 	return true;
 #endif
 }

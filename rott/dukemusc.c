@@ -97,7 +97,8 @@ static void init_debugging(void)
     if (initialized_debugging)
         return;
 
-    envr = getenv(DUKESND_DEBUG);
+#ifndef __WINRT__
+	envr = getenv(DUKESND_DEBUG);
     if (envr != NULL)
     {
         if (strcmp(envr, "-") == 0)
@@ -110,6 +111,7 @@ static void init_debugging(void)
         else
             setbuf(debug_file, NULL);
     } // if
+#endif
 
     initialized_debugging = 1;
 } // init_debugging

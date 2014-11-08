@@ -142,7 +142,7 @@ static int NoWait;
 static int startlevel=0;
 static int demonumber=-1;
 
-char CWD[40];                          // curent working directory
+char CWD[256];                          // curent working directory
 static boolean quitactive = false;
 
 int timelimit;
@@ -1029,9 +1029,14 @@ void Init_Tables (void)
 	unsigned *blockstart;
 	byte * shape;
 
-   memset (&CWD[0], 0, 40);
-   getcwd (CWD, 40);                      // get the current directory
-
+	memset(&CWD[0], 0, sizeof(CWD));
+#ifdef __WINRT__
+   char * path = SDL_GetBasePath();
+   strcpy_s(CWD, sizeof(CWD), path);
+   SDL_free(path);
+#else
+	getcwd(CWD, sizeof(CWD));                      // get the current directory
+#endif
    origpal=SafeMalloc(768);
    memcpy (origpal, W_CacheLumpName("pal",PU_CACHE, CvtNull, 1), 768);
 

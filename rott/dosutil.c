@@ -154,6 +154,10 @@ int setup_homedir (void)
 				strerror (errno));
 		return -1;
 	}
+#elif defined(__WINRT__)
+	char * path = SDL_WinRTGetFSPathUTF8(SDL_WINRT_PATH_LOCAL_FOLDER);
+	strcpy_s(ApogeePath, sizeof(ApogeePath), path);
+	SDL_free(path);
 #else
     sprintf(ApogeePath, ".%s", PATH_SEP_STR);
 #endif
