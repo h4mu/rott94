@@ -398,7 +398,16 @@ CP_itemtype MainMenu[] =
       { CP_Active,         "ordrinfo\0", 'O', (menuptr)CP_OrderInfo },
       { CP_Active,         "mm_opt7\0",  'V', (menuptr)CP_ViewScores },
       { CP_Active,         "mm_opt8\0",  'B', (menuptr)NULL },
-      { CP_Active,         "mm_opt9\0",  'Q', (menuptr)CP_Quit }
+      {
+#if defined(__ANDROID__) || defined(__WINRT__)
+		  CP_Inactive,
+#else
+		  CP_Active,
+#endif
+		  "mm_opt9\0",
+		  'Q',
+		  (menuptr)CP_Quit
+	  }
    };
 
 
@@ -2180,11 +2189,13 @@ int HandleMenu (CP_iteminfo *item_i, CP_itemtype *items, void (*routine)(int w))
          MN_PlayMenuSnd (SD_SELECTSND);
       }
 
-      if (ci.button1 || Keyboard[sc_Escape])
+#if !defined(__ANDROID__) && !defined(__WINRT__)
+	  if (ci.button1 || Keyboard[sc_Escape])
       {
          WaitKeyUp ();
          exit = 2;
       }
+#endif
 
       if ( ( Keyboard[ sc_Home ] ) && ( numactive > 1 ) )
          {

@@ -1773,7 +1773,9 @@ void QuitGame ( void )
       }
    ShutDown();
 #endif
-
+#ifdef USE_SDL
+   SDL_Quit();
+#endif
    exit(0);
 }
 
