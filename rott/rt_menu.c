@@ -391,7 +391,16 @@ CP_iteminfo MainItems  = { MENU_X, MENU_Y + 1, 9, STARTITEM, 32, MainMenuNames, 
 CP_itemtype MainMenu[] =
    {
       { CP_CursorLocation, "mm_opt1\0",  'N', (menuptr)CP_NewGame },
-      { CP_Active,         "battle\0",   'C', (menuptr)CP_BattleModes },
+      {
+#if defined(__ANDROID__) || defined(__WINRT__)
+		  CP_Inactive,
+#else
+		  CP_Active,
+#endif
+		  "battle\0",
+		  'C',
+		  (menuptr)CP_BattleModes
+	  },
       { CP_Active,         "mm_opt2\0",  'R', (menuptr)CP_LoadGame },
       { CP_Inactive,       "mm_opt3\0",  'S', (menuptr)CP_SaveGame },
       { CP_Active,         "mm_opt5\0",  'O', (menuptr)CP_ControlMenu },
@@ -1876,9 +1885,11 @@ menuitems CP_MainMenu
 			DisableScreenStretch();//bna++ shut off streech mode
             break;
 
+#if !defined(__ANDROID__) && !defined(__WINRT__)
          case -1:
             CP_Quit( 0 );
             break;
+#endif
 
          default:
             if ( !StartGame )
@@ -2189,13 +2200,11 @@ int HandleMenu (CP_iteminfo *item_i, CP_itemtype *items, void (*routine)(int w))
          MN_PlayMenuSnd (SD_SELECTSND);
       }
 
-#if !defined(__ANDROID__) && !defined(__WINRT__)
 	  if (ci.button1 || Keyboard[sc_Escape])
       {
          WaitKeyUp ();
          exit = 2;
       }
-#endif
 
       if ( ( Keyboard[ sc_Home ] ) && ( numactive > 1 ) )
          {
