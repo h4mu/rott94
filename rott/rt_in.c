@@ -379,6 +379,11 @@ static const SDL_Keycode keysymMapping[3][3] = {
 
 static int fingersDown[10] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
 
+static int get_finger_id(const SDL_Event *event)
+{
+	return event->tfinger.fingerId % (sizeof(fingersDown) / sizeof(fingersDown[0]));
+}
+
 static int sdl_finger_filter(const SDL_Event *event)
 {
 	SDL_Event keyEvent;
@@ -389,24 +394,24 @@ static int sdl_finger_filter(const SDL_Event *event)
 	{
 		keyEvent.type = SDL_KEYUP;
 		keyEvent.key.state = SDL_RELEASED;
-		fingersDown[event->tfinger.fingerId] = -1;
+		fingersDown[get_finger_id(event)] = -1;
 	}
 	else
 	{
 		int linearCoord = row * 3 + column;
-		if (fingersDown[event->tfinger.fingerId] == -1)
+		if (fingersDown[get_finger_id(event)] == -1)
 		{
-			fingersDown[event->tfinger.fingerId] = linearCoord;
+			fingersDown[get_finger_id(event)] = linearCoord;
 		}
-		else if (fingersDown[event->tfinger.fingerId] != linearCoord)
+		else if (fingersDown[get_finger_id(event)] != linearCoord)
 		{
 			keyEvent.type = SDL_KEYUP;
 			keyEvent.key.state = SDL_RELEASED;
-			int oldRow = fingersDown[event->tfinger.fingerId] / 3;
-			int oldColumn = fingersDown[event->tfinger.fingerId] % 3;
+			int oldRow = fingersDown[get_finger_id(event)] / 3;
+			int oldColumn = fingersDown[get_finger_id(event)] % 3;
 			keyEvent.key.keysym.sym = keysymMapping[oldRow][oldColumn];
 			sdl_key_filter(&keyEvent);
-			fingersDown[event->tfinger.fingerId] = linearCoord;
+			fingersDown[get_finger_id(event)] = linearCoord;
 		}
 		keyEvent.type = SDL_KEYDOWN;
 		keyEvent.key.state = SDL_PRESSED;
