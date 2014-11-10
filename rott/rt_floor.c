@@ -73,7 +73,7 @@ byte *   mr_src;
 ==================
 */
 
-static byte     *floor;
+static byte     *g_floor;
 static byte     *ceiling;
 //static int xstarts[MAXVIEWHEIGHT];
 static int xstarts[600];//set to max hight res
@@ -441,8 +441,8 @@ void SetPlaneViewSize (void)
    floornum = GetFloorCeilingLump ( floornum );
    //ceilingnum = GetFloorCeilingLump ( ceilingnum );
 
-   floor = W_CacheLumpNum(floornum,PU_LEVELSTRUCT, Cvt_patch_t, 1);
-   floor +=8;
+   g_floor = W_CacheLumpNum(floornum,PU_LEVELSTRUCT, Cvt_patch_t, 1);
+   g_floor +=8;
 
    if (sky==0)  // Don't cache in if not used
       {
@@ -558,7 +558,7 @@ void DrawHLine (int xleft, int xright, int yp)
       {
       int hd;
 
-      buf=floor;
+      buf=g_floor;
       hd=yp-centery;
       height=(hd<<13)/(maxheight-pheight+32);
       }
