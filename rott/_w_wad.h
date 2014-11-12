@@ -45,6 +45,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #endif
 
+#if USE_SDL
+#	include "SDL.h"
+#endif
+
 //===============
 //   TYPES
 //===============
@@ -53,7 +57,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 typedef struct
 {
         char            name[8];
-        int             handle,position,size;
+#if USE_SDL
+        SDL_RWops*		handle;
+#else
+        int             handle;
+#endif
+        int				position,size;
         int             byteswapped;
 } lumpinfo_t;
 

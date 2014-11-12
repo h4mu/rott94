@@ -131,7 +131,15 @@ int setup_homedir (void)
 	if (home == NULL)
 	{
 #ifdef __ANDROID__
-		home = DATADIR;
+		home = SDL_AndroidGetExternalStoragePath();
+		if (home == NULL)
+		{
+			home = SDL_AndroidGetInternalStoragePath();
+		}
+		if (home == NULL)
+		{
+			home = ".";
+		}
 #else
 		home = ".";
 #endif
@@ -139,7 +147,7 @@ int setup_homedir (void)
 	/* try to create the root directory */
 	snprintf (ApogeePath, sizeof (ApogeePath), "%s/.rott/", home);
 	err = mkdir (ApogeePath, S_IRWXU);
-	
+
 /* keep the shareware and registered game data separated */
 #if (SHAREWARE == 1)
 	snprintf (ApogeePath, sizeof (ApogeePath), "%s/.rott/", home);
@@ -150,7 +158,7 @@ int setup_homedir (void)
 	err = mkdir (ApogeePath, S_IRWXU);
 	if (err == -1 && errno != EEXIST)
 	{
-		fprintf (stderr, "Couldn't create preferences directory: %s\n", 
+		fprintf (stderr, "Couldn't create preferences directory: %s\n",
 				strerror (errno));
 		return -1;
 	}

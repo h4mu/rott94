@@ -88,8 +88,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #	ifdef USE_SDL
 #		include "SDL_platform.h"
 #	endif
-#	ifdef __WINRT__
-#		define DATADIR "." PATH_SEP_STR
+#	if defined(__WINRT__) || defined(__ANDROID__)
+#		define DATADIR ""
 #	else
 #		define DATADIR "assets" PATH_SEP_STR
 #	endif

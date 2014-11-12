@@ -4726,13 +4726,13 @@ void DoLoadGameAction (void)
       py = 152;
       if (whichstr)
       {
-//         VW_DrawPropString ("ƒ");
+//         VW_DrawPropString ("ï¿½");
          VW_DrawPropString (".");
          whichstr = 0;
 		}
       else
       {
-//         VW_DrawPropString ("„");
+//         VW_DrawPropString ("ï¿½");
          VW_DrawPropString (".");
          whichstr = 1;
       }
@@ -4768,7 +4768,11 @@ long DoCheckSum (byte *source, int size, long csum)
 #define SAVECHECKSUMSIZE (10000)
 long CalculateSaveGameCheckSum (char * filename)
 {
+#if USE_SDL
+   SDL_RWops* handle;
+#else
    int handle;
+#endif
    int lengthleft;
    int length;
    byte * altbuffer;
@@ -4781,7 +4785,11 @@ long CalculateSaveGameCheckSum (char * filename)
    // Open the savegame file
 
    handle = SafeOpenRead (filename);
+#if USE_SDL
+   lengthleft = SDL_RWsize(handle);
+#else
    lengthleft = filelength (handle);
+#endif
 
    while (lengthleft>0)
       {
@@ -4797,7 +4805,11 @@ long CalculateSaveGameCheckSum (char * filename)
 
    SafeFree(altbuffer);
 
+#if USE_SDL
+   SDL_RWclose(handle);
+#else
    close (handle);
+#endif
 
    return checksum;
 }
@@ -4807,7 +4819,11 @@ long CalculateSaveGameCheckSum (char * filename)
 // StoreBuffer
 //
 //******************************************************************************
+#if USE_SDL
+void StoreBuffer (SDL_RWops* handle, byte * src, int size)
+#else
 void StoreBuffer (int handle, byte * src, int size)
+#endif
 {
    SafeWrite(handle,&size,sizeof(size));
    SafeWrite(handle,src,size);
@@ -4818,7 +4834,11 @@ void StoreBuffer (int handle, byte * src, int size)
 // SaveTag
 //
 //******************************************************************************
+#if USE_SDL
+void SaveTag (SDL_RWops* handle, char * tag, int size)
+#else
 void SaveTag (int handle, char * tag, int size)
+#endif
 {
    SafeWrite(handle,tag,size);
 }
@@ -4839,7 +4859,11 @@ boolean SaveTheGame (int num, gamestorage_t * game)
    byte   * altbuffer;
 	int    size;
 	int    avail;
+#if USE_SDL
+	SDL_RWops* savehandle;
+#else
    int    savehandle;
+#endif
    int    crc;
 	int    i;
    char   letter;
@@ -5093,7 +5117,11 @@ boolean SaveTheGame (int num, gamestorage_t * game)
 	size = sizeof (poweradjust);
    SafeWrite(savehandle,&poweradjust,size);
 
+#if USE_SDL
+   SDL_RWclose(savehandle);
+#else
    close (savehandle);
+#endif
 
    // Calculate CRC
 
@@ -5106,7 +5134,11 @@ boolean SaveTheGame (int num, gamestorage_t * game)
    size=sizeof(crc);
    SafeWrite(savehandle,&crc,size);
 
+#if USE_SDL
+   SDL_RWclose(savehandle);
+#else
    close (savehandle);
+#endif
 
    pickquick = true;
 	return (true);

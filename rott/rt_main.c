@@ -2976,7 +2976,11 @@ void WriteLBMfile (char *filename, byte *data, int width, int height)
    long    *formlength, *bmhdlength, *cmaplength, *bodylength;
    long    length;
    bmhd_t  basebmhd;
+#if USE_SDL
+   SDL_RWops* handle;
+#else
    int     handle;
+#endif
    int     i;
 
    lbm = lbmptr = (byte *) SafeMalloc ((iGLOBAL_SCREENWIDTH*iGLOBAL_SCREENHEIGHT)+4000);
@@ -3081,7 +3085,11 @@ void WriteLBMfile (char *filename, byte *data, int width, int height)
 
    SafeWrite (handle, lbm, lbmptr-lbm);
 
+#if USE_SDL
+   SDL_RWclose(handle);
+#else
    close (handle);
+#endif
    SafeFree(lbm);
 }
 
@@ -3266,7 +3274,11 @@ void WritePCX (char * file, byte * source)
    PCX_HEADER pcxHDR;
    byte *tempbuffer;
    byte pal[0x300];
+#if USE_SDL
+   SDL_RWops* pcxhandle;
+#else
    int pcxhandle;
+#endif
    int i, j, y;
    unsigned char c;
    unsigned char buffer1[GAP_SIZE];
@@ -3341,7 +3353,11 @@ void WritePCX (char * file, byte * source)
    SafeWrite (pcxhandle, &c, 1);
    SafeWrite (pcxhandle, &pal[0], 768);
 
+#if USE_SDL
+   SDL_RWclose(pcxhandle);
+#else
    close (pcxhandle);
+#endif
    SafeFree (tempbuffer);
 }
 

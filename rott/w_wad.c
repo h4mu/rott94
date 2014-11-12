@@ -78,13 +78,16 @@ static byte *lumpcheck;
 =
 ====================
 */
+#if USE_SDL
+#	include "SDL.h"
+#endif
 
 void W_AddFile (char *_filename)
 {
         wadinfo_t               header;
         lumpinfo_t              *lump_p;
         unsigned                i;
-        int                     handle, length;
+        int                     length;
         int                     startlump;
         filelump_t              *fileinfo, singleinfo;
 
@@ -109,8 +112,13 @@ void W_AddFile (char *_filename)
 //      FIXME: shared opens
 
 #ifdef PLATFORM_DOS
+		int handle;
         if ( (handle = open (filename,O_RDWR | O_BINARY)) == -1)
+#elif USE_SDL
+        SDL_RWops* handle;
+        if ( (handle = SDL_RWFromFile (filename,"rb")) == NULL)
 #else
+   		int handle;
         if ( (handle = open (filename,O_RDONLY | O_BINARY)) == -1)
 #endif
                 return;
@@ -125,7 +133,11 @@ void W_AddFile (char *_filename)
                    printf("    Adding single file %s.\n",filename);
                 fileinfo = &singleinfo;
                 singleinfo.filepos = 0;
+#if USE_SDL
+                singleinfo.size = LONG(SDL_RWsize(handle));
+#else
                 singleinfo.size = LONG(filelength(handle));
+#endif
                 ExtractFileBase (filename, singleinfo.name);
                 numlumps++;
         }
@@ -134,7 +146,11 @@ void W_AddFile (char *_filename)
         // WAD file
                 if (!quiet)
                    printf("    Adding %s.\n",filename);
+#if USE_SDL
+                SDL_RWread(handle, &header, sizeof(header), 1);
+#else
                 read (handle, &header, sizeof(header));
+#endif
                 if (strncmp(header.identification,"IWAD",4))
                         Error ("Wad file %s doesn't have IWAD id\n",filename);
                 header.numlumps = IntelLong(LONG(header.numlumps));
@@ -143,8 +159,13 @@ void W_AddFile (char *_filename)
                 fileinfo = alloca (length);
                 if (!fileinfo)
                    Error ("Wad file could not allocate header info on stack");
+#if USE_SDL
+                SDL_RWseek(handle, header.infotableofs, RW_SEEK_SET);
+                SDL_RWread(handle, fileinfo, length, 1);
+#else
                 lseek (handle, header.infotableofs, SEEK_SET);
                 read (handle, fileinfo, length);
+#endif
                 
                 numlumps += header.numlumps;
         }
@@ -408,8 +429,8 @@ int readinglump;
 byte * lumpdest;
 void W_ReadLump (int lump, void *dest)
 {
-        int                     c;
-        lumpinfo_t      *l;
+        int c;
+        lumpinfo_t *l;
 
         readinglump=lump;
         lumpdest=dest;
@@ -419,8 +440,13 @@ void W_ReadLump (int lump, void *dest)
                 Error ("W_ReadLump: %i < 0",lump);
         l = lumpinfo+lump;
 
+#if USE_SDL
+        SDL_RWseek(l->handle, l->position, RW_SEEK_SET);
+        c = SDL_RWread(l->handle, dest, 1, l->size);
+#else
         lseek (l->handle, l->position, SEEK_SET);
         c = read (l->handle, dest, l->size);
+#endif
         if (c < l->size)
                 Error ("W_ReadLump: only read %i of %i on lump %i",c,l->size,lump);
 }
@@ -447,8 +473,13 @@ void W_WriteLump (int lump, void *src)
       Error ("W_WriteLump: %i < 0",lump);
    l = lumpinfo+lump;
 
+#if USE_SDL
+   SDL_RWseek(l->handle, l->position, RW_SEEK_SET);
+   c = SDL_RWwrite(l->handle, src, 1, l->size);
+#else
    lseek (l->handle, l->position, SEEK_SET);
    c = write (l->handle, src, l->size);
+#endif
    if (c < l->size)
       Error ("W_WriteLump: only wrote %i of %i on lump %i",c,l->size,lump);
 }

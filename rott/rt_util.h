@@ -52,12 +52,22 @@ void  Error (char *error, ...) __attribute__((noreturn,format(printf,1,2)));
 void  StartupSoftError ( void );
 void  ShutdownSoftError ( void );
 int   CheckParm (char *check);
+#if USE_SDL
+#include "SDL.h"
+SDL_RWops*   SafeOpenWrite (char *filename);
+SDL_RWops*   SafeOpenAppend (char *filename);
+SDL_RWops*   SafeOpenRead (char *filename);
+void  SafeRead (SDL_RWops* handle, void *buffer, long count);
+void  SafeWrite (SDL_RWops* handle, void *buffer, long count);
+void  SafeWriteString (SDL_RWops* handle, char * buffer);
+#else
 int   SafeOpenWrite (char *filename);
 int   SafeOpenAppend (char *filename);
 int   SafeOpenRead (char *filename);
 void  SafeRead (int handle, void *buffer, long count);
 void  SafeWrite (int handle, void *buffer, long count);
 void  SafeWriteString (int handle, char * buffer);
+#endif
 void  *SafeMalloc (long size);
 void  *SafeLevelMalloc (long size);
 void  SafeFree (void * ptr);

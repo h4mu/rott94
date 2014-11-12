@@ -406,7 +406,11 @@ void PlayMusic(char *_filename)
 int MUSIC_PlaySongROTT(unsigned char *song, int size, int loopflag)
 {
     char filename[MAX_PATH];
+#if USE_SDL
+    SDL_RWops* handle;
+#else
     int handle;
+#endif
     
     MUSIC_StopSong();
 
@@ -415,7 +419,11 @@ int MUSIC_PlaySongROTT(unsigned char *song, int size, int loopflag)
     handle = SafeOpenWrite(filename);
     
     SafeWrite(handle, song, size);
+#if USE_SDL
+    SDL_RWclose(handle);
+#else
     close(handle);
+#endif
     
     music_songdata = song;
 

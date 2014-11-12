@@ -106,7 +106,12 @@ void ReadScores (void);
 void ReadInt (const char * s1, int * val);
 void ReadBoolean (const char * s1, boolean * val);
 void ReadConfig (void);
+#if USE_SDL
+#include "SDL.h"
+void WriteParameter (SDL_RWops* file, const char * s1, int val);
+#else
 void WriteParameter (int file, const char * s1, int val);
+#endif
 void WriteScores (void);
 void WriteConfig (void);
 void ReadSETUPFiles (void);

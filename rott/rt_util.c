@@ -628,94 +628,160 @@ int CheckParm (char *check)
 	return 0;
 }
 
-
-
+#if USE_SDL
+SDL_RWops* SafeOpenAppend (char *_filename)
+#else
 int SafeOpenAppend (char *_filename)
+#endif
 {
+#if USE_SDL
+	SDL_RWops* handle;
+#else
 	int	handle;
+#endif
     char filename[MAX_PATH];
     strncpy(filename, _filename, sizeof (filename));
     filename[sizeof (filename) - 1] = '\0';
     FixFilePath(filename);
 
+#if USE_SDL
+	handle = SDL_RWFromFile(filename, "ab+");
+
+	if (handle == NULL)
+		Error ("Error opening %s: %s",filename,SDL_GetError());
+#else
 	handle = open(filename,O_RDWR | O_BINARY | O_CREAT | O_APPEND
 	, S_IREAD | S_IWRITE);
 
 	if (handle == -1)
 		Error ("Error opening for append %s: %s",filename,strerror(errno));
+#endif
 
 	return handle;
 }
 
+#if USE_SDL
+SDL_RWops* SafeOpenWrite (char *_filename)
+#else
 int SafeOpenWrite (char *_filename)
+#endif
 {
+#if USE_SDL
+	SDL_RWops* handle;
+#else
 	int	handle;
+#endif
     char filename[MAX_PATH];
     strncpy(filename, _filename, sizeof (filename));
     filename[sizeof (filename) - 1] = '\0';
     FixFilePath(filename);
 
+#if USE_SDL
+	handle = SDL_RWFromFile(filename, "wb+");
+
+	if (handle == NULL)
+		Error ("Error opening %s: %s",filename,SDL_GetError());
+#else
 	handle = open(filename,O_RDWR | O_BINARY | O_CREAT | O_TRUNC
 	, S_IREAD | S_IWRITE);
 
 	if (handle == -1)
 		Error ("Error opening %s: %s",filename,strerror(errno));
+#endif
 
 	return handle;
 }
 
+#if USE_SDL
+SDL_RWops* SafeOpenRead (char *_filename)
+#else
 int SafeOpenRead (char *_filename)
+#endif
 {
+#if USE_SDL
+	SDL_RWops* handle;
+#else
 	int	handle;
+#endif
     char filename[MAX_PATH];
     strncpy(filename, _filename, sizeof (filename));
     filename[sizeof (filename) - 1] = '\0';
     FixFilePath(filename);
 
+#if USE_SDL
+	handle = SDL_RWFromFile(filename, "rb");
+
+	if (handle == NULL)
+		Error ("Error opening %s: %s",filename,SDL_GetError());
+#else
 	handle = open(filename,O_RDONLY | O_BINARY);
 
 	if (handle == -1)
 		Error ("Error opening %s: %s",filename,strerror(errno));
+#endif
 
 	return handle;
 }
 
-
+#if USE_SDL
+void SafeRead (SDL_RWops* handle, void *buffer, long count)
+#else
 void SafeRead (int handle, void *buffer, long count)
+#endif
 {
 	unsigned	iocount;
 
 	while (count)
 	{
 		iocount = count > 0x8000 ? 0x8000 : count;
+#if USE_SDL
+		int cnt = SDL_RWread (handle,buffer,1,iocount);
+		if (cnt != (int)iocount)
+#else
 		if (read (handle,buffer,iocount) != (int)iocount)
+#endif
 			Error ("File read failure reading %ld bytes",count);
 		buffer = (void *)( (byte *)buffer + iocount );
 		count -= iocount;
 	}
 }
 
-
+#if USE_SDL
+void SafeWrite (SDL_RWops* handle, void *buffer, long count)
+#else
 void SafeWrite (int handle, void *buffer, long count)
+#endif
 {
 	unsigned	iocount;
 
 	while (count)
 	{
 		iocount = count > 0x8000 ? 0x8000 : count;
+#if USE_SDL
+		if (SDL_RWwrite (handle,buffer,1,iocount) != (int)iocount)
+#else
 		if (write (handle,buffer,iocount) != (int)iocount)
+#endif
 			Error ("File write failure writing %ld bytes",count);
 		buffer = (void *)( (byte *)buffer + iocount );
 		count -= iocount;
 	}
 }
 
+#if USE_SDL
+void SafeWriteString (SDL_RWops* handle, char * buffer)
+#else
 void SafeWriteString (int handle, char * buffer)
+#endif
 {
 	unsigned	iocount;
 
    iocount=strlen(buffer);
+#if USE_SDL
+	if (SDL_RWwrite (handle,buffer,1,iocount) != (int)iocount)
+#else
 	if (write (handle,buffer,iocount) != (int)iocount)
+#endif
 			Error ("File write string failure writing %s\n",buffer);
 }
 
@@ -765,14 +831,26 @@ void SafeFree (void * ptr)
 
 long	LoadFile (char *filename, void **bufferptr)
 {
+#if USE_SDL
+	SDL_RWops* handle;
+#else
 	int		handle;
+#endif
 	long	length;
 
 	handle = SafeOpenRead (filename);
+#if USE_SDL
+	length = SDL_RWsize (handle);
+#else
 	length = filelength (handle);
+#endif
 	*bufferptr = SafeMalloc (length);
 	SafeRead (handle,*bufferptr, length);
+#if USE_SDL
+	SDL_RWclose(handle);
+#else
 	close (handle);
+#endif
 	return length;
 }
 
@@ -787,11 +865,19 @@ long	LoadFile (char *filename, void **bufferptr)
 
 void	SaveFile (char *filename, void *buffer, long count)
 {
+#if USE_SDL
+	SDL_RWops* handle;
+#else
 	int		handle;
+#endif
 
 	handle = SafeOpenWrite (filename);
 	SafeWrite (handle, buffer, count);
+#if USE_SDL
+	SDL_RWclose(handle);
+#else
 	close (handle);
+#endif
 }
 
 
