@@ -98,7 +98,7 @@
     <PackageCertificateKeyFile>Rott94.Windows_StoreKey.pfx</PackageCertificateKeyFile>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxBundlePlatforms>x86|arm</AppxBundlePlatforms>
-    <AppxBundle>Always</AppxBundle>
+    <AppxBundle>Auto</AppxBundle>
     <PackageCertificateThumbprint>9F909D3D0333234C90E55D1F0C055D5FB5610123</PackageCertificateThumbprint>
   </PropertyGroup>
   <Import Project="..\Rott94.Shared\Rott94.Shared.vcxitems" Label="Shared" />
