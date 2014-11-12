@@ -1,42 +1,28 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Package xmlns="http://schemas.microsoft.com/appx/2010/manifest">
-
-  <Identity Name="bdfd33e5-260f-4842-af96-4ed92ab3c07e"
-            Publisher="CN=Tamas"
-            Version="1.0.0.0" />
-
+<Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest">
+  <Identity Name="58129h4mu.Rott94" Publisher="CN=63D1F155-8622-4CF4-AE59-89AF957FD7A2" Version="1.1.0.0" />
   <Properties>
-    <DisplayName>Rott94.Windows</DisplayName>
-    <PublisherDisplayName>Tamas</PublisherDisplayName>
+    <DisplayName>Rott94</DisplayName>
+    <PublisherDisplayName>h4mu</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
-
   <Prerequisites>
     <OSMinVersion>6.3.0</OSMinVersion>
     <OSMaxVersionTested>6.3.0</OSMaxVersionTested>
   </Prerequisites>
-
   <Resources>
-    <Resource Language="x-generate"/>
+    <Resource Language="x-generate" />
   </Resources>
-
   <Applications>
-    <Application Id="App"
-        Executable="$targetnametoken$.exe"
-        EntryPoint="Rott94_Windows.App">
-        <VisualElements
-            DisplayName="Rott94.Windows"
-            Logo="Assets\Logo.png"
-            SmallLogo="Assets\SmallLogo.png"
-            Description="Rott94.Windows"
-            ForegroundText="light"
-            BackgroundColor="#464646">
-            <DefaultTile ShowName="allLogos" />
-            <SplashScreen Image="Assets\SplashScreen.png" />
-        </VisualElements>
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="Rott94_Windows.App">
+      <m2:VisualElements DisplayName="Rott94" Description="Modern Windows source port of the game classic that is Rise of the Triad: The Hunt Begins ." BackgroundColor="#464646" ForegroundText="light" Square150x150Logo="Assets\Logo.png" Square30x30Logo="Assets\SmallLogo.png">
+        <m2:DefaultTile>
+          <m2:ShowNameOnTiles>
+            <m2:ShowOn Tile="square150x150Logo" />
+          </m2:ShowNameOnTiles>
+        </m2:DefaultTile>
+        <m2:SplashScreen Image="Assets\SplashScreen.png" />
+      </m2:VisualElements>
     </Application>
   </Applications>
-  <Capabilities>
-    <Capability Name="internetClient" />
-  </Capabilities>
 </Package>

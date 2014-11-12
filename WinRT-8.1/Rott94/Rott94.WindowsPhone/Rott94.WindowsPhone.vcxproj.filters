@@ -45,5 +45,6 @@
     <None Include="..\..\..\assets\REMOTE1.RTS">
       <Filter>Assets</Filter>
     </None>
+    <None Include="Package.StoreAssociation.xml" />
   </ItemGroup>
 </Project>
