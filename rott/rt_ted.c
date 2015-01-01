@@ -114,8 +114,6 @@ char LevelName[80];
 static cachetype * cachelist;
 static word cacheindex;
 static boolean CachingStarted=false;
-static char * ROTTMAPS = STANDARDGAMELEVELS;
-static char * BATTMAPS = STANDARDBATTLELEVELS;
 
 static char NormalWeaponTiles[ 10 ] =
    {
@@ -1691,11 +1689,11 @@ void GetMapFileName ( char * filename )
       }
    else if ( BATTLEMODE )
       {
-      strcpy(filename,BATTMAPS);
+	  DataPath(filename, STANDARDBATTLELEVELS);
       }
    else
       {
-      strcpy(filename,ROTTMAPS);
+	  DataPath(filename, STANDARDGAMELEVELS);
       }
 }
 
@@ -1799,11 +1797,15 @@ void GetMapInfo
       }
    else if ( BATTLEMODE )
       {
-      GetMapFileInfo( mapinfo, BATTMAPS );
+	  char maps[MAX_PATH];
+	  DataPath(maps, STANDARDBATTLELEVELS);
+      GetMapFileInfo( mapinfo, maps);
       }
    else
       {
-      GetMapFileInfo( mapinfo, ROTTMAPS );
+	  char maps[MAX_PATH];
+	  DataPath(maps, STANDARDGAMELEVELS);
+      GetMapFileInfo( mapinfo, maps);
       }
    }
 
@@ -1982,11 +1984,15 @@ void LoadROTTMap
       }
    else if ( BATTLEMODE )
       {
-      ReadROTTMap( BATTMAPS, mapnum );
+	  char map[MAX_PATH];
+	  DataPath(map, STANDARDBATTLELEVELS);
+      ReadROTTMap(map, mapnum );
       }
    else
       {
-      ReadROTTMap( ROTTMAPS, mapnum );
+	  char map[MAX_PATH];
+	  DataPath(map, STANDARDGAMELEVELS);
+	  ReadROTTMap(map, mapnum );
       }
    }
 

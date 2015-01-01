@@ -821,6 +821,24 @@ void CheckCommandLineParameters( void )
    }
 }
 
+void DataPath(char * path, char * filename)
+{
+#if defined(__WINRT__)
+	const char * baseDir = ".";
+#elif defined(__ANDROID__)
+	const char * baseDir = SDL_AndroidGetExternalStoragePath();
+	if (!baseDir)
+	{
+		baseDir =  SDL_AndroidGetInternalStoragePath();
+	}
+#else
+	const char * baseDir = "assets";
+#endif
+	strncpy(path, baseDir, MAX_PATH);
+	strncat(path, PATH_SEP_STR, MAX_PATH);
+	strncat(path, filename, MAX_PATH);
+}
+
 void SetupWads( void )
 {
    char  *newargs[99];
@@ -971,16 +989,19 @@ NoRTC:;
 
    // Normal ROTT wads
 
+   char wadName[MAX_PATH];
 #if (SHAREWARE)
-   newargs [argnum++] = DATADIR "HUNTBGIN.WAD";
+   DataPath(wadName, "HUNTBGIN.WAD");
 #else
-   newargs [argnum++] = DATADIR "DARKWAR.WAD";
+   DataPath(wadName, "DARKWAR.WAD");
 #endif
+   newargs[argnum++] = wadName;
 
 //   newargs [argnum++] = "credits.wad";
 
    // Check for Remote Ridicule WAD
 
+   char remote1Path[MAX_PATH];
    if (RemoteSounds.avail == true)
       {
       char  *src;
@@ -994,7 +1015,8 @@ NoRTC:;
       }
    else
       {
-      newargs [argnum++] = DATADIR "REMOTE1.RTS";
+	  DataPath(remote1Path, "REMOTE1.RTS");
+      newargs [argnum++] = remote1Path;
       }
 
    newargs [argnum++] = NULL;

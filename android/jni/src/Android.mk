@@ -70,6 +70,7 @@ LOCAL_SRC_FILES += ../../../rott/audiolib/nodpmi.c
 LOCAL_SRC_FILES += ../../../rott/audiolib/pitch.c
 LOCAL_SRC_FILES += ../../../rott/audiolib/user.c
 LOCAL_SRC_FILES += ../../../rott/audiolib/usrhooks.c
+LOCAL_SRC_FILES += io_github_h4mu_rott94_ContentPrepareActivity.c
 
 LOCAL_SHARED_LIBRARIES := SDL2 SDL2_mixer
 

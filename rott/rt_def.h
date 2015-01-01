@@ -84,27 +84,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
 //***************************************************************************
 
-#ifndef DATADIR
-#	ifdef USE_SDL
-#		include "SDL_platform.h"
-#	endif
-#	if defined(__WINRT__) || defined(__ANDROID__)
-#		define DATADIR ""
-#	else
-#		define DATADIR "assets" PATH_SEP_STR
-#	endif
-#endif
-
-#undef PI
-#undef M_PI
-
 #ifndef NULL
 #define NULL       0
 #endif
 
+#undef PI
 #define PI      3.141592657
-#define LONG(a) ((int)a)
+#undef M_PI
 #define M_PI            3.14159
+#define LONG(a) ((int)a)
 
 #ifndef O_BINARY
 #define O_BINARY 0

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Rott94</string>
+    <string name="contentDownloadingTitle">Downloading</string>
+    <string name="contentDownloadingConfirmationMessage">Do you want to download game content from the internet?</string>
 </resources>
