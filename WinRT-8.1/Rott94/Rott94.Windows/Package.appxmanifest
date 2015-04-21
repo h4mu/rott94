@@ -23,6 +23,18 @@
         </m2:DefaultTile>
         <m2:SplashScreen Image="Assets\SplashScreen.png" />
       </m2:VisualElements>
+      <Extensions>
+        <Extension Category="windows.fileTypeAssociation">
+          <FileTypeAssociation Name="wad">
+            <SupportedFileTypes>
+              <FileType>.wad</FileType>
+              <FileType>.rtl</FileType>
+              <FileType>.rtc</FileType>
+              <FileType>.rts</FileType>
+            </SupportedFileTypes>
+          </FileTypeAssociation>
+        </Extension>
+      </Extensions>
     </Application>
   </Applications>
 </Package>

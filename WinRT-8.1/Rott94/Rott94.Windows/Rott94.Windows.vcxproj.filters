@@ -29,15 +29,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Rott94.Windows_TemporaryKey.pfx" />
-    <None Include="..\..\..\assets\HUNTBGIN.WAD">
-      <Filter>Assets</Filter>
-    </None>
-    <None Include="..\..\..\assets\REMOTE1.RTS">
-      <Filter>Assets</Filter>
-    </None>
-    <None Include="..\..\..\assets\HUNTBGIN.RTL">
-      <Filter>Assets</Filter>
-    </None>
     <None Include="Package.StoreAssociation.xml" />
     <None Include="Rott94.Windows_StoreKey.pfx" />
   </ItemGroup>

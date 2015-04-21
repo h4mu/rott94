@@ -143,17 +143,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\assets\HUNTBGIN.RTL">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
-    <None Include="..\..\..\assets\HUNTBGIN.WAD">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
-    <None Include="..\..\..\assets\REMOTE1.RTS">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Package.StoreAssociation.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

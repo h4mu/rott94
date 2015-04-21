@@ -206,15 +206,6 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <None Include="..\..\..\assets\HUNTBGIN.RTL">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
-    <None Include="..\..\..\assets\HUNTBGIN.WAD">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
-    <None Include="..\..\..\assets\REMOTE1.RTS">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
     <None Include="Rott94.Windows_StoreKey.pfx" />
     <None Include="Rott94.Windows_TemporaryKey.pfx" />
   </ItemGroup>

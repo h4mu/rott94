@@ -87,7 +87,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "fx_man.h"
 //MED
 #include "memcheck.h"
-
+#ifdef __WINRT__
+extern void EnsureContentAvailable();
+#endif
 volatile int    oldtime;
 volatile int    gametime;
 
@@ -204,6 +206,9 @@ int main (int argc, char *argv[])
         chdir(path);
         free(path);
     }
+#endif
+#ifdef __WINRT__
+	EnsureContentAvailable();
 #endif
 
 #ifndef DOS
@@ -824,7 +829,9 @@ void CheckCommandLineParameters( void )
 void DataPath(char * path, char * filename)
 {
 #if defined(__WINRT__)
-	const char * baseDir = ".";
+	char tmp[255];
+	wcstombs(tmp, GetDataBasePathWinRT(), sizeof(tmp));
+	const char * baseDir = tmp;
 #elif defined(__ANDROID__)
 	const char * baseDir = SDL_AndroidGetExternalStoragePath();
 	if (!baseDir)

@@ -36,15 +36,6 @@
     <AppxManifest Include="Package.appxmanifest" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\assets\HUNTBGIN.RTL">
-      <Filter>Assets</Filter>
-    </None>
-    <None Include="..\..\..\assets\HUNTBGIN.WAD">
-      <Filter>Assets</Filter>
-    </None>
-    <None Include="..\..\..\assets\REMOTE1.RTS">
-      <Filter>Assets</Filter>
-    </None>
     <None Include="Package.StoreAssociation.xml" />
   </ItemGroup>
 </Project>

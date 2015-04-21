@@ -182,10 +182,14 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\z_zone.c">
       <Filter>rott</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)ContentManagement.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="rott">
       <UniqueIdentifier>{fa139719-d1cb-4077-ad4e-c307c6c1ce1c}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)ContentManagement.h" />
   </ItemGroup>
 </Project>
