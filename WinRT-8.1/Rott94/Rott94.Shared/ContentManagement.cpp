@@ -48,7 +48,7 @@ void ContentManagement::OnActivated(CoreApplicationView^, IActivatedEventArgs ^a
 bool ContentManagement::FilesFound()
 {
 	struct _stat buf;
-	vector<wstring> files({
+	const vector<wstring> files({
 #if SHAREWARE
 		L"HUNTBGIN.RTC", L"HUNTBGIN.RTL", L"HUNTBGIN.WAD",
 #else
@@ -84,5 +84,8 @@ void ContentManagement::ObtainGameContent()
 			CoreWindow::GetForCurrentThread()->Dispatcher->ProcessEvents(CoreProcessEventsOption::ProcessAllIfPresent);
 		}
 	}
-	CoreApplication::MainView->Activated -= activatedEventRegistrationToken;
+	if (isCopyFinished)
+	{
+		CoreApplication::MainView->Activated -= activatedEventRegistrationToken;
+	}
 }
