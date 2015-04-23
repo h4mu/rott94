@@ -421,8 +421,11 @@ static int sdl_finger_filter(const SDL_Event *event)
 	return sdl_key_filter(&keyEvent);
 } /* sdl_finger_filter */
 
+unsigned int lastInteraction;
+
 static int root_sdl_event_filter(const SDL_Event *event)
 {
+	lastInteraction = SDL_GetTicks();
     switch (event->type)
     {
         case SDL_KEYUP:

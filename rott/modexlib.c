@@ -425,6 +425,30 @@ static SDL_Texture *sdl_texture = NULL;
 SDL_Surface *sdl_surface = NULL;
 static SDL_Surface *sdl_surface32 = NULL;
 static SDL_Surface *unstretch_sdl_surface = NULL;
+static SDL_Texture *sdl_hint_texture = NULL;
+extern unsigned int lastInteraction;
+
+void BuildHintTexture()
+{
+	lastInteraction = SDL_GetTicks();
+	SDL_RWops *file = SDL_RWFromFile("kep.bmp", "rb");
+	if (!file)
+	{
+		Error("File error: %s\n", SDL_GetError());
+	}
+	SDL_Surface *image = SDL_LoadBMP_RW(file, SDL_TRUE);
+	if (!image)
+	{
+		Error("Bitmap error: %s\n", SDL_GetError());
+	}
+	SDL_SetColorKey(image, SDL_TRUE, SDL_MapRGBA(image->format, 255, 255, 255, 0));
+	sdl_hint_texture = SDL_CreateTextureFromSurface(sdl_renderer, image);
+	if (!sdl_hint_texture)
+	{
+		Error("Texture error: %s\n", SDL_GetError());
+	}
+	SDL_FreeSurface(image);
+}
 
 void GraphicsMode ( void )
 {
@@ -476,6 +500,7 @@ void GraphicsMode ( void )
 	{
 		Error ("Could not create surface: %s\n", SDL_GetError());
 	}
+	BuildHintTexture();
 }
 
 void blitScreen32(uint32_t *dst)
@@ -738,6 +763,26 @@ void VL_DePlaneVGA (void)
 {
 }
 
+static void RenderCopyHintTexture()
+{
+	unsigned int deltaInteraction = SDL_GetTicks() - lastInteraction;
+	const unsigned int minDelay = 10000;
+	if (deltaInteraction < minDelay + 4600)
+	{
+		if (deltaInteraction > minDelay + 4000)
+		{
+			unsigned int shade = (minDelay + 4600 - deltaInteraction) / 3;
+			SDL_SetTextureAlphaMod(sdl_hint_texture, shade < 1 ? 0 : shade);
+			SDL_RenderCopy(sdl_renderer, sdl_hint_texture, NULL, NULL);
+		}
+		else if (deltaInteraction > minDelay)
+		{
+			unsigned int shade = (deltaInteraction - minDelay) / 3;
+			SDL_SetTextureAlphaMod(sdl_hint_texture, shade > 200 ? 200 : shade);
+			SDL_RenderCopy(sdl_renderer, sdl_hint_texture, NULL, NULL);
+		}
+	}
+}
 
 /* C version of rt_vh_a.asm */
 
@@ -754,6 +799,7 @@ void VH_UpdateScreen (void)
 	SDL_UpdateTexture(sdl_texture, NULL, sdl_surface32->pixels, sdl_surface32->pitch);
 	SDL_RenderClear(sdl_renderer);
 	SDL_RenderCopy(sdl_renderer, sdl_texture, NULL, NULL);
+	RenderCopyHintTexture();
 	SDL_RenderPresent(sdl_renderer);
 }
 
@@ -792,6 +838,7 @@ void XFlipPage ( void )
 	SDL_UpdateTexture(sdl_texture, NULL, sdl_surface32->pixels, sdl_surface32->pitch);
 	SDL_RenderClear(sdl_renderer);
 	SDL_RenderCopy(sdl_renderer, sdl_texture, NULL, NULL);
+	RenderCopyHintTexture();
 	SDL_RenderPresent(sdl_renderer);
  
 #endif
