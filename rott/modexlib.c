@@ -431,7 +431,7 @@ extern unsigned int lastInteraction;
 void BuildHintTexture()
 {
 	lastInteraction = SDL_GetTicks();
-	SDL_RWops *file = SDL_RWFromFile("kep.bmp", "rb");
+	SDL_RWops *file = SDL_RWFromFile("buttons.bmp", "rb");
 	if (!file)
 	{
 		Error("File error: %s\n", SDL_GetError());
