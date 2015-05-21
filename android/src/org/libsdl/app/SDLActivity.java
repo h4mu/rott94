@@ -45,14 +45,14 @@ public class SDLActivity extends Activity {
     protected static AudioTrack mAudioTrack;
 
     // Load the .so
-    static {
-        System.loadLibrary("SDL2");
+//    static {
+        //System.loadLibrary("SDL2");
         //System.loadLibrary("SDL2_image");
-        System.loadLibrary("SDL2_mixer");
+        //System.loadLibrary("SDL2_mixer");
         //System.loadLibrary("SDL2_net");
         //System.loadLibrary("SDL2_ttf");
-        System.loadLibrary("main");
-    }
+        //System.loadLibrary("main");
+//    }
     
     
     public static void initialize() {

@@ -1,6 +1,22 @@
-/**
- * 
- */
+/*
+Copyright (C) 2014-2015 Tamas Hamor
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+*/
 package io.github.h4mu.rott94;
 
 import io.github.h4mu.rott94.util.SfxFilteredInputStream;
@@ -29,9 +45,15 @@ import android.os.Bundle;
  * 
  */
 public class ContentPrepareActivity extends Activity {
-	private static final String SHAREWARE_URL = "file:///storage/sdcard0/download/1rott13.zip"; //"https://github.com/h4mu/rott94/releases/download/v0.8-alpha/1rott13.zip";
+	private static final String SHAREWARE_URL = "https://github.com/h4mu/rott94/releases/download/v0.8-alpha/1rott13.zip";
 	private static final int BUFFER_SIZE = 8192;
 
+	static {
+		System.loadLibrary("SDL2");
+		System.loadLibrary("SDL2_mixer");
+		System.loadLibrary("main");
+	}
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
