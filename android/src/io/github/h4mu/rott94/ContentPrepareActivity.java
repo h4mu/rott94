@@ -39,6 +39,7 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.widget.Toast;
 
 /**
  * @author hamu
@@ -60,7 +61,8 @@ public class ContentPrepareActivity extends Activity {
 		if (isGameContentInstalled()) {
 			startActivity(new Intent(this, rottActivity.class));
 		} else {
-			new AlertDialog
+			if (isShareware()) {
+				new AlertDialog
 				.Builder(this)
 				.setCancelable(true)
 				.setTitle(R.string.contentDownloadingTitle)
@@ -78,6 +80,12 @@ public class ContentPrepareActivity extends Activity {
 						ContentPrepareActivity.this.finish();
 					}
 				}).show();
+			} else {
+				Toast.makeText(this,
+						getResources().getString(R.string.contentNotFoundMessage, getContentFolder().getAbsolutePath()),
+						Toast.LENGTH_LONG).show();
+				finish();
+			}
 		}
 	}
 
