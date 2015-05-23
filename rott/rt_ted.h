@@ -170,7 +170,7 @@ void PrintTileStats (void);
 void GetMapInfo (mapfileinfo_t * mapinfo);
 void GetMapFileName ( char * filename );
 void SetBattleMapFileName ( char * filename );
-word GetMapCRC ( int num );
+unsigned GetMapCRC ( int num );
 
 int GetNextMap ( int tilex, int tiley );
 void Illuminate();
