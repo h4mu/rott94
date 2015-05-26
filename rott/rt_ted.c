@@ -1718,7 +1718,7 @@ void SetBattleMapFileName ( char * filename )
 =
 ======================
 */
-word GetMapCRC
+unsigned GetMapCRC
    (
    int num
    )
@@ -1729,10 +1729,10 @@ word GetMapCRC
 #else
    int  filehandle;
 #endif
-   char filename[ 80 ];
+   char filename[ MAX_PATH ];
    RTLMAP RTLMap;
 
-   GetMapFileName( &filename[ 0 ] );
+   GetMapFileName( filename );
    CheckRTLVersion( filename );
    filehandle = SafeOpenRead( filename );
 

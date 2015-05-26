@@ -5196,7 +5196,7 @@ boolean LoadTheGame (int num, gamestorage_t * game)
 	int    checksum;
 	int    savedchecksum;
 	int    i;
-   word   mapcrc;
+	unsigned   mapcrc;
         int myticcount;
 
 	if (num>15 || num<0)
