@@ -95,11 +95,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <PackageCertificateKeyFile>Rott94.Windows_StoreKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateKeyFile>Rott94.Windows_TemporaryKey.pfx</PackageCertificateKeyFile>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxBundlePlatforms>x86|arm</AppxBundlePlatforms>
     <AppxBundle>Auto</AppxBundle>
-    <PackageCertificateThumbprint>9F909D3D0333234C90E55D1F0C055D5FB5610123</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>DA29381F9F937D14FBBA5893DBE045F8DA235CD4</PackageCertificateThumbprint>
   </PropertyGroup>
   <Import Project="..\Rott94.Shared\Rott94.Shared.vcxitems" Label="Shared" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -206,8 +206,6 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <None Include="Rott94.Windows_StoreKey.pfx" />
-    <None Include="Rott94.Windows_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\android\jni\SDL\VisualC-WinRT\WinRT81_VS2013\SDL-WinRT81.vcxproj">
@@ -219,6 +217,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Package.StoreAssociation.xml" />
+    <None Include="Rott94.Windows_TemporaryKey.pfx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

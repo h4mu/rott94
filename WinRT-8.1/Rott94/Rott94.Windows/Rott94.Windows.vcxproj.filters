@@ -28,8 +28,7 @@
     <AppxManifest Include="Package.appxmanifest" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Rott94.Windows_TemporaryKey.pfx" />
     <None Include="Package.StoreAssociation.xml" />
-    <None Include="Rott94.Windows_StoreKey.pfx" />
+    <None Include="Rott94.Windows_TemporaryKey.pfx" />
   </ItemGroup>
 </Project>
