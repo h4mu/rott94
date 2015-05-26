@@ -122,6 +122,7 @@
     <AppxBundlePlatforms>arm</AppxBundlePlatforms>
   </PropertyGroup>
   <ItemGroup>
+    <Image Include="..\..\..\assets\buttons.bmp" />
     <Image Include="Assets\Logo.scale-240.png" />
     <Image Include="Assets\SmallLogo.scale-240.png" />
     <Image Include="Assets\SplashScreen.scale-240.png" />

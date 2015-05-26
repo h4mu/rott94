@@ -31,4 +31,9 @@
     <None Include="Package.StoreAssociation.xml" />
     <None Include="Rott94.Windows_TemporaryKey.pfx" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\assets\buttons.bmp">
+      <Filter>Assets</Filter>
+    </Image>
+  </ItemGroup>
 </Project>
