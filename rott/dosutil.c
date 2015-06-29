@@ -39,6 +39,7 @@ long filelength(int handle)
 	return buf.st_size;
 }
 
+#ifndef __EMSCRIPTEN__
 char *strlwr(char *s)
 {
 	char *p = s;
@@ -62,6 +63,7 @@ char *strupr(char *s)
 	
 	return s;
 }
+#endif
 	
 char *itoa(int value, char *string, int radix)
 {

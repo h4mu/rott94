@@ -348,11 +348,13 @@
     <Language Code="zu-za" InMinimumRequirementSet="true" />
   </SupportedLocales>
   <ProductReservedInfo>
-    <MainPackageIdentityName>58129h4mu.Rott94</MainPackageIdentityName>
+    <MainPackageIdentityName>58129h4mu.Rott94Shareware</MainPackageIdentityName>
     <ReservedNames>
-      <ReservedName>Rott94</ReservedName>
+      <ReservedName>Rott94 Shareware</ReservedName>
     </ReservedNames>
   </ProductReservedInfo>
-  <AccountPackageIdentityNames />
-  <PackageInfoList LandingUrl="https://appdev.microsoft.com:443/StorePortals/Developer/Catalog/ReleaseAnchor/7f4984aa-b461-4221-9a62-19742bd98bc8" />
+  <AccountPackageIdentityNames>
+    <MainPackageIdentityName>58129h4mu.Rott94</MainPackageIdentityName>
+  </AccountPackageIdentityNames>
+  <PackageInfoList LandingUrl="https://appdev.microsoft.com:443/StorePortals/Developer/Catalog/ReleaseAnchor/cdd84f75-fb22-4245-9a86-137a0e554cfa" />
 </StoreAssociation>

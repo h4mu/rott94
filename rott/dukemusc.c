@@ -34,7 +34,11 @@
 #endif
 
 #include "SDL.h"
-#include "SDL_mixer.h"
+#ifdef __EMSCRIPTEN__
+#	include <SDL/SDL_mixer.h>
+#else
+#	include "SDL_mixer.h"
+#endif
 #ifdef ROTT
 #include "rt_def.h"      // ROTT music hack
 #include "rt_cfg.h"      // ROTT music hack

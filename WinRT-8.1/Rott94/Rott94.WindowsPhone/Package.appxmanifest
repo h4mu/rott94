@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest" xmlns:m3="http://schemas.microsoft.com/appx/2014/manifest" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest">
-  <Identity Name="58129h4mu.Rott94" Publisher="CN=63D1F155-8622-4CF4-AE59-89AF957FD7A2" Version="1.1.0.6" />
-  <mp:PhoneIdentity PhoneProductId="bdb0eb5a-22be-4708-9e6d-22e279b91e29" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
+  <Identity Name="58129h4mu.Rott94Shareware" Publisher="CN=63D1F155-8622-4CF4-AE59-89AF957FD7A2" Version="1.1.0.0" />
+  <mp:PhoneIdentity PhoneProductId="b37b3daa-2fdb-4470-afac-1fe1bf85d532" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
-    <DisplayName>Rott94</DisplayName>
+    <DisplayName>Rott94 Shareware</DisplayName>
     <PublisherDisplayName>h4mu</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -16,7 +16,7 @@
   </Resources>
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="Rott94_WindowsPhone.App">
-      <m3:VisualElements DisplayName="Rott94" Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\SmallLogo.png" Description="Windows Phone source port of the game classic that is Rise of the Triad: The Hunt Begins ." ForegroundText="light" BackgroundColor="transparent">
+      <m3:VisualElements DisplayName="Rott94 Shareware" Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\SmallLogo.png" Description="Windows Phone source port of the game classic that is Rise of the Triad: The Hunt Begins ." ForegroundText="light" BackgroundColor="transparent">
         <m3:DefaultTile Wide310x150Logo="Assets\WideLogo.png" Square71x71Logo="Assets\Square71x71Logo.png">
         </m3:DefaultTile>
         <m3:SplashScreen Image="Assets\SplashScreen.png" />
