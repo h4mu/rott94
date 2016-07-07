@@ -39,7 +39,7 @@ will be placed in /opt/rpi-tools
 
 You'll also need a Rasbian binary image.
 Get it from: http://downloads.raspberrypi.org/raspbian_latest 
-After unzipping, you'll get file with a name like: <date>-wheezy-raspbian.img
+After unzipping, you'll get file with a name like: "<date>-wheezy-raspbian.img"
 Let's assume the sysroot will be built in /opt/rpi-sysroot.
 
     export SYSROOT=/opt/rpi-sysroot
@@ -74,7 +74,7 @@ The final step is compiling SDL itself.
     export CC="/opt/rpi-tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin/arm-linux-gnueabihf-gcc --sysroot=$SYSROOT -I$SYSROOT/opt/vc/include -I$SYSROOT/usr/include -I$SYSROOT/opt/vc/include/interface/vcos/pthreads -I$SYSROOT/opt/vc/include/interface/vmcs_host/linux"
     cd <SDL SOURCE>
     mkdir -p build;cd build
-    ../configure --with-sysroot=$SYSROOT --host=arm-raspberry-linux-gnueabihf --prefix=$PWD/rpi-sdl2-installed --disable-pulseaudio --disable-esd
+    LDFLAGS="-L$SYSROOT/opt/vc/lib" ../configure --with-sysroot=$SYSROOT --host=arm-raspberry-linux-gnueabihf --prefix=$PWD/rpi-sdl2-installed --disable-pulseaudio --disable-esd
     make
     make install
 

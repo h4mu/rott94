@@ -14,6 +14,7 @@ TARGETS = \
 	testatomic$(EXE) \
 	testaudioinfo$(EXE) \
 	testautomation$(EXE) \
+	testbounds$(EXE) \
 	testdraw2$(EXE) \
 	testdrawchessboard$(EXE) \
 	testdropfile$(EXE) \
@@ -60,6 +61,8 @@ TARGETS = \
 	torturethread$(EXE) \
 	testrendercopyex$(EXE) \
 	testmessage$(EXE) \
+	testdisplayinfo$(EXE) \
+	testqsort$(EXE) \
 	controllermap$(EXE) \
 	
 all: Makefile $(TARGETS)
@@ -264,6 +267,15 @@ testrendercopyex$(EXE): $(srcdir)/testrendercopyex.c
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) @MATHLIB@
 
 testmessage$(EXE): $(srcdir)/testmessage.c
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+
+testdisplayinfo$(EXE): $(srcdir)/testdisplayinfo.c
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+
+testqsort$(EXE): $(srcdir)/testqsort.c
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+
+testbounds$(EXE): $(srcdir)/testbounds.c
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 
 controllermap$(EXE): $(srcdir)/controllermap.c

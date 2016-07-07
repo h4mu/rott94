@@ -17,13 +17,17 @@ process:
 
 You can also build SDL as a Universal library (a single binary for both
 32-bit and 64-bit Intel architectures), on Mac OS X 10.7 and newer, by using
-the fatbuild.sh script in build-scripts:
-	sh build-scripts/fatbuild.sh
-	sudo build-scripts/fatbuild.sh install
+the gcc-fat.sh script in build-scripts:
+
+    mkdir mybuild
+    cd mybuild
+    CC=$PWD/../build-scripts/gcc-fat.sh CXX=$PWD/../build-scripts/g++fat.sh ../configure
+	make
+	sudo make install
+
 This script builds SDL with 10.5 ABI compatibility on i386 and 10.6
 ABI compatibility on x86_64 architectures.  For best compatibility you
-should compile your application the same way.  A script which wraps
-gcc to make this easy is provided in test/gcc-fat.sh
+should compile your application the same way.
 
 Please note that building SDL requires at least Xcode 4.6 and the 10.7 SDK
 (even if you target back to 10.5 systems). PowerPC support for Mac OS X has
@@ -92,7 +96,7 @@ APP_NAME_bundle: EXE_NAME
 You should replace EXE_NAME with the name of the executable. APP_NAME is what
 will be visible to the user in the Finder. Usually it will be the same
 as EXE_NAME but capitalized. E.g. if EXE_NAME is "testgame" then APP_NAME 
-usually is "TestGame". You might also want to use @PACKAGE@ to use the package
+usually is "TestGame". You might also want to use `@PACKAGE@` to use the package
 name as specified in your configure.in file.
 
 If your project builds more than one application, you will have to do a bit
@@ -223,4 +227,4 @@ following locations:
         Functionality may be added in the future to help this.
 
 
-Known bugs are listed in the file "BUGS"
+Known bugs are listed in the file "BUGS.txt".
