@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2016 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -35,13 +35,13 @@
 #include "SDL_error.h"
 #include "SDL_assert.h"
 #include "SDL_events.h"
-#include "SDL_thread.h"
 #include "SDL_timer.h"
 #include "SDL_mutex.h"
 #include "SDL_events.h"
 #include "SDL_hints.h"
 #include "SDL_joystick.h"
 #include "../SDL_sysjoystick.h"
+#include "../../thread/SDL_systhread.h"
 #if !SDL_EVENTS_DISABLED
 #include "../../events/SDL_events_c.h"
 #endif
@@ -301,18 +301,9 @@ SDL_SYS_JoystickInit(void)
     SDL_SYS_JoystickDetect();
 
     if (!s_threadJoystick) {
-        s_bJoystickThreadQuit = SDL_FALSE;
         /* spin up the thread to detect hotplug of devices */
-#if defined(__WIN32__) && !defined(HAVE_LIBC)
-#undef SDL_CreateThread
-#if SDL_DYNAMIC_API
-        s_threadJoystick= SDL_CreateThread_REAL(SDL_JoystickThread, "SDL_joystick", NULL, NULL, NULL);
-#else
-        s_threadJoystick= SDL_CreateThread(SDL_JoystickThread, "SDL_joystick", NULL, NULL, NULL);
-#endif
-#else
-        s_threadJoystick = SDL_CreateThread(SDL_JoystickThread, "SDL_joystick", NULL);
-#endif
+        s_bJoystickThreadQuit = SDL_FALSE;
+        s_threadJoystick = SDL_CreateThreadInternal(SDL_JoystickThread, "SDL_joystick", 64 * 1024, NULL);
     }
     return SDL_SYS_NumJoysticks();
 }
@@ -460,7 +451,6 @@ SDL_SYS_JoystickOpen(SDL_Joystick * joystick, int device_index)
 
     /* allocate memory for system specific hardware data */
     joystick->instance_id = joystickdevice->nInstanceID;
-    joystick->closed = SDL_FALSE;
     joystick->hwdata =
         (struct joystick_hwdata *) SDL_malloc(sizeof(struct joystick_hwdata));
     if (joystick->hwdata == NULL) {
@@ -480,13 +470,13 @@ SDL_SYS_JoystickOpen(SDL_Joystick * joystick, int device_index)
 SDL_bool 
 SDL_SYS_JoystickAttached(SDL_Joystick * joystick)
 {
-    return !joystick->closed && !joystick->hwdata->removed;
+    return joystick->hwdata && !joystick->hwdata->removed;
 }
 
 void
 SDL_SYS_JoystickUpdate(SDL_Joystick * joystick)
 {
-    if (joystick->closed || !joystick->hwdata) {
+    if (!joystick->hwdata || joystick->hwdata->removed) {
         return;
     }
 
@@ -497,8 +487,7 @@ SDL_SYS_JoystickUpdate(SDL_Joystick * joystick)
     }
 
     if (joystick->hwdata->removed) {
-        joystick->closed = SDL_TRUE;
-        joystick->uncentered = SDL_TRUE;
+        joystick->force_recentering = SDL_TRUE;
     }
 }
 
@@ -512,10 +501,7 @@ SDL_SYS_JoystickClose(SDL_Joystick * joystick)
         SDL_DINPUT_JoystickClose(joystick);
     }
 
-    /* free system specific hardware data */
     SDL_free(joystick->hwdata);
-
-    joystick->closed = SDL_TRUE;
 }
 
 /* Function to perform any system-specific joystick related cleanup */

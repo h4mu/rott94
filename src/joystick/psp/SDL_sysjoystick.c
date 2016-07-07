@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2016 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -34,9 +34,9 @@
 
 #include "SDL_events.h"
 #include "SDL_error.h"
-#include "SDL_thread.h"
 #include "SDL_mutex.h"
 #include "SDL_timer.h"
+#include "../../thread/SDL_systhread.h"
 
 /* Current pad state */
 static SceCtrlData pad = { .Lx = 0, .Ly = 0, .Buttons = 0 };
@@ -116,7 +116,7 @@ int SDL_SYS_JoystickInit(void)
         return SDL_SetError("Can't create input semaphore");
     }
     running = 1;
-    if((thread = SDL_CreateThread(JoystickUpdate, "JoySitckThread",NULL)) == NULL) {
+    if((thread = SDL_CreateThreadInternal(JoystickUpdate, "JoystickThread", 4096, NULL)) == NULL) {
         return SDL_SetError("Can't create input thread");
     }
 
@@ -177,7 +177,7 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick, int device_index)
     return 0;
 }
 
-/* Function to determine is this joystick is attached to the system right now */
+/* Function to determine if this joystick is attached to the system right now */
 SDL_bool SDL_SYS_JoystickAttached(SDL_Joystick *joystick)
 {
     return SDL_TRUE;
@@ -233,7 +233,6 @@ void SDL_SYS_JoystickUpdate(SDL_Joystick *joystick)
 /* Function to close a joystick after use */
 void SDL_SYS_JoystickClose(SDL_Joystick *joystick)
 {
-    /* Do nothing. */
 }
 
 /* Function to perform any system-specific joystick related cleanup */

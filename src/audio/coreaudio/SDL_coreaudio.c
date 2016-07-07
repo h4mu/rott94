@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2016 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -406,13 +406,7 @@ COREAUDIO_CloseDevice(_THIS)
             AudioUnitSetProperty(this->hidden->audioUnit,
                                  kAudioUnitProperty_SetRenderCallback,
                                  scope, bus, &callback, sizeof(callback));
-
-            #if MACOSX_COREAUDIO
-            CloseComponent(this->hidden->audioUnit);
-            #else
             AudioComponentInstanceDispose(this->hidden->audioUnit);
-            #endif
-
             this->hidden->audioUnitOpened = 0;
         }
         SDL_free(this->hidden->buffer);
@@ -482,13 +476,8 @@ prepare_audiounit(_THIS, void *handle, int iscapture,
 {
     OSStatus result = noErr;
     AURenderCallbackStruct callback;
-#if MACOSX_COREAUDIO
-    ComponentDescription desc;
-    Component comp = NULL;
-#else
     AudioComponentDescription desc;
     AudioComponent comp = NULL;
-#endif
     const AudioUnitElement output_bus = 0;
     const AudioUnitElement input_bus = 1;
     const AudioUnitElement bus = ((iscapture) ? input_bus : output_bus);
@@ -507,11 +496,10 @@ prepare_audiounit(_THIS, void *handle, int iscapture,
 
 #if MACOSX_COREAUDIO
     desc.componentSubType = kAudioUnitSubType_DefaultOutput;
-    comp = FindNextComponent(NULL, &desc);
 #else
     desc.componentSubType = kAudioUnitSubType_RemoteIO;
-    comp = AudioComponentFindNext(NULL, &desc);
 #endif
+    comp = AudioComponentFindNext(NULL, &desc);
 
     if (comp == NULL) {
         SDL_SetError("Couldn't find requested CoreAudio component");
@@ -519,17 +507,8 @@ prepare_audiounit(_THIS, void *handle, int iscapture,
     }
 
     /* Open & initialize the audio unit */
-#if MACOSX_COREAUDIO
-    result = OpenAComponent(comp, &this->hidden->audioUnit);
-    CHECK_RESULT("OpenAComponent");
-#else
-    /*
-       AudioComponentInstanceNew only available on iPhone OS 2.0 and Mac OS X 10.6
-       We can't use OpenAComponent on iPhone because it is not present
-     */
     result = AudioComponentInstanceNew(comp, &this->hidden->audioUnit);
     CHECK_RESULT("AudioComponentInstanceNew");
-#endif
 
     this->hidden->audioUnitOpened = 1;
 

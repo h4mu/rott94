@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2016 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -27,6 +27,7 @@
 #include "SDL_audio_c.h"
 #include "SDL_audiomem.h"
 #include "SDL_sysaudio.h"
+#include "../thread/SDL_systhread.h"
 
 #define _THIS SDL_AudioDevice *_this
 
@@ -589,10 +590,6 @@ SDL_ClearQueuedAudio(SDL_AudioDeviceID devid)
     free_audio_queue(buffer);
 }
 
-
-#if defined(__ANDROID__)
-#include <android/log.h>
-#endif
 
 /* The general mixing thread function */
 int SDLCALL
@@ -1195,19 +1192,15 @@ open_audio_device(const char *devname, int iscapture,
     /* Start the audio thread if necessary */
     if (!current_audio.impl.ProvidesOwnCallbackThread) {
         /* Start the audio thread */
+
+        /* !!! FIXME: we don't force the audio thread stack size here because it calls into user code, but maybe we should? */
+        /* buffer queueing callback only needs a few bytes, so make the stack tiny. */
         char name[64];
+        const size_t stacksize = (device->spec.callback == SDL_BufferQueueDrainCallback) ? 64 * 1024 : 0;
+
         SDL_snprintf(name, sizeof (name), "SDLAudioDev%d", (int) device->id);
-/* !!! FIXME: this is nasty. */
-#if defined(__WIN32__) && !defined(HAVE_LIBC)
-#undef SDL_CreateThread
-#if SDL_DYNAMIC_API
-        device->thread = SDL_CreateThread_REAL(SDL_RunAudio, name, device, NULL, NULL);
-#else
-        device->thread = SDL_CreateThread(SDL_RunAudio, name, device, NULL, NULL);
-#endif
-#else
-        device->thread = SDL_CreateThread(SDL_RunAudio, name, device);
-#endif
+        device->thread = SDL_CreateThreadInternal(SDL_RunAudio, name, stacksize, device);
+
         if (device->thread == NULL) {
             SDL_CloseAudioDevice(device->id);
             SDL_SetError("Couldn't create audio thread");

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2016 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -98,11 +98,16 @@ typedef struct _NSWindow NSWindow;
 typedef struct _UIWindow UIWindow;
 typedef struct _UIViewController UIViewController;
 #endif
+typedef Uint32 GLuint;
 #endif
 
 #if defined(SDL_VIDEO_DRIVER_ANDROID)
 typedef struct ANativeWindow ANativeWindow;
 typedef void *EGLSurface;
+#endif
+
+#if defined(SDL_VIDEO_DRIVER_VIVANTE)
+#include "SDL_egl.h"
 #endif
 
 /**
@@ -119,7 +124,8 @@ typedef enum
     SDL_SYSWM_WAYLAND,
     SDL_SYSWM_MIR,
     SDL_SYSWM_WINRT,
-    SDL_SYSWM_ANDROID
+    SDL_SYSWM_ANDROID,
+    SDL_SYSWM_VIVANTE
 } SDL_SYSWM_TYPE;
 
 /**
@@ -162,8 +168,16 @@ struct SDL_SysWMmsg
 #if defined(SDL_VIDEO_DRIVER_UIKIT)
         struct
         {
+            int dummy;
             /* No UIKit window events yet */
         } uikit;
+#endif
+#if defined(SDL_VIDEO_DRIVER_VIVANTE)
+        struct
+        {
+            int dummy;
+            /* No Vivante window events yet */
+        } vivante;
 #endif
         /* Can't have an empty union */
         int dummy;
@@ -186,6 +200,7 @@ struct SDL_SysWMinfo
         struct
         {
             HWND window;                /**< The window handle */
+            HDC hdc;                    /**< The window device context */
         } win;
 #endif
 #if defined(SDL_VIDEO_DRIVER_WINRT)
@@ -227,6 +242,9 @@ struct SDL_SysWMinfo
 #else
             UIWindow *window;                     /* The UIKit window */
 #endif
+            GLuint framebuffer; /* The GL view's Framebuffer Object. It must be bound when rendering to the screen using GL. */
+            GLuint colorbuffer; /* The GL view's color Renderbuffer Object. It must be bound when SDL_GL_SwapWindow is called. */
+            GLuint resolveFramebuffer; /* The Framebuffer Object which holds the resolve color Renderbuffer, when MSAA is used. */
         } uikit;
 #endif
 #if defined(SDL_VIDEO_DRIVER_WAYLAND)
@@ -251,6 +269,14 @@ struct SDL_SysWMinfo
             ANativeWindow *window;
             EGLSurface surface;
         } android;
+#endif
+
+#if defined(SDL_VIDEO_DRIVER_VIVANTE)
+        struct
+        {
+            EGLNativeDisplayType display;
+            EGLNativeWindowType window;
+        } vivante;
 #endif
 
         /* Can't have an empty union */
