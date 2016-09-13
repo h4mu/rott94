@@ -10,7 +10,7 @@ This is a source port of Apogee's DOS FPS game [Rise of the Triad](http://en.wik
 
 ## Installing
 1. Enable unknown sources (and optionally debug connections for ADB support)
-2. Copy APK file to device
+2. Copy APK file to device (APKs can be downloaded from https://github.com/h4mu/rott94/releases)
 3. Open package and install it
 4. Copy game files to /sdcard/Android/data/io.github.h4mu.andrott/files/ (e.g. by using "adb push")
 
