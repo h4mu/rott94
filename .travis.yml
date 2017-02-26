@@ -13,7 +13,7 @@ before_install:
   - export ANDROID_NDK_HOME=$HOME/android-ndk-root
 script:
    - cd android
-   - $ANDROID_NDK_HOME/ndk-build
+   - $ANDROID_NDK_HOME/ndk-build APP_ABI="armeabi armeabi-v7a x86 mips x86_64 arm64-v8a"
    - ant release
 #deploy:
 #  overwrite: true
