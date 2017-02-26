@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/h4mu/rott94.svg?branch=master)](https://travis-ci.org/h4mu/rott94)
 #Rott94
 
 ## About

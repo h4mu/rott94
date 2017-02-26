@@ -1,0 +1,23 @@
+language: android
+#sudo: true
+android:
+  components:
+    - tools
+    - platform-tools
+    - build-tools-25.0.2
+    - android-12
+before_install:
+  - git clone https://github.com/urho3d/android-ndk.git $HOME/android-ndk-root
+  - export ANDROID_NDK_HOME=$HOME/android-ndk-root
+script:
+   - cd android
+   - $ANDROID_NDK_HOME/ndk-build
+   - ant release
+#deploy:
+#  overwrite: true
+#  provider: releases
+#  api_key: "GITHUB OAUTH TOKEN"
+#  file: android/bin/io.github.h4mu.andrott-release-unsigned.apk
+#  skip_cleanup: true
+#  on:
+#    tags: true
