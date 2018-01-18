@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2016 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2018 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -34,16 +34,23 @@ extern "C" {
 
 /* Interface from the SDL library into the Android Java activity */
 extern void Android_JNI_SetActivityTitle(const char *title);
+extern void Android_JNI_SetOrientation(int w, int h, int resizable, const char *hint);
+
 extern SDL_bool Android_JNI_GetAccelerometerValues(float values[3]);
 extern void Android_JNI_ShowTextInput(SDL_Rect *inputRect);
 extern void Android_JNI_HideTextInput(void);
+extern SDL_bool Android_JNI_IsScreenKeyboardShown(void);
 extern ANativeWindow* Android_JNI_GetNativeWindow(void);
 
+extern int Android_JNI_GetDisplayDPI(float *ddpi, float *xdpi, float *ydpi);
+
 /* Audio support */
-extern int Android_JNI_OpenAudioDevice(int sampleRate, int is16Bit, int channelCount, int desiredBufferFrames);
+extern int Android_JNI_OpenAudioDevice(int iscapture, int sampleRate, int is16Bit, int channelCount, int desiredBufferFrames);
 extern void* Android_JNI_GetAudioBuffer(void);
 extern void Android_JNI_WriteAudioBuffer(void);
-extern void Android_JNI_CloseAudioDevice(void);
+extern int Android_JNI_CaptureAudioBuffer(void *buffer, int buflen);
+extern void Android_JNI_FlushCapturedAudio(void);
+extern void Android_JNI_CloseAudioDevice(const int iscapture);
 
 #include "SDL_rwops.h"
 
@@ -53,6 +60,9 @@ Sint64 Android_JNI_FileSeek(SDL_RWops* ctx, Sint64 offset, int whence);
 size_t Android_JNI_FileRead(SDL_RWops* ctx, void* buffer, size_t size, size_t maxnum);
 size_t Android_JNI_FileWrite(SDL_RWops* ctx, const void* buffer, size_t size, size_t num);
 int Android_JNI_FileClose(SDL_RWops* ctx);
+
+/* Environment support */
+void Android_JNI_GetManifestEnvironmentVariables(void);
 
 /* Clipboard support */
 int Android_JNI_SetClipboardText(const char* text);
@@ -65,20 +75,31 @@ int Android_JNI_GetPowerInfo(int* plugged, int* charged, int* battery, int* seco
 /* Joystick support */
 void Android_JNI_PollInputDevices(void);
 
+/* Haptic support */
+void Android_JNI_PollHapticDevices(void);
+void Android_JNI_HapticRun(int device_id, int length);
+
 /* Video */
 void Android_JNI_SuspendScreenSaver(SDL_bool suspend);
 
 /* Touch support */
 int Android_JNI_GetTouchDeviceIds(int **ids);
+void Android_JNI_SetSeparateMouseAndTouch(SDL_bool new_value);
 
 /* Threads */
 #include <jni.h>
 JNIEnv *Android_JNI_GetEnv(void);
 int Android_JNI_SetupThread(void);
-jclass Android_JNI_GetActivityClass(void);
 
 /* Generic messages */
 int Android_JNI_SendMessage(int command, int param);
+
+/* Init */
+JNIEXPORT void JNICALL SDL_Android_Init(JNIEnv* mEnv, jclass cls);
+
+/* MessageBox */
+#include "SDL_messagebox.h"
+int Android_JNI_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

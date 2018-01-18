@@ -37,8 +37,8 @@
     <ClCompile Include="..\..\src\audio\SDL_audiotypecvt.c" />
     <ClCompile Include="..\..\src\audio\SDL_mixer.c" />
     <ClCompile Include="..\..\src\audio\SDL_wave.c" />
-    <ClCompile Include="..\..\src\audio\xaudio2\SDL_xaudio2.c" />
-    <ClCompile Include="..\..\src\audio\xaudio2\SDL_xaudio2_winrthelpers.cpp">
+    <ClCompile Include="..\..\src\audio\wasapi\SDL_wasapi.c" />
+    <ClCompile Include="..\..\src\audio\wasapi\SDL_wasapi_winrt.cpp">
       <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</CompileAsWinRT>
       <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</CompileAsWinRT>
       <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsWinRT>
@@ -114,11 +114,11 @@
       <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</CompileAsWinRT>
       <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</CompileAsWinRT>
     </ClCompile>
+    <ClCompile Include="..\..\src\render\direct3d11\SDL_shaders_d3d11.c" />
     <ClCompile Include="..\..\src\render\opengles2\SDL_render_gles2.c" />
     <ClCompile Include="..\..\src\render\opengles2\SDL_shaders_gles2.c" />
     <ClCompile Include="..\..\src\render\SDL_d3dmath.c" />
     <ClCompile Include="..\..\src\render\SDL_render.c" />
-    <ClCompile Include="..\..\src\render\SDL_yuv_mmx.c" />
     <ClCompile Include="..\..\src\render\SDL_yuv_sw.c" />
     <ClCompile Include="..\..\src\render\software\SDL_blendfillrect.c" />
     <ClCompile Include="..\..\src\render\software\SDL_blendline.c" />
@@ -129,6 +129,7 @@
     <ClCompile Include="..\..\src\render\software\SDL_rotate.c" />
     <ClCompile Include="..\..\src\SDL.c" />
     <ClCompile Include="..\..\src\SDL_assert.c" />
+    <ClCompile Include="..\..\src\SDL_dataqueue.c" />
     <ClCompile Include="..\..\src\SDL_error.c" />
     <ClCompile Include="..\..\src\SDL_hints.c" />
     <ClCompile Include="..\..\src\SDL_log.c" />
@@ -167,11 +168,20 @@
     <ClCompile Include="..\..\src\video\SDL_stretch.c" />
     <ClCompile Include="..\..\src\video\SDL_surface.c" />
     <ClCompile Include="..\..\src\video\SDL_video.c" />
+    <ClCompile Include="..\..\src\video\SDL_yuv.c" />
     <ClCompile Include="..\..\src\video\winrt\SDL_winrtevents.cpp">
       <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</CompileAsWinRT>
       <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</CompileAsWinRT>
       <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsWinRT>
       <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="..\..\src\video\winrt\SDL_winrtgamebar.cpp">
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</CompileAsWinRT>
       <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</CompileAsWinRT>
       <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</CompileAsWinRT>
     </ClCompile>
@@ -223,6 +233,7 @@
       <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</CompileAsWinRT>
       <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</CompileAsWinRT>
     </ClCompile>
+    <ClCompile Include="..\..\src\video\yuv2rgb\yuv_rgb.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\begin_code.h" />
@@ -279,11 +290,10 @@
     <ClInclude Include="..\..\src\audio\disk\SDL_diskaudio.h" />
     <ClInclude Include="..\..\src\audio\dummy\SDL_dummyaudio.h" />
     <ClInclude Include="..\..\src\audio\SDL_audiodev_c.h" />
-    <ClInclude Include="..\..\src\audio\SDL_audiomem.h" />
     <ClInclude Include="..\..\src\audio\SDL_audio_c.h" />
     <ClInclude Include="..\..\src\audio\SDL_sysaudio.h" />
     <ClInclude Include="..\..\src\audio\SDL_wave.h" />
-    <ClInclude Include="..\..\src\audio\xaudio2\SDL_xaudio2_winrthelpers.h" />
+    <ClInclude Include="..\..\src\audio\wasapi\SDL_wasapi.h" />
     <ClInclude Include="..\..\src\core\windows\SDL_directx.h" />
     <ClInclude Include="..\..\src\core\windows\SDL_windows.h" />
     <ClInclude Include="..\..\src\core\windows\SDL_xinput.h" />
@@ -315,7 +325,7 @@
     <ClInclude Include="..\..\src\joystick\windows\SDL_windowsjoystick_c.h" />
     <ClInclude Include="..\..\src\joystick\windows\SDL_xinputjoystick_c.h" />
     <ClInclude Include="..\..\src\render\direct3d11\SDL_render_winrt.h" />
-    <ClInclude Include="..\..\src\render\mmx.h" />
+    <ClInclude Include="..\..\src\render\direct3d11\SDL_shaders_d3d11.h" />
     <ClInclude Include="..\..\src\render\opengles2\SDL_gles2funcs.h" />
     <ClInclude Include="..\..\src\render\opengles2\SDL_shaders_gles2.h" />
     <ClInclude Include="..\..\src\render\SDL_d3dmath.h" />
@@ -330,6 +340,7 @@
     <ClInclude Include="..\..\src\render\software\SDL_render_sw_c.h" />
     <ClInclude Include="..\..\src\render\software\SDL_rotate.h" />
     <ClInclude Include="..\..\src\SDL_assert_c.h" />
+    <ClInclude Include="..\..\src\SDL_dataqueue.h" />
     <ClInclude Include="..\..\src\SDL_error_c.h" />
     <ClInclude Include="..\..\src\SDL_fatal.h" />
     <ClInclude Include="..\..\src\SDL_hints_c.h" />
@@ -352,11 +363,14 @@
     <ClInclude Include="..\..\src\video\SDL_RLEaccel_c.h" />
     <ClInclude Include="..\..\src\video\SDL_shape_internals.h" />
     <ClInclude Include="..\..\src\video\SDL_sysvideo.h" />
+    <ClInclude Include="..\..\src\video\SDL_yuv_c.h" />
     <ClInclude Include="..\..\src\video\winrt\SDL_winrtevents_c.h" />
+    <ClInclude Include="..\..\src\video\winrt\SDL_winrtgamebar_cpp.h" />
     <ClInclude Include="..\..\src\video\winrt\SDL_winrtmessagebox.h" />
     <ClInclude Include="..\..\src\video\winrt\SDL_winrtmouse_c.h" />
     <ClInclude Include="..\..\src\video\winrt\SDL_winrtopengles.h" />
     <ClInclude Include="..\..\src\video\winrt\SDL_winrtvideo_cpp.h" />
+    <ClInclude Include="..\..\src\video\yuv2rgb\yuv_rgb.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{aeaea3a2-d4e6-45b1-8ec6-53d84287fc14}</ProjectGuid>
@@ -469,7 +483,7 @@
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <AdditionalDependencies>xinput.lib;xaudio2.lib;d2d1.lib;d3d11.lib;dxgi.lib;ole32.lib;windowscodecs.lib;dwrite.lib;kernel32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>xinput.lib;d2d1.lib;d3d11.lib;dxgi.lib;ole32.lib;windowscodecs.lib;dwrite.lib;kernel32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -483,7 +497,7 @@
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <AdditionalDependencies>xinput.lib;xaudio2.lib;d2d1.lib;d3d11.lib;dxgi.lib;ole32.lib;windowscodecs.lib;dwrite.lib;kernel32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>xinput.lib;d2d1.lib;d3d11.lib;dxgi.lib;ole32.lib;windowscodecs.lib;dwrite.lib;kernel32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|arm'">
@@ -497,7 +511,7 @@
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <AdditionalDependencies>xinput.lib;xaudio2.lib;d2d1.lib;d3d11.lib;dxgi.lib;ole32.lib;windowscodecs.lib;dwrite.lib;kernel32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>xinput.lib;d2d1.lib;d3d11.lib;dxgi.lib;ole32.lib;windowscodecs.lib;dwrite.lib;kernel32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|arm'">
@@ -511,7 +525,7 @@
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <AdditionalDependencies>xinput.lib;xaudio2.lib;d2d1.lib;d3d11.lib;dxgi.lib;ole32.lib;windowscodecs.lib;dwrite.lib;kernel32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>xinput.lib;d2d1.lib;d3d11.lib;dxgi.lib;ole32.lib;windowscodecs.lib;dwrite.lib;kernel32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -525,7 +539,7 @@
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <AdditionalDependencies>xinput.lib;xaudio2.lib;d2d1.lib;d3d11.lib;dxgi.lib;ole32.lib;windowscodecs.lib;dwrite.lib;kernel32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>xinput.lib;d2d1.lib;d3d11.lib;dxgi.lib;ole32.lib;windowscodecs.lib;dwrite.lib;kernel32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -539,7 +553,7 @@
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <AdditionalDependencies>xinput.lib;xaudio2.lib;d2d1.lib;d3d11.lib;dxgi.lib;ole32.lib;windowscodecs.lib;dwrite.lib;kernel32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>xinput.lib;d2d1.lib;d3d11.lib;dxgi.lib;ole32.lib;windowscodecs.lib;dwrite.lib;kernel32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
