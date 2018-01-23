@@ -59,7 +59,7 @@ public class ContentPrepareActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		if (isGameContentInstalled()) {
-			startActivity(new Intent(this, rottActivity.class));
+			startActivity(new Intent(this, rott94Activity.class));
 		} else {
 			if (isShareware()) {
 				new AlertDialog
@@ -137,7 +137,7 @@ public class ContentPrepareActivity extends Activity {
 				}
 				super.onPostExecute(result);
 				if (result) {
-					startActivity(new Intent(ContentPrepareActivity.this, rottActivity.class));
+					startActivity(new Intent(ContentPrepareActivity.this, rott94Activity.class));
 				} else {
 					finish();
 				}
