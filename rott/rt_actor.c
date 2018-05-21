@@ -1621,11 +1621,8 @@ void SpawnStand (classtype which, int tilex, int tiley, int dir, int ambush)
 
 
  #if 0
- #if (SUPERROTT == 1)
-
+ if (gamestate.Product == ROTT_SUPERCD)
    ConsiderAlternateActor(new,which);
-
- #endif
  #endif
 
    StandardEnemyInit(new,dir);
@@ -1671,9 +1668,8 @@ void SpawnPatrol (classtype which, int tilex, int tiley, int dir)
 {statetype *temp;
  int path=PATH;
 #if 0
-#if (SUPERROTT == 1)
+if (gamestate.Product == ROTT_SUPERCD)
  char *altstartlabel;
-#endif
 #endif
 
 
@@ -1711,9 +1707,8 @@ void SpawnPatrol (classtype which, int tilex, int tiley, int dir)
 
 
    #if 0
-   #if (SUPERROTT == 1)
+   if (gamestate.Product == ROTT_SUPERCD)
    ConsiderAlternateActor(new,which);
-   #endif
    #endif
 
    StandardEnemyInit(new,dir);
