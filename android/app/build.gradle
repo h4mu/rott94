@@ -32,6 +32,33 @@ android {
     lintOptions {
         abortOnError false
     }
+    flavorDimensions "version"
+    productFlavors {
+        shareware {
+            dimension "version"
+            applicationIdSuffix ".shareware"
+            versionNameSuffix "-shareware"
+            externalNativeBuild.ndkBuild {
+                arguments  "SHAREWARE=1", "SUPERROTT=0", "SITELICENSE=0"
+            }
+        }
+        superrott {
+            dimension "version"
+            applicationIdSuffix ".superrott"
+            versionNameSuffix "-superrott"
+            externalNativeBuild.ndkBuild {
+                arguments  "SHAREWARE=0", "SUPERROTT=1", "SITELICENSE=0"
+            }
+        }
+        sitelicense {
+            dimension "version"
+            applicationIdSuffix ".sitelicense"
+            versionNameSuffix "-sitelicense"
+            externalNativeBuild.ndkBuild {
+                arguments  "SHAREWARE=0", "SUPERROTT=0", "SITELICENSE=1"
+            }
+        }
+    }
 }
 
 dependencies {
