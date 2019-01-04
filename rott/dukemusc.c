@@ -34,7 +34,11 @@
 #endif
 
 #include "SDL.h"
-#include "SDL_mixer.h"
+#ifdef __EMSCRIPTEN__
+#	include <SDL/SDL_mixer.h>
+#else
+#	include "SDL_mixer.h"
+#endif
 #ifdef ROTT
 #include "rt_def.h"      // ROTT music hack
 #include "rt_cfg.h"      // ROTT music hack
@@ -97,7 +101,8 @@ static void init_debugging(void)
     if (initialized_debugging)
         return;
 
-    envr = getenv(DUKESND_DEBUG);
+#ifndef __WINRT__
+	envr = getenv(DUKESND_DEBUG);
     if (envr != NULL)
     {
         if (strcmp(envr, "-") == 0)
@@ -110,6 +115,7 @@ static void init_debugging(void)
         else
             setbuf(debug_file, NULL);
     } // if
+#endif
 
     initialized_debugging = 1;
 } // init_debugging
@@ -404,7 +410,11 @@ void PlayMusic(char *_filename)
 int MUSIC_PlaySongROTT(unsigned char *song, int size, int loopflag)
 {
     char filename[MAX_PATH];
+#if USE_SDL
+    SDL_RWops* handle;
+#else
     int handle;
+#endif
     
     MUSIC_StopSong();
 
@@ -413,7 +423,11 @@ int MUSIC_PlaySongROTT(unsigned char *song, int size, int loopflag)
     handle = SafeOpenWrite(filename);
     
     SafeWrite(handle, song, size);
+#if USE_SDL
+    SDL_RWclose(handle);
+#else
     close(handle);
+#endif
     
     music_songdata = song;
 

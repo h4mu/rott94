@@ -63,7 +63,9 @@ void LoadScriptFile (char *filename)
 
 	size = LoadFile (filename, (void **)&scriptbuffer);
 
-	snprintf(scriptfilename, sizeof(scriptfilename), "%s", filename);
+	strncpy(scriptfilename, filename, sizeof(scriptfilename));
+	scriptfilename[sizeof(scriptfilename) - 1] = '\0';
+
 	script_p = scriptbuffer;
 	scriptend_p = script_p + size;
 	scriptline = 1;

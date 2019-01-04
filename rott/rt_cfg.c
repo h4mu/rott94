@@ -192,7 +192,11 @@ char CodeName[MAXCODENAMELENGTH];
 
 void ReadScores (void)
 {
+#if USE_SDL
+   SDL_RWops* file;
+#else
    int file;
+#endif
    char filename[ 128 ];
 
    GetPathFromEnvironment( filename, ApogeePath, ScoresName );
@@ -200,7 +204,11 @@ void ReadScores (void)
       {
       file = SafeOpenRead (filename);
       SafeRead (file, &Scores, sizeof (Scores));
+#if USE_SDL
+      SDL_RWclose(file);
+#else
       close(file);
+#endif
       }
    else
       gamestate.violence = 0;
@@ -1102,7 +1110,11 @@ void CheckVendor (void)
 //
 //******************************************************************************
 
+#if USE_SDL
+void WriteParameter (SDL_RWops* file, const char * s1, int val)
+#else
 void WriteParameter (int file, const char * s1, int val)
+#endif
 {
    char s[50];
 
@@ -1128,8 +1140,11 @@ void WriteParameter (int file, const char * s1, int val)
 // WriteParameterHex
 //
 //******************************************************************************
-
+#if USE_SDL
+void WriteParameterHex (SDL_RWops* file, const char * s1, int val)
+#else
 void WriteParameterHex (int file, const char * s1, int val)
+#endif
 {
    char s[50];
 
@@ -1161,13 +1176,21 @@ void WriteParameterHex (int file, const char * s1, int val)
 
 void WriteScores (void)
 {
+#if USE_SDL
+   SDL_RWops* file;
+#else
    int file;
+#endif
    char filename[ 128 ];
 
    GetPathFromEnvironment( filename, ApogeePath, ScoresName );
    file=SafeOpenWrite( filename );
    SafeWrite (file, &Scores, sizeof (Scores));
+#if USE_SDL
+   SDL_RWclose(file);
+#else
    close(file);
+#endif
 }
 
 
@@ -1183,13 +1206,25 @@ void WriteBattleConfig
    )
 
    {
+#if USE_SDL
+   SDL_RWops* file;
+#else
    int  file;
+#endif
    int  index;
    char filename[ 128 ];
    extern specials BattleSpecialsTimes;
 
    // Write Battle File
    GetPathFromEnvironment( filename, ApogeePath, BattleName );
+#if USE_SDL
+   file = SDL_RWFromFile(filename, "w+");
+
+   if ( file == NULL )
+      {
+      Error( "Error opening %s: %s", filename, SDL_GetError() );
+      }
+#else
    file = open( filename, O_RDWR | O_TEXT | O_CREAT | O_TRUNC,
       S_IREAD | S_IWRITE );
 
@@ -1197,6 +1232,7 @@ void WriteBattleConfig
       {
       Error( "Error opening %s: %s", filename, strerror( errno ) );
       }
+#endif
 
    // Write out BATTLECONFIG header
    SafeWriteString( file,
@@ -1523,7 +1559,11 @@ void WriteBattleConfig
          BATTLE_Options[ index ].RespawnTime );
       }
 
+#if USE_SDL
+   SDL_RWclose(file);
+#else
    close( file );
+#endif
    }
 
 #endif
@@ -1540,7 +1580,11 @@ void WriteSoundConfig
    )
 
    {
+#if USE_SDL
+   SDL_RWops* file;
+#else
    int file;
+#endif
    char filename[ 128 ];
 
    if ( !WriteSoundFile )
@@ -1549,11 +1593,18 @@ void WriteSoundConfig
       }
 
    GetPathFromEnvironment( filename, ApogeePath, SoundName );
+#if USE_SDL
+   file = SDL_RWFromFile ( filename, "w+");
+
+   if (file == NULL)
+      Error ("Error opening %s: %s", filename, SDL_GetError());
+#else
    file = open ( filename, O_RDWR | O_TEXT | O_CREAT | O_TRUNC,
       S_IREAD | S_IWRITE);
 
    if (file == -1)
       Error ("Error opening %s: %s", filename, strerror(errno));
+#endif
 
    // Write out ROTTSOUND header
 
@@ -1682,7 +1733,11 @@ void WriteSoundConfig
    WriteParameterHex(file, "SBEmu            ", SBSettings.Emu );
 #endif
 
+#if USE_SDL
+   SDL_RWclose(file);
+#else
    close (file);
+#endif
    }
 
 
@@ -1694,7 +1749,11 @@ void WriteSoundConfig
 
 void WriteConfig (void)
 {
+#if USE_SDL
+   SDL_RWops* file;
+#else
    int file;
+#endif
    char filename[ 128 ];
    char passwordtemp[50];
    static int inconfig = 0;
@@ -1718,11 +1777,18 @@ void WriteConfig (void)
    WriteBattleConfig();
 
    GetPathFromEnvironment( filename, ApogeePath, ConfigName );
+#if USE_SDL
+   file = SDL_RWFromFile( filename,"w+");
+
+   if (file == NULL)
+      Error ("Error opening %s: %s",filename,SDL_GetError());
+#else
    file = open( filename,O_RDWR | O_TEXT | O_CREAT | O_TRUNC
    , S_IREAD | S_IWRITE);
 
    if (file == -1)
       Error ("Error opening %s: %s",filename,strerror(errno));
+#endif
 
    // Write out ROTTCONFIG header
 
@@ -2032,7 +2098,11 @@ void WriteConfig (void)
    SafeWriteString(file,&passwordtemp[0]);
    SafeWriteString(file,"\n");
 
+#if USE_SDL
+   SDL_RWclose(file);
+#else
    close (file);
+#endif
 #endif
    inconfig--;
 }

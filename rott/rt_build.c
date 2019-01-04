@@ -236,7 +236,7 @@ void   DrawPlanePosts (void)
 {
    int height;
    char * buf;
-   byte * shape;
+   byte * shape = NULL;
    int lastwall=-2;
    int plane;
    int i;
@@ -382,7 +382,7 @@ void DrawTransformedPlanes ( void )
    int greatest;
    int height;
    int i;
-   visobj_t * closest;
+   visobj_t * closest = NULL;
 
    numvisible = visptr-&vislist[0];
    if (!numvisible)

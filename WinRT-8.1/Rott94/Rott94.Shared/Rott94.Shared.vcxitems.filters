@@ -1,0 +1,195 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\android\jni\SDL\src\main\winrt\SDL_winrt_main_NonXAML.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\byteordr.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\cin_actr.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\cin_efct.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\cin_evnt.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\cin_glob.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\cin_main.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\cin_util.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\dosutil.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\dsl.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\dukemusc.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\engine.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\fx_man.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\isr.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\ll_man.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\modexlib.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\multivoc.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\mv_mix.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\mvreverb.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\nodpmi.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\pitch.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_actor.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_battl.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_build.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_cfg.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_com.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_crc.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_debug.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_dmand.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_door.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_draw.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_err.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_floor.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_game.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_in.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_main.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_map.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_menu.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_msg.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_net.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_playr.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_rand.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_scale.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_sound.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_spbal.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_sqrt.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_stat.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_state.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_str.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_swift.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_ted.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_util.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_vid.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_view.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\scriplib.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\user.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\usrhooks.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\w_wad.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\watcom.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\winrott.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\z_zone.c">
+      <Filter>rott</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)ContentManagement.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="rott">
+      <UniqueIdentifier>{fa139719-d1cb-4077-ad4e-c307c6c1ce1c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)ContentManagement.h" />
+  </ItemGroup>
+</Project>

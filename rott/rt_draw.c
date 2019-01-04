@@ -1820,7 +1820,7 @@ void DrawWallPost ( wallcast_t * post, byte * buf)
    int ht;
    int topscreen;
    int bottomscreen;
-   byte * src;
+   byte * src = NULL;
    byte * src2;
 
    whereami=42;
@@ -2562,13 +2562,13 @@ void InterpolateMaskedWall (visobj_t * plane)
    int dh;
    int dx;
    int height;
-   byte * shape;
-   byte * shape2;
-   byte * shape3;
+   byte * shape = NULL;
+   byte * shape2 = NULL;
+   byte * shape3 = NULL;
    byte * buf;
-	transpatch_t *p;
-   patch_t *p2;
-   patch_t *p3;
+	transpatch_t *p = NULL;
+   patch_t *p2 = NULL;
+   patch_t *p3 = NULL;
    int pl;
    boolean drawbottom,drawmiddle,drawtop;
    int topoffset;

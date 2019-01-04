@@ -143,6 +143,7 @@ void PlayCinematic (void);
 void InitCharacter(void);
 void ShutDown ( void );
 void UpdateGameObjects ( void );
+void DataPath(char * path, char * filename);
 
 #if (WHEREAMI==1)
 extern int programlocation;
@@ -172,6 +173,6 @@ extern boolean HUD;
 extern boolean SOUNDSETUP;
 #endif
 
-extern char CWD[40];
+extern char CWD[256];
 
 #endif

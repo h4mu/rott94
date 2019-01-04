@@ -3710,7 +3710,7 @@ void T_BossExplosions(objtype*ob)
 		 ob->dirchoosetime --;
 	  else
 		 {int randtime,randangle,randdist,sound;
-		  statetype *nstate;
+		  statetype *nstate = NULL;
 
 		  ob->temp1 --;
 		  randtime = GameRandomNumber("Boss Explosion Time",0);
@@ -4825,7 +4825,7 @@ void SpawnMissileSmoke(objtype *ob)
 void T_Projectile (objtype *ob)
    {
    objtype *owner;
-   playertype * pstate;
+   playertype * pstate = NULL;
 
    owner = (objtype*)(ob->whatever);
 
@@ -10427,7 +10427,7 @@ void A_Drain (objtype *ob)
 
 void  A_DmonkAttack(objtype*ob)
 {int angle,nobclass,nspeed,altangle1=0,altangle2=0,zoff=0,sound;
- statetype *nstate;
+ statetype *nstate = NULL;
 
 
   if (!ob->ticcount)
@@ -11807,13 +11807,13 @@ void A_Repeat(objtype*ob)
 
 void  A_MissileWeapon(objtype *ob)
 {
- int    sound,nspeed,noffset,zoffset;
+ int    sound,nspeed = 0,noffset,zoffset;
 
 #if (SHAREWARE == 0)
  int oldyzangle;
 #endif
  classtype nobclass;
- statetype*nstate;
+ statetype*nstate = NULL;
 
 
  if ((ob->obclass == wallopobj) || (ob->obclass == roboguardobj));

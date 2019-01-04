@@ -87,7 +87,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "fx_man.h"
 //MED
 #include "memcheck.h"
-
 volatile int    oldtime;
 volatile int    gametime;
 
@@ -142,7 +141,7 @@ static int NoWait;
 static int startlevel=0;
 static int demonumber=-1;
 
-char CWD[40];                          // curent working directory
+char CWD[256];                          // curent working directory
 static boolean quitactive = false;
 
 int timelimit;
@@ -168,13 +167,15 @@ int G_weaponscale;
 extern int iDropDemo;
 extern boolean iG_aimCross;
 extern boolean sdl_fullscreen;
+extern byte     *updateptr;
+extern byte     update[UPDATESIZE];
+
 
 extern void ComSetTime ( void );
 extern void VH_UpdateScreen (void);
 extern void RottConsole ( void );
 extern void	ReadDelay(long delay);
 extern void RecordDemoQuery ( void );
-
 
 int main (int argc, char *argv[])
 {
@@ -204,9 +205,14 @@ int main (int argc, char *argv[])
         free(path);
     }
 #endif
+#ifdef __WINRT__
+	EnsureContentAvailable();
+#endif
 
 #ifndef DOS
+#	ifndef __ANDROID__
    signal (11, crash_print);
+#	endif
 
    if (setup_homedir() == -1) return 1;
 #endif
@@ -838,6 +844,26 @@ void CheckCommandLineParameters( void )
    }
 }
 
+void DataPath(char * path, char * filename)
+{
+#if defined(__WINRT__)
+	char tmp[255];
+	wcstombs(tmp, GetDataBasePathWinRT(), sizeof(tmp));
+	const char * baseDir = tmp;
+#elif defined(__ANDROID__)
+	const char * baseDir = SDL_AndroidGetExternalStoragePath();
+	if (!baseDir)
+	{
+		baseDir =  SDL_AndroidGetInternalStoragePath();
+	}
+#else
+	const char * baseDir = "assets";
+#endif
+	strncpy(path, baseDir, MAX_PATH);
+	strncat(path, PATH_SEP_STR, MAX_PATH);
+	strncat(path, filename, MAX_PATH);
+}
+
 void SetupWads( void )
 {
    char  *newargs[99];
@@ -994,16 +1020,19 @@ NoRTC:;
 
    // Normal ROTT wads
 
+   char wadName[MAX_PATH];
 #if (SHAREWARE)
-   newargs [argnum++] = DATADIR "HUNTBGIN.WAD";
+   DataPath(wadName, "HUNTBGIN.WAD");
 #else
-   newargs [argnum++] = DATADIR "DARKWAR.WAD";
+   DataPath(wadName, "DARKWAR.WAD");
 #endif
+   newargs[argnum++] = wadName;
 
 //   newargs [argnum++] = "credits.wad";
 
    // Check for Remote Ridicule WAD
 
+   char remote1Path[MAX_PATH];
    if (RemoteSounds.avail == true)
       {
       char  *src;
@@ -1018,7 +1047,8 @@ NoRTC:;
       }
    else
       {
-      newargs [argnum++] = DATADIR "REMOTE1.RTS";
+	  DataPath(remote1Path, "REMOTE1.RTS");
+      newargs [argnum++] = remote1Path;
       }
 
    if (tempstr)
@@ -1056,9 +1086,14 @@ void Init_Tables (void)
 	unsigned *blockstart;
 	byte * shape;
 
-   memset (&CWD[0], 0, 40);
-   getcwd (CWD, 40);                      // get the current directory
-
+	memset(&CWD[0], 0, sizeof(CWD));
+#ifdef __WINRT__
+   char * path = SDL_GetBasePath();
+   strcpy_s(CWD, sizeof(CWD), path);
+   SDL_free(path);
+#else
+	getcwd(CWD, sizeof(CWD));                      // get the current directory
+#endif
    origpal=SafeMalloc(768);
    memcpy (origpal, W_CacheLumpName("pal",PU_CACHE, CvtNull, 1), 768);
 
@@ -1773,7 +1808,7 @@ void QuitGame ( void )
       px = ERRORVERSIONCOL;
       py = ERRORVERSIONROW;
 #if (BETA == 1)
-      UL_printf ("á");
+      UL_printf ("ï¿½");
 #else
       UL_printf (itoa(ROTTMAJORVERSION,&buf[0],10));
 #endif
@@ -1795,7 +1830,9 @@ void QuitGame ( void )
       }
    ShutDown();
 #endif
-
+#ifdef USE_SDL
+   SDL_Quit();
+#endif
    exit(0);
 }
 
@@ -2996,7 +3033,11 @@ void WriteLBMfile (char *filename, byte *data, int width, int height)
    long    *formlength, *bmhdlength, *cmaplength, *bodylength;
    long    length;
    bmhd_t  basebmhd;
+#if USE_SDL
+   SDL_RWops* handle;
+#else
    int     handle;
+#endif
    int     i;
 
    lbm = lbmptr = (byte *) SafeMalloc ((iGLOBAL_SCREENWIDTH*iGLOBAL_SCREENHEIGHT)+4000);
@@ -3101,7 +3142,11 @@ void WriteLBMfile (char *filename, byte *data, int width, int height)
 
    SafeWrite (handle, lbm, lbmptr-lbm);
 
+#if USE_SDL
+   SDL_RWclose(handle);
+#else
    close (handle);
+#endif
    SafeFree(lbm);
 }
 
@@ -3286,7 +3331,11 @@ void WritePCX (char * file, byte * source)
    PCX_HEADER pcxHDR;
    byte *tempbuffer;
    byte pal[0x300];
+#if USE_SDL
+   SDL_RWops* pcxhandle;
+#else
    int pcxhandle;
+#endif
    int i, j, y;
    unsigned char c;
    unsigned char buffer1[GAP_SIZE];
@@ -3361,7 +3410,11 @@ void WritePCX (char * file, byte * source)
    SafeWrite (pcxhandle, &c, 1);
    SafeWrite (pcxhandle, &pal[0], 768);
 
+#if USE_SDL
+   SDL_RWclose(pcxhandle);
+#else
    close (pcxhandle);
+#endif
    SafeFree (tempbuffer);
 }
 

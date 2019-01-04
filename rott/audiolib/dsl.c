@@ -5,7 +5,11 @@
 #include "util.h"
 
 #include "SDL.h"
-#include "SDL_mixer.h"
+#ifdef __EMSCRIPTEN__
+#	include <SDL/SDL_mixer.h>
+#else
+#	include "SDL_mixer.h"
+#endif
 
 extern volatile int MV_MixPage;
 

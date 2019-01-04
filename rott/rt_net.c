@@ -848,7 +848,7 @@ void ProcessRemoteRidicule ( void * pkt )
       ( ( who == MSG_DIRECTED_TO_TEAM ) && ( BATTLE_Team[ from ] ==
       BATTLE_Team[ consoleplayer ] ) ) )
       {
-      strcpy( name, "(Å RR from " );
+      strcpy( name, "(ÔøΩ RR from " );
       strcat( name, PLAYERSTATE[from].codename );
       strcat( name, ")" );
       AddMessage( name, MSG_REMOTERIDICULE );
@@ -3077,10 +3077,11 @@ void SetupGameMaster ( void )
 
 void GetDemoFilename (int demonumber, char * filename)
 {
-   strcpy(filename,DATADIR "DEMO0_0.DMO\0");
+   DataPath(filename, "DEMO0_0.DMO\0");
+//   strcpy(filename,DATADIR "DEMO0_0.DMO\0");
 
-   filename[4 + strlen(DATADIR)] = (char)('0' + (byte)demonumber);
-   filename[6 + strlen(DATADIR)] = (char)('0' + (byte)gamestate.violence);
+   filename[strlen(filename) - 7] = (char)('0' + (byte)demonumber);
+   filename[strlen(filename) - 5] = (char)('0' + (byte)gamestate.violence);
    FixFilePath(filename);
 }
 //****************************************************************************
@@ -3091,7 +3092,7 @@ void GetDemoFilename (int demonumber, char * filename)
 
 boolean DemoExists (int demonumber)
 {
-   char demo[20 + sizeof(DATADIR)];
+   char demo[MAX_PATH];
 
    GetDemoFilename (demonumber, &demo[0]);
    if (access (demo, F_OK) == 0)
@@ -3120,7 +3121,7 @@ boolean DemoExists (int demonumber)
 
 void SaveDemo (int demonumber)
 {
-   char demo[20 + sizeof(DATADIR)];
+   char demo[MAX_PATH];
 
    RecordDemoCmd ();
    GetDemoFilename (demonumber, &demo[0]);
@@ -3136,7 +3137,7 @@ void SaveDemo (int demonumber)
 
 void LoadDemo (int demonumber)
 {
-   char demo[20 + sizeof(DATADIR)];
+   char demo[MAX_PATH];
    int size;
 
    GetDemoFilename (demonumber, demo);

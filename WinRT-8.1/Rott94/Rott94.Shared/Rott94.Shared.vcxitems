@@ -1,0 +1,206 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{3caa51d3-b39d-4897-a318-9dc6d4c23df7}</ItemsProjectGuid>
+    <ItemsRootNamespace>Rott94</ItemsRootNamespace>
+    <ItemsProjectName>Rott94.Shared</ItemsProjectName>
+    <SharedGUID>3e406d0c-8e6a-4a69-983c-cc3bb34a9254</SharedGUID>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\android\jni\SDL\src\main\winrt\SDL_winrt_main_NonXAML.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\cin_actr.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\cin_efct.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\cin_evnt.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\cin_glob.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\cin_main.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\cin_util.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\dosutil.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\engine.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\isr.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\modexlib.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_actor.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_battl.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_build.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_cfg.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_crc.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_com.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_debug.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_dmand.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_door.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_draw.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_floor.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_game.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_in.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_main.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_map.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_menu.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_msg.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_net.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_playr.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_rand.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_scale.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_sound.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_spbal.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_sqrt.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_stat.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_state.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_str.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_swift.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_ted.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_util.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_view.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_vid.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\rt_err.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\scriplib.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\w_wad.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\watcom.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\z_zone.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\byteordr.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\dukemusc.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\winrott.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\fx_man.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\dsl.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\ll_man.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\multivoc.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\mv_mix.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\mvreverb.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\nodpmi.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\pitch.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\user.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\usrhooks.c">
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)ContentManagement.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)ContentManagement.h" />
+  </ItemGroup>
+</Project>

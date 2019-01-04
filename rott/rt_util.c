@@ -87,7 +87,7 @@ static unsigned char egargb[48]={ 0x00,0x00,0x00,
 									 0xff,0xff,0xff};
 
 extern const byte * ROTT_ERR;
-
+extern SDL_Surface *sdl_surface;
 #if (DEVELOPMENT == 1)
 int TotalStaticMemory=0;
 #endif
@@ -356,7 +356,7 @@ void Error (char *error, ...)
    px = ERRORVERSIONCOL;
    py = ERRORVERSIONROW;
 #if (BETA == 1)
-   UL_printf ("á");
+   UL_printf ("ï¿½");
 #else
    UL_printf (itoa(ROTTMAJORVERSION,&buf[0],10));
 #endif
@@ -628,94 +628,160 @@ int CheckParm (char *check)
 	return 0;
 }
 
-
-
+#if USE_SDL
+SDL_RWops* SafeOpenAppend (char *_filename)
+#else
 int SafeOpenAppend (char *_filename)
+#endif
 {
+#if USE_SDL
+	SDL_RWops* handle;
+#else
 	int	handle;
+#endif
     char filename[MAX_PATH];
     strncpy(filename, _filename, sizeof (filename));
     filename[sizeof (filename) - 1] = '\0';
     FixFilePath(filename);
 
+#if USE_SDL
+	handle = SDL_RWFromFile(filename, "ab+");
+
+	if (handle == NULL)
+		Error ("Error opening %s: %s",filename,SDL_GetError());
+#else
 	handle = open(filename,O_RDWR | O_BINARY | O_CREAT | O_APPEND
 	, S_IREAD | S_IWRITE);
 
 	if (handle == -1)
 		Error ("Error opening for append %s: %s",filename,strerror(errno));
+#endif
 
 	return handle;
 }
 
+#if USE_SDL
+SDL_RWops* SafeOpenWrite (char *_filename)
+#else
 int SafeOpenWrite (char *_filename)
+#endif
 {
+#if USE_SDL
+	SDL_RWops* handle;
+#else
 	int	handle;
+#endif
     char filename[MAX_PATH];
     strncpy(filename, _filename, sizeof (filename));
     filename[sizeof (filename) - 1] = '\0';
     FixFilePath(filename);
 
+#if USE_SDL
+	handle = SDL_RWFromFile(filename, "wb+");
+
+	if (handle == NULL)
+		Error ("Error opening %s: %s",filename,SDL_GetError());
+#else
 	handle = open(filename,O_RDWR | O_BINARY | O_CREAT | O_TRUNC
 	, S_IREAD | S_IWRITE);
 
 	if (handle == -1)
 		Error ("Error opening %s: %s",filename,strerror(errno));
+#endif
 
 	return handle;
 }
 
+#if USE_SDL
+SDL_RWops* SafeOpenRead (char *_filename)
+#else
 int SafeOpenRead (char *_filename)
+#endif
 {
+#if USE_SDL
+	SDL_RWops* handle;
+#else
 	int	handle;
+#endif
     char filename[MAX_PATH];
     strncpy(filename, _filename, sizeof (filename));
     filename[sizeof (filename) - 1] = '\0';
     FixFilePath(filename);
 
+#if USE_SDL
+	handle = SDL_RWFromFile(filename, "rb");
+
+	if (handle == NULL)
+		Error ("Error opening %s: %s",filename,SDL_GetError());
+#else
 	handle = open(filename,O_RDONLY | O_BINARY);
 
 	if (handle == -1)
 		Error ("Error opening %s: %s",filename,strerror(errno));
+#endif
 
 	return handle;
 }
 
-
+#if USE_SDL
+void SafeRead (SDL_RWops* handle, void *buffer, long count)
+#else
 void SafeRead (int handle, void *buffer, long count)
+#endif
 {
 	unsigned	iocount;
 
 	while (count)
 	{
 		iocount = count > 0x8000 ? 0x8000 : count;
+#if USE_SDL
+		int cnt = SDL_RWread (handle,buffer,1,iocount);
+		if (cnt != (int)iocount)
+#else
 		if (read (handle,buffer,iocount) != (int)iocount)
+#endif
 			Error ("File read failure reading %ld bytes",count);
 		buffer = (void *)( (byte *)buffer + iocount );
 		count -= iocount;
 	}
 }
 
-
+#if USE_SDL
+void SafeWrite (SDL_RWops* handle, void *buffer, long count)
+#else
 void SafeWrite (int handle, void *buffer, long count)
+#endif
 {
 	unsigned	iocount;
 
 	while (count)
 	{
 		iocount = count > 0x8000 ? 0x8000 : count;
+#if USE_SDL
+		if (SDL_RWwrite (handle,buffer,1,iocount) != (int)iocount)
+#else
 		if (write (handle,buffer,iocount) != (int)iocount)
+#endif
 			Error ("File write failure writing %ld bytes",count);
 		buffer = (void *)( (byte *)buffer + iocount );
 		count -= iocount;
 	}
 }
 
+#if USE_SDL
+void SafeWriteString (SDL_RWops* handle, char * buffer)
+#else
 void SafeWriteString (int handle, char * buffer)
+#endif
 {
 	unsigned	iocount;
 
    iocount=strlen(buffer);
+#if USE_SDL
+	if (SDL_RWwrite (handle,buffer,1,iocount) != (int)iocount)
+#else
 	if (write (handle,buffer,iocount) != (int)iocount)
+#endif
 			Error ("File write string failure writing %s\n",buffer);
 }
 
@@ -765,14 +831,26 @@ void SafeFree (void * ptr)
 
 long	LoadFile (char *filename, void **bufferptr)
 {
+#if USE_SDL
+	SDL_RWops* handle;
+#else
 	int		handle;
+#endif
 	long	length;
 
 	handle = SafeOpenRead (filename);
+#if USE_SDL
+	length = SDL_RWsize (handle);
+#else
 	length = filelength (handle);
+#endif
 	*bufferptr = SafeMalloc (length);
 	SafeRead (handle,*bufferptr, length);
+#if USE_SDL
+	SDL_RWclose(handle);
+#else
 	close (handle);
+#endif
 	return length;
 }
 
@@ -787,11 +865,19 @@ long	LoadFile (char *filename, void **bufferptr)
 
 void	SaveFile (char *filename, void *buffer, long count)
 {
+#if USE_SDL
+	SDL_RWops* handle;
+#else
 	int		handle;
+#endif
 
 	handle = SafeOpenWrite (filename);
 	SafeWrite (handle, buffer, count);
+#if USE_SDL
+	SDL_RWclose(handle);
+#else
 	close (handle);
+#endif
 }
 
 
@@ -1249,9 +1335,9 @@ void GetaPalette (byte *palette)
 		palette[i] = inp (PEL_DATA)<<2;
 #else
 	int i;
-	SDL_Palette *pal = SDL_GetVideoSurface()->format->palette;
+	SDL_Palette *pal = sdl_surface->format->palette;
 	
-	for (i = 0; i < 256; i++) {
+	for (i = 0; i < sdl_surface->format->palette->ncolors; i++) {
 		palette[0] = pal->colors[i].r;
 		palette[1] = pal->colors[i].g;
 		palette[2] = pal->colors[i].b;
@@ -1280,17 +1366,17 @@ void SetaPalette (byte *pal)
 	for (i=0 ; i<768 ; i++)
 		OUTP (PEL_DATA, pal[i]>>2);
 #else
-   SDL_Color cmap[256];
+   SDL_Color* cmap = sdl_surface->format->palette->colors;
    int i;
 
-   for (i = 0; i < 256; i++)
+   for (i = 0; i < sdl_surface->format->palette->ncolors; i++)
    {
 	   cmap[i].r = pal[i*3+0];
 	   cmap[i].g = pal[i*3+1];
 	   cmap[i].b = pal[i*3+2];
    }
 
-   SDL_SetColors (SDL_GetVideoSurface (), cmap, 0, 256);
+//   SDL_SetColors (sdl_surface, cmap, 0, 256);
 #endif
 }
 
@@ -1304,9 +1390,9 @@ void GetPalette(char * palette)
      *(palette+(unsigned char)i)=inp(0x3c9)<<2;
 #else
 	int i;
-	SDL_Palette *pal = SDL_GetVideoSurface()->format->palette;
+	SDL_Palette *pal = sdl_surface->format->palette;
 	
-	for (i = 0; i < 256; i++) {
+	for (i = 0; i < pal->ncolors; i++) {
 		palette[0] = pal->colors[i].r;
 		palette[1] = pal->colors[i].g;
 		palette[2] = pal->colors[i].b;
@@ -1395,17 +1481,15 @@ void VL_FillPalette (int red, int green, int blue)
       OUTP (PEL_DATA,blue);
    }
 #else
-   SDL_Color cmap[256];
+   SDL_Color* cmap = sdl_surface->format->palette->colors;
    int i;
 
-   for (i = 0; i < 256; i++)
+   for (i = 0; i < sdl_surface->format->palette->ncolors; i++)
    {
            cmap[i].r = red << 2;
            cmap[i].g = green << 2;
            cmap[i].b = blue << 2;
    }
-
-   SDL_SetColors (SDL_GetVideoSurface (), cmap, 0, 256);
 #endif
 }
 
@@ -1495,17 +1579,17 @@ void VL_SetPalette (byte *palette)
       OUTP (PEL_DATA, gammatable[(gammaindex<<6)+(*palette++)]);
       }
 #else
-   SDL_Color cmap[256];
+   SDL_Color* cmap = sdl_surface->format->palette->colors;
    int i;
 
-   for (i = 0; i < 256; i++)
+   for (i = 0; i < sdl_surface->format->palette->ncolors; i++)
    {
 	   cmap[i].r = gammatable[(gammaindex<<6)+(*palette++)] << 2;
 	   cmap[i].g = gammatable[(gammaindex<<6)+(*palette++)] << 2;
 	   cmap[i].b = gammatable[(gammaindex<<6)+(*palette++)] << 2;
    }
 
-   SDL_SetColors (SDL_GetVideoSurface (), cmap, 0, 256);
+//   SDL_SetColors (SDL_GetVideoSurface (), cmap, 0, 256);
 #endif
 }
 
@@ -1534,9 +1618,9 @@ void VL_GetPalette (byte *palette)
       *palette++ = inp (PEL_DATA);
 #else
 	int i;
-	SDL_Palette *pal = SDL_GetVideoSurface()->format->palette;
+	SDL_Palette *pal = sdl_surface->format->palette;
 	
-	for (i = 0; i < 256; i++) {
+	for (i = 0; i < pal->ncolors; i++) {
 		palette[0] = pal->colors[i].r >> 2;
 		palette[1] = pal->colors[i].g >> 2;
 		palette[2] = pal->colors[i].b >> 2;
@@ -1573,7 +1657,7 @@ void UL_DisplayMemoryError ( int memneeded )
    px = ERRORVERSIONCOL;
    py = ERRORVERSIONROW;
 #if (BETA == 1)
-   UL_printf ("á");
+   UL_printf ("ï¿½");
 #else
    UL_printf (itoa(ROTTMAJORVERSION,&buf[0],10));
 #endif
@@ -1851,6 +1935,7 @@ boolean UL_ChangeDirectory (char *path)
 
    return (true);
 #else
+#	ifndef __WINRT__
 	if (!path || !*path) {
 		return true;
 	}
@@ -1858,7 +1943,7 @@ boolean UL_ChangeDirectory (char *path)
 	if (chdir (path) == -1) {
 	         return (false);
 	}
-	
+#	endif	
 	return true;
 #endif
 }

@@ -84,6 +84,19 @@ typedef struct
 
 #define  MAXSILLYSTRINGS 32
 
+#if (SHAREWARE==0)
+   #define  STANDARDGAMELEVELS   ("DARKWAR.RTL")
+   #if (SUPERROTT==1)
+       #define  STANDARDBATTLELEVELS ("ROTTCD.RTC")
+   #elif (SITELICENSE==1)
+       #define  STANDARDBATTLELEVELS ("ROTTSITE.RTC")
+   #else
+       #define  STANDARDBATTLELEVELS ("DARKWAR.RTC")
+   #endif
+#else
+   #define  STANDARDGAMELEVELS   ("HUNTBGIN.RTL")
+   #define  STANDARDBATTLELEVELS ("HUNTBGIN.RTC")
+#endif
 
 
 

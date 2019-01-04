@@ -1,4 +1,4 @@
-#include <stdio.h>
+	#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -39,6 +39,7 @@ long filelength(int handle)
 	return buf.st_size;
 }
 
+#ifndef __EMSCRIPTEN__
 char *strlwr(char *s)
 {
 	char *p = s;
@@ -62,6 +63,7 @@ char *strupr(char *s)
 	
 	return s;
 }
+#endif
 	
 char *itoa(int value, char *string, int radix)
 {
@@ -127,25 +129,45 @@ int setup_homedir (void)
 {
 #if PLATFORM_UNIX && !defined(__MINGW32__)
 	int err;
-
+	char * home = getenv ("HOME");
+	if (home == NULL)
+	{
+#ifdef __ANDROID__
+		home = SDL_AndroidGetExternalStoragePath();
+		if (home == NULL)
+		{
+			home = SDL_AndroidGetInternalStoragePath();
+		}
+		if (home == NULL)
+		{
+			home = ".";
+		}
+#else
+		home = ".";
+#endif
+	}
 	/* try to create the root directory */
-	snprintf (ApogeePath, sizeof (ApogeePath), "%s/.rott/", getenv ("HOME"));
+	snprintf (ApogeePath, sizeof (ApogeePath), "%s/.rott/", home);
 	err = mkdir (ApogeePath, S_IRWXU);
-	
+
 /* keep the shareware and registered game data separated */
 #if (SHAREWARE == 1)
-	snprintf (ApogeePath, sizeof (ApogeePath), "%s/.rott/", getenv ("HOME"));
+	snprintf (ApogeePath, sizeof (ApogeePath), "%s/.rott/", home);
 #else
-	snprintf (ApogeePath, sizeof (ApogeePath), "%s/.rott/darkwar/", getenv ("HOME"));
+	snprintf (ApogeePath, sizeof (ApogeePath), "%s/.rott/darkwar/", home);
 #endif
 
 	err = mkdir (ApogeePath, S_IRWXU);
 	if (err == -1 && errno != EEXIST)
 	{
-		fprintf (stderr, "Couldn't create preferences directory: %s\n", 
+		fprintf (stderr, "Couldn't create preferences directory: %s\n",
 				strerror (errno));
 		return -1;
 	}
+#elif defined(__WINRT__)
+	char * path = SDL_WinRTGetFSPathUTF8(SDL_WINRT_PATH_LOCAL_FOLDER);
+	strcpy_s(ApogeePath, sizeof(ApogeePath), path);
+	SDL_free(path);
 #else
     sprintf(ApogeePath, ".%s", PATH_SEP_STR);
 #endif
@@ -197,44 +219,10 @@ void DisplayTextSplash(byte *text, int l)
 	printf ("\033[m");
 }
 
-#if !defined(__CYGWIN__) && !defined(__MINGW32__)
-#include <execinfo.h>
-
-void print_stack (int level)
-{
-	void *array[64];
-	char **syms;
-	int size, i;
-
-	printf ("Stack dump:\n");
-	printf ("{\n");
-	size = backtrace (array, (sizeof (array))/(sizeof (array[0])));
-	syms = backtrace_symbols (array, size);
-	for (i=level+1; i<size;++i) {
-		printf ("\t%s\n",syms[i]);
-	}
-	free (syms);
-	/*
-	for (i = 2; i <size; ++i) {
-		printf ("\t%p\n", array[i]);
-	}
-	*/
-	printf ("}\n");
-}
-#else
-
-void print_stack (int level)
-{
-        printf("Stack dump not implemented.\n");
-}
-
-#endif
 
 void crash_print (int sig)
 {
 	printf ("OH NO OH NO ROTT CRASHED!\n");
-	printf ("Here is where:\n");
-	print_stack (1);
 #if defined(USE_SDL)
 	SDL_Quit ();
 #endif

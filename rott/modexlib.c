@@ -44,7 +44,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 static void StretchMemPicture ();
 // GLOBAL VARIABLES
 
-boolean StretchScreen=0;//bná++
+boolean StretchScreen=0;//bnï¿½++
 extern boolean iG_aimCross;
 extern boolean sdl_fullscreen;
 extern int iG_X_center;
@@ -419,8 +419,36 @@ void XFlipPage ( void )
 =
 ====================
 */
-static SDL_Surface *sdl_surface = NULL;
+SDL_Window *sdl_window = NULL;
+static SDL_Renderer *sdl_renderer = NULL;
+static SDL_Texture *sdl_texture = NULL;
+SDL_Surface *sdl_surface = NULL;
+static SDL_Surface *sdl_surface32 = NULL;
 static SDL_Surface *unstretch_sdl_surface = NULL;
+static SDL_Texture *sdl_hint_texture = NULL;
+extern unsigned int lastInteraction;
+
+void BuildHintTexture()
+{
+	lastInteraction = SDL_GetTicks();
+	SDL_RWops *file = SDL_RWFromFile("buttons.bmp", "rb");
+	if (!file)
+	{
+		Error("File error: %s\n", SDL_GetError());
+	}
+	SDL_Surface *image = SDL_LoadBMP_RW(file, SDL_TRUE);
+	if (!image)
+	{
+		Error("Bitmap error: %s\n", SDL_GetError());
+	}
+	SDL_SetColorKey(image, SDL_TRUE, SDL_MapRGBA(image->format, 255, 255, 255, 0));
+	sdl_hint_texture = SDL_CreateTextureFromSurface(sdl_renderer, image);
+	if (!sdl_hint_texture)
+	{
+		Error("Texture error: %s\n", SDL_GetError());
+	}
+	SDL_FreeSurface(image);
+}
 
 void GraphicsMode ( void )
 {
@@ -428,25 +456,65 @@ void GraphicsMode ( void )
 
 	if (SDL_InitSubSystem (SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
 	{
-	    Error ("Could not initialize SDL\n");
+	    Error ("Could not initialize SDL: %s\n", SDL_GetError());
 	}
 
-    #if defined(PLATFORM_WIN32) || defined(PLATFORM_MACOSX)
+    #if defined(PLATFORM_MACOSX)
         // FIXME: remove this.  --ryan.
-        flags = SDL_FULLSCREEN;
+        flags = SDL_WINDOW_FULLSCREEN;
         SDL_WM_GrabInput(SDL_GRAB_ON);
     #endif
-
-    SDL_WM_SetCaption ("Rise of the Triad", "ROTT");
     SDL_ShowCursor (0);
-//    sdl_surface = SDL_SetVideoMode (320, 200, 8, flags);
     if (sdl_fullscreen)
-        flags = SDL_FULLSCREEN;
-    sdl_surface = SDL_SetVideoMode (iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, 8, flags);    
+        flags = SDL_WINDOW_FULLSCREEN;
+	sdl_window = SDL_CreateWindow("Rise of the Triad",
+							  SDL_WINDOWPOS_UNDEFINED,
+							  SDL_WINDOWPOS_UNDEFINED,
+							  iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT,
+							  flags);
+	if (sdl_window == NULL)
+	{
+		Error ("Could not open window: %s\n", SDL_GetError());
+	}
+	sdl_renderer = SDL_CreateRenderer(sdl_window, -1, /*SDL_RENDERER_SOFTWARE*/ 0);
+	if (sdl_renderer == NULL)
+	{
+		Error ("Could not create renderer: %s\n", SDL_GetError());
+	}
+	SDL_RenderSetLogicalSize(sdl_renderer, iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT);
+	sdl_texture = SDL_CreateTexture(sdl_renderer,
+			SDL_PIXELFORMAT_ARGB8888, //SDL_PIXELFORMAT_RGB565,
+			SDL_TEXTUREACCESS_STREAMING,
+			iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT);
+	if (sdl_texture == NULL)
+	{
+		Error ("Texture error: %s\n", SDL_GetError());
+	}
+	sdl_surface = SDL_CreateRGBSurface(0, iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, 8, 0, 0, 0, 0);
 	if (sdl_surface == NULL)
 	{
-		Error ("Could not set video mode\n");
-	} 
+		Error ("Could not create surface: %s\n", SDL_GetError());
+	}
+	sdl_surface32 = SDL_CreateRGBSurface(0, iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, 32, 0, 0, 0, 0);
+	if (sdl_surface32 == NULL)
+	{
+		Error ("Could not create surface: %s\n", SDL_GetError());
+	}
+	BuildHintTexture();
+}
+
+void blitScreen32(uint32_t *dst)
+{
+    uint8_t *src = sdl_surface->pixels;
+    SDL_Palette* palette = sdl_surface->format->palette;
+    int x, y;
+
+    for (y = iGLOBAL_SCREENHEIGHT; y > 0; y--)
+		for (x = iGLOBAL_SCREENWIDTH; x > 0; x--)
+		{
+			SDL_Color color = palette->colors[*src++];
+			*(dst++) = (color.a << 24) | (color.r << 16) | (color.g << 8) | color.b;
+		}
 }
 
 /*
@@ -459,10 +527,13 @@ void GraphicsMode ( void )
 void SetTextMode ( void )
 {
 	if (SDL_WasInit(SDL_INIT_VIDEO) == SDL_INIT_VIDEO) {
-		if (sdl_surface != NULL) {
-			SDL_FreeSurface(sdl_surface);
-	
-			sdl_surface = NULL;
+		if (sdl_renderer != NULL) {
+			SDL_DestroyRenderer(sdl_renderer);
+			sdl_renderer = NULL;
+		}
+		if (sdl_window != NULL) {
+			SDL_DestroyWindow(sdl_window);
+			sdl_window = NULL;
 		}
 		
 		SDL_QuitSubSystem (SDL_INIT_VIDEO);
@@ -667,6 +738,15 @@ void VL_ClearVideo (byte color)
   VGAMAPMASK(15);
   memset((byte *)(0xa000<<4),color,0x10000);
 #else
+//  SDL_Color renderColor = sdl_surface->format->palette->colors[color];
+//  if (!SDL_SetRenderDrawColor(sdl_renderer, renderColor.r, renderColor.g, renderColor.b, renderColor.a))
+//  {
+//	  Error(SDL_GetError());
+//  }
+//  if (!SDL_RenderClear(sdl_renderer))
+//  {
+//	  Error(SDL_GetError());
+//  }
   memset (sdl_surface->pixels, color, iGLOBAL_SCREENWIDTH*iGLOBAL_SCREENHEIGHT);
 #endif
 }
@@ -683,6 +763,26 @@ void VL_DePlaneVGA (void)
 {
 }
 
+static void RenderCopyHintTexture()
+{
+	unsigned int deltaInteraction = SDL_GetTicks() - lastInteraction;
+	const unsigned int minDelay = 10000;
+	if (deltaInteraction < minDelay + 4600)
+	{
+		if (deltaInteraction > minDelay + 4000)
+		{
+			unsigned int shade = (minDelay + 4600 - deltaInteraction) / 3;
+			SDL_SetTextureAlphaMod(sdl_hint_texture, shade < 1 ? 0 : shade);
+			SDL_RenderCopy(sdl_renderer, sdl_hint_texture, NULL, NULL);
+		}
+		else if (deltaInteraction > minDelay)
+		{
+			unsigned int shade = (deltaInteraction - minDelay) / 3;
+			SDL_SetTextureAlphaMod(sdl_hint_texture, shade > 200 ? 200 : shade);
+			SDL_RenderCopy(sdl_renderer, sdl_hint_texture, NULL, NULL);
+		}
+	}
+}
 
 /* C version of rt_vh_a.asm */
 
@@ -694,7 +794,13 @@ void VH_UpdateScreen (void)
 	}else{
 		DrawCenterAim ();
 	}
-	SDL_UpdateRect (SDL_GetVideoSurface (), 0, 0, 0, 0);
+//	SDL_UpdateRect (SDL_GetVideoSurface (), 0, 0, 0, 0);
+	blitScreen32(sdl_surface32->pixels);
+	SDL_UpdateTexture(sdl_texture, NULL, sdl_surface32->pixels, sdl_surface32->pitch);
+	SDL_RenderClear(sdl_renderer);
+	SDL_RenderCopy(sdl_renderer, sdl_texture, NULL, NULL);
+	RenderCopyHintTexture();
+	SDL_RenderPresent(sdl_renderer);
 }
 
 
@@ -727,7 +833,13 @@ void XFlipPage ( void )
 	}else{
 		DrawCenterAim ();
 	}
-   SDL_UpdateRect (sdl_surface, 0, 0, 0, 0);
+//   SDL_UpdateRect (sdl_surface, 0, 0, 0, 0);
+	blitScreen32(sdl_surface32->pixels);
+	SDL_UpdateTexture(sdl_texture, NULL, sdl_surface32->pixels, sdl_surface32->pitch);
+	SDL_RenderClear(sdl_renderer);
+	SDL_RenderCopy(sdl_renderer, sdl_texture, NULL, NULL);
+	RenderCopyHintTexture();
+	SDL_RenderPresent(sdl_renderer);
  
 #endif
 }
@@ -738,9 +850,9 @@ void XFlipPage ( void )
 void EnableScreenStretch(void)
 {
    int i,offset;
-   
+
    if (iGLOBAL_SCREENWIDTH <= 320 || StretchScreen) return;
-   
+
    if (unstretch_sdl_surface == NULL)
    {
       /* should really be just 320x200, but there is code all over the
@@ -748,21 +860,21 @@ void EnableScreenStretch(void)
       unstretch_sdl_surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
          iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, 8, 0, 0, 0, 0);
    }
-	
-   displayofs = unstretch_sdl_surface->pixels +
+
+   displayofs = (byte*)unstretch_sdl_surface->pixels +
 	(displayofs - (byte *)sdl_surface->pixels);
    bufferofs  = unstretch_sdl_surface->pixels;
    page1start = unstretch_sdl_surface->pixels;
    page2start = unstretch_sdl_surface->pixels;
    page3start = unstretch_sdl_surface->pixels;
-   StretchScreen = 1;	
+   StretchScreen = 1;
 }
 
 void DisableScreenStretch(void)
 {
    if (iGLOBAL_SCREENWIDTH <= 320 || !StretchScreen) return;
-	
-   displayofs = sdl_surface->pixels +
+
+   displayofs = (byte*)sdl_surface->pixels +
 	(displayofs - (byte *)unstretch_sdl_surface->pixels);
    bufferofs  = sdl_surface->pixels;
    page1start = sdl_surface->pixels;
@@ -777,12 +889,12 @@ static void StretchMemPicture ()
 {
   SDL_Rect src;
   SDL_Rect dest;
-	
+
   src.x = 0;
   src.y = 0;
   src.w = 320;
   src.h = 200;
-  
+
   dest.x = 0;
   dest.y = 0;
   dest.w = iGLOBAL_SCREENWIDTH;

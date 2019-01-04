@@ -84,20 +84,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
 //***************************************************************************
 
-#ifndef DATADIR
-#define DATADIR	""
-#endif
-
-#undef PI
-#undef M_PI
-
 #ifndef NULL
 #define NULL       0
 #endif
 
+#undef PI
 #define PI      3.141592657
-#define LONG(a) ((int)a)
+#undef M_PI
 #define M_PI            3.14159
+#define LONG(a) ((int)a)
 
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -142,7 +137,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
     #error please define for your platform.
   #endif
 
-#if !defined(ANSIESC)
+#if !defined(ANSIESC) && defined(MSDOS)
 #define STUB_FUNCTION fprintf(stderr,"STUB: %s at " __FILE__ ", line %d, thread %d\n",__FUNCTION__,__LINE__,getpid())
 #else
 #define STUB_FUNCTION

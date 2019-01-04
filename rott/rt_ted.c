@@ -1378,6 +1378,9 @@ void CA_RLEWexpand (word *source, word *dest,long length, unsigned rlewtag)
 =
 ======================
 */
+#if USE_SDL
+#	include "SDL.h"
+#endif
 
 void CheckRTLVersion
    (
@@ -1385,7 +1388,11 @@ void CheckRTLVersion
    )
 
    {
+#if USE_SDL
+	SDL_RWops* filehandle;
+#else
    int  filehandle;
+#endif
    char RTLSignature[ 4 ];
    unsigned int RTLVersion;
 
@@ -1416,7 +1423,11 @@ void CheckRTLVersion
          RTL_VERSION >> 8, RTL_VERSION & 0xff );
       }
 
+#if USE_SDL
+   SDL_RWclose(filehandle);
+#else
    close( filehandle );
+#endif
    }
 
 
@@ -1436,7 +1447,11 @@ void ReadROTTMap
 
    {
    RTLMAP RTLMap;
-   int    filehandle;
+#if USE_SDL
+	SDL_RWops* filehandle;
+#else
+   int  filehandle;
+#endif
    long   pos;
    long   compressed;
    long   expanded;
@@ -1449,8 +1464,13 @@ void ReadROTTMap
    //
    // Load map header
    //
+#if USE_SDL
+   SDL_RWseek( filehandle, RTL_HEADER_OFFSET + mapnum * sizeof( RTLMap ),
+      RW_SEEK_SET );
+#else
    lseek( filehandle, RTL_HEADER_OFFSET + mapnum * sizeof( RTLMap ),
       SEEK_SET );
+#endif
    SafeRead( filehandle, &RTLMap, sizeof( RTLMap ) );
 
     SwapIntelLong((int *)&RTLMap.used);
@@ -1493,7 +1513,11 @@ void ReadROTTMap
       pos        = RTLMap.planestart[ plane ];
       compressed = RTLMap.planelength[ plane ];
 		buffer     = SafeMalloc( compressed );
+#if USE_SDL
+      SDL_RWseek( filehandle, pos, RW_SEEK_SET );
+#else
       lseek( filehandle, pos, SEEK_SET );
+#endif
       SafeRead( filehandle, buffer, compressed );
 
       mapplanes[ plane ] = Z_Malloc( expanded, PU_LEVEL, &mapplanes[ plane ] );
@@ -1511,7 +1535,11 @@ void ReadROTTMap
 
 		SafeFree( buffer );
       }
-   close(filehandle);
+#if USE_SDL
+   SDL_RWclose(filehandle);
+#else
+   close( filehandle );
+#endif
 
    //
    // get map name
@@ -1599,7 +1627,11 @@ void GetMapFileInfo
 
    {
    RTLMAP RTLMap[ 100 ];
-   int    filehandle;
+#if USE_SDL
+	SDL_RWops* filehandle;
+#else
+   int  filehandle;
+#endif
    int    i;
    int    nummaps;
 
@@ -1610,9 +1642,17 @@ void GetMapFileInfo
    //
    // Load map header
    //
+#if USE_SDL
+   SDL_RWseek( filehandle, RTL_HEADER_OFFSET, RW_SEEK_SET );
+#else
    lseek( filehandle, RTL_HEADER_OFFSET, SEEK_SET );
+#endif
    SafeRead( filehandle, &RTLMap, sizeof( RTLMap ) );
+#if USE_SDL
+   SDL_RWclose(filehandle);
+#else
    close( filehandle );
+#endif
 
    nummaps = 0;
    for( i = 0; i < 100; i++ )
@@ -1651,11 +1691,11 @@ void GetMapFileName ( char * filename )
       }
    else if ( BATTLEMODE )
       {
-      strcpy(filename,BATTMAPS);
+	  DataPath(filename, STANDARDBATTLELEVELS);
       }
    else
       {
-      strcpy(filename,ROTTMAPS);
+	  DataPath(filename, STANDARDGAMELEVELS);
       }
 }
 
@@ -1679,27 +1719,39 @@ void SetBattleMapFileName ( char * filename )
 =
 ======================
 */
-word GetMapCRC
+unsigned GetMapCRC
    (
    int num
    )
 
    {
+#if USE_SDL
+	SDL_RWops* filehandle;
+#else
    int  filehandle;
-   char filename[ 80 ];
+#endif
+   char filename[ MAX_PATH ];
    RTLMAP RTLMap;
 
-   GetMapFileName( &filename[ 0 ] );
+   GetMapFileName( filename );
    CheckRTLVersion( filename );
    filehandle = SafeOpenRead( filename );
 
    //
    // Load map header
    //
+#if USE_SDL
+   SDL_RWseek( filehandle, RTL_HEADER_OFFSET + num * sizeof( RTLMap ), RW_SEEK_SET );
+#else
    lseek( filehandle, RTL_HEADER_OFFSET + num * sizeof( RTLMap ), SEEK_SET );
+#endif
    SafeRead( filehandle, &RTLMap, sizeof( RTLMap ) );
 
+#if USE_SDL
+   SDL_RWclose(filehandle);
+#else
    close( filehandle );
+#endif
 
    return( RTLMap.CRC );
    }
@@ -1746,11 +1798,15 @@ void GetMapInfo
       }
    else if ( BATTLEMODE )
       {
-      GetMapFileInfo( mapinfo, BATTMAPS );
+	  char maps[MAX_PATH];
+	  DataPath(maps, STANDARDBATTLELEVELS);
+      GetMapFileInfo( mapinfo, maps);
       }
    else
       {
-      GetMapFileInfo( mapinfo, ROTTMAPS );
+	  char maps[MAX_PATH];
+	  DataPath(maps, STANDARDGAMELEVELS);
+      GetMapFileInfo( mapinfo, maps);
       }
    }
 
@@ -1773,7 +1829,11 @@ void LoadTedMap
    long    expanded;
    int     plane;
    int     i;
+#if USE_SDL
+   SDL_RWops* maphandle;
+#else
    int     maphandle;
+#endif
    byte   *buffer;
    maptype mapheader;
    char    name[ 200 ];
@@ -1812,7 +1872,11 @@ void LoadTedMap
       Error( "LoadTedMap : Tried to load a non existent map!" );
       }
 
+#if USE_SDL
+   SDL_RWseek( maphandle, pos, RW_SEEK_SET );
+#else
    lseek( maphandle, pos, SEEK_SET );
+#endif
    SafeRead( maphandle, &mapheader, sizeof( maptype ) );
 
    for( i = 0 ; i < 3; i++ )
@@ -1838,7 +1902,12 @@ void LoadTedMap
    for( plane = 0; plane <= 2; plane++ )
       {
       pos = mapheader.planestart[ plane ];
+
+#if USE_SDL
+      SDL_RWseek( maphandle, pos, RW_SEEK_SET );
+#else
       lseek( maphandle, pos, SEEK_SET );
+#endif
 
       compressed = mapheader.planelength[ plane ];
       buffer = SafeMalloc( compressed );
@@ -1860,7 +1929,11 @@ void LoadTedMap
 
 	SafeFree( tinf );
 
+#if USE_SDL
+	if (SDL_RWclose(maphandle))
+#else
    if ( close( maphandle ) )
+#endif
       {
       Error( "Error closing Ted file Error #%d", errno );
       }
@@ -1912,11 +1985,15 @@ void LoadROTTMap
       }
    else if ( BATTLEMODE )
       {
-      ReadROTTMap( BATTMAPS, mapnum );
+	  char map[MAX_PATH];
+	  DataPath(map, STANDARDBATTLELEVELS);
+      ReadROTTMap(map, mapnum );
       }
    else
       {
-      ReadROTTMap( ROTTMAPS, mapnum );
+	  char map[MAX_PATH];
+	  DataPath(map, STANDARDGAMELEVELS);
+	  ReadROTTMap(map, mapnum );
       }
    }
 

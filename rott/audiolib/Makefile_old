@@ -7,7 +7,7 @@ RANLIB ?= ranlib
 ARFLAGS ?= rcT
 CFLAGS ?= -g -O2
 CFLAGS += -Wall
-CFLAGS += $(shell sdl-config --cflags)
+CFLAGS += $(shell sdl2-config --cflags)
 
 OBJS :=
 OBJS += fx_man.o

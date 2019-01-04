@@ -38,6 +38,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <io.h>
 #elif PLATFORM_UNIX
 #include <unistd.h>
+#endif
+
+#ifdef USE_SDL
 #include "SDL.h"
 #endif
 
@@ -374,7 +377,7 @@ char *colorname[] =
 CP_MenuNames MainMenuNames[] =
    {
    "NEW GAME",
-   "COMM-BATÅ GAME",
+   "COMM-BATÔøΩ GAME",
    "RESTORE GAME",
    "SAVE GAME",
    "OPTIONS",
@@ -388,14 +391,32 @@ CP_iteminfo MainItems  = { MENU_X, MENU_Y + 1, 9, STARTITEM, 32, MainMenuNames, 
 CP_itemtype MainMenu[] =
    {
       { CP_CursorLocation, "mm_opt1\0",  'N', (menuptr)CP_NewGame },
-      { CP_Active,         "battle\0",   'C', (menuptr)CP_BattleModes },
+      {
+#if defined(__ANDROID__) || defined(__WINRT__)
+		  CP_Inactive,
+#else
+		  CP_Active,
+#endif
+		  "battle\0",
+		  'C',
+		  (menuptr)CP_BattleModes
+	  },
       { CP_Active,         "mm_opt2\0",  'R', (menuptr)CP_LoadGame },
       { CP_Inactive,       "mm_opt3\0",  'S', (menuptr)CP_SaveGame },
       { CP_Active,         "mm_opt5\0",  'O', (menuptr)CP_ControlMenu },
       { CP_Active,         "ordrinfo\0", 'O', (menuptr)CP_OrderInfo },
       { CP_Active,         "mm_opt7\0",  'V', (menuptr)CP_ViewScores },
       { CP_Active,         "mm_opt8\0",  'B', (menuptr)NULL },
-      { CP_Active,         "mm_opt9\0",  'Q', (menuptr)CP_Quit }
+      {
+#if defined(__ANDROID__) || defined(__WINRT__)
+		  CP_Inactive,
+#else
+		  CP_Active,
+#endif
+		  "mm_opt9\0",
+		  'Q',
+		  (menuptr)CP_Quit
+	  }
    };
 
 
@@ -1524,7 +1545,7 @@ void SetUpControlPanel (void)
    //bna--savedscreen = SafeMalloc (16000);
    savedscreen = SafeMalloc (16000*8);
 
-   // Copy the current save game screen (Ω size) to this buffer
+   // Copy the current save game screen (ÔøΩ size) to this buffer
 
    if (RefreshPause==false)
       {
@@ -1864,9 +1885,11 @@ menuitems CP_MainMenu
 			DisableScreenStretch();//bna++ shut off streech mode
             break;
 
+#if !defined(__ANDROID__) && !defined(__WINRT__)
          case -1:
             CP_Quit( 0 );
             break;
+#endif
 
          default:
             if ( !StartGame )
@@ -2177,7 +2200,7 @@ int HandleMenu (CP_iteminfo *item_i, CP_itemtype *items, void (*routine)(int w))
          MN_PlayMenuSnd (SD_SELECTSND);
       }
 
-      if (ci.button1 || Keyboard[sc_Escape])
+	  if (ci.button1 || Keyboard[sc_Escape])
       {
          WaitKeyUp ();
          exit = 2;
@@ -3606,7 +3629,7 @@ int CP_SaveGame ( void )
             if (SaveGamesAvail[which])
                DrawMenuBufPropString (PrintX, PrintY, SaveGameNames[which]);
             else
-               DrawMenuBufPropString (PrintX, PrintY, "     - Å -");
+               DrawMenuBufPropString (PrintX, PrintY, "     - ÔøΩ -");
 
 //            MN_PlayMenuSnd (SD_ESCPRESSEDSND);
             continue;
@@ -4389,7 +4412,7 @@ void PrintLSEntry (int w)
    if (SaveGamesAvail[w])
       DrawMenuBufPropString (PrintX, PrintY, SaveGameNames[w]);
    else
-      DrawMenuBufPropString (PrintX, PrintY, "     - Å -");
+      DrawMenuBufPropString (PrintX, PrintY, "     - ÔøΩ -");
 }
 
 
@@ -5364,6 +5387,7 @@ extern boolean usemouselook;
 extern boolean iG_aimCross;
 extern boolean usejump;
 extern boolean sdl_fullscreen;
+extern SDL_Window *sdl_window;
 
 void CP_ExtOptionsMenu (void)
 {
@@ -5388,7 +5412,7 @@ void CP_ExtOptionsMenu (void)
          case 2: iG_aimCross   ^= 1; DrawExtOptionsButtons (); break;
          case 3: usejump       ^= 1; DrawExtOptionsButtons (); break;
          case 4:
-            if (SDL_WM_ToggleFullScreen(SDL_GetVideoSurface()))
+            if (SDL_SetWindowFullscreen(sdl_window, 0))
             {
                sdl_fullscreen ^= 1;
                DrawExtOptionsButtons ();
