@@ -1,8 +1,14 @@
 # Determine which version to build
-# Leave at 0 to build the commercial/superrott/sitelicense version
+# Make sure only one of the following is set to 1 at once
+# Triple 0 will build the commercial/registered version
 
-SHAREWARE ?= 0
+SHAREWARE   ?= 1
+SUPERROTT   ?= 0
+SITELICENSE ?= 0
+
 CPPFLAGS += -DSHAREWARE=$(SHAREWARE)
+CPPFLAGS += -DSUPERROTT=$(SUPERROTT)
+CPPFLAGS += -DSITELICENSE=$(SITELICENSE)
 
 ROTT ?= rott
 
