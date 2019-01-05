@@ -371,7 +371,7 @@ static int sdl_key_filter(const SDL_Event *event)
     return(0);
 } /* sdl_key_filter */
 
-static const SDL_Keycode scancodeMapping[3][3] = {
+static const SDL_Scancode scancodeMapping[3][3] = {
 		{SDL_SCANCODE_UP, SDL_SCANCODE_RETURN, SDL_SCANCODE_UP},
 		{SDL_SCANCODE_LEFT, SDL_SCANCODE_SPACE, SDL_SCANCODE_RIGHT},
 		{SDL_SCANCODE_DOWN, SDL_SCANCODE_ESCAPE, SDL_SCANCODE_RCTRL}
@@ -390,6 +390,22 @@ static int sdl_finger_filter(const SDL_Event *event)
 	keyEvent.key.keysym.mod = 0;
 	int column = (int)floor(event->tfinger.x / .333f);
 	int row = (int)floor(event->tfinger.y / .333f);
+    if (column < 0)
+    {
+        column = 0;
+    }
+    if (column > 2)
+    {
+        column = 2;
+    }
+    if (row < 0)
+    {
+        row = 0;
+    }
+    if (row > 2)
+    {
+        row = 2;
+    }
 	if (event->type == SDL_FINGERUP)
 	{
 		keyEvent.type = SDL_KEYUP;
