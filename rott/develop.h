@@ -41,6 +41,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define BNACRASHPREVENT  1 //bna added 
 // Flavor selection (shareware, registered, cd version, site license) has moved to the Makefile
+#ifndef SHAREWARE
+#define SHAREWARE 0
+#endif
 
 // cute little dopefish thing, only works with special patch?
 #define DOPEFISH 0

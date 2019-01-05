@@ -1936,7 +1936,7 @@ boolean UL_ChangeDirectory (char *path)
    return (true);
 #else
 #	ifndef __WINRT__
-	if (!*path) {
+	if (!path || !*path) {
 		return true;
 	}
 	

@@ -7179,8 +7179,6 @@ void CP_TeamPlayErrorMessage
 //
 //****************************************************************************
 
-#if (SITELICENSE == 0)
-
 #define SITELINES 8
 
 char *sitemessage[] =
@@ -7194,8 +7192,6 @@ char *sitemessage[] =
    "just for two!  Call 1-800-APOGEE1 to order.",
    "For more on site licenses, see ORDERING INFO."
    };
-
-#endif
 
 void CP_ModemGameMessage (int player  )
 
@@ -7239,7 +7235,8 @@ void CP_ModemGameMessage (int player  )
          MenuBufCPrint ("Please wait while\nMaster selects\nCOMM-BAT options.");
          }
 
-#if (SITELICENSE == 0)
+if (gamestate.Product != ROTT_SITELICENSE)
+{
       if (networkgame==true)
          {
          for( i = 0; i < SITELINES; i++ )
@@ -7248,7 +7245,7 @@ void CP_ModemGameMessage (int player  )
                sitemessage[ i ] );
             }
          }
-#endif
+}
       }
 
    FlipMenuBuf();
