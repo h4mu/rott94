@@ -1589,7 +1589,7 @@ void VL_SetPalette (byte *palette)
 	   cmap[i].b = gammatable[(gammaindex<<6)+(*palette++)] << 2;
    }
 
-//   SDL_SetColors (SDL_GetVideoSurface (), cmap, 0, 256);
+   XFlipPage();
 #endif
 }
 
