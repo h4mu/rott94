@@ -152,10 +152,10 @@ public class ContentPrepareActivity extends Activity {
 
 					@Override
 					public boolean accept(File dir, String filename) {
-						return "REMOTE1.RTS".equals(filename)
+						return "remote1.rts".equals(filename.toLowerCase())
 								|| (isShareware()
-										? "HUNTBGIN.RTL".equals(filename) || "HUNTBGIN.WAD".equals(filename)
-										: "DARKWAR.RTL".equals(filename) || "DARKWAR.WAD".equals(filename));
+										? "huntbgin.rtl".equals(filename.toLowerCase()) || "huntbgin.wad".equals(filename.toLowerCase())
+										: "darkwar.rtl".equals(filename.toLowerCase()) || "darkwar.wad".equals(filename.toLowerCase()));
 					}
 
 				}).length >= 3;
