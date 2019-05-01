@@ -152,10 +152,14 @@ public class ContentPrepareActivity extends Activity {
 
 					@Override
 					public boolean accept(File dir, String filename) {
-						return "REMOTE1.RTS".equals(filename)
+						String upperCase = filename.toUpperCase();
+						if (!filename.equals(upperCase)) {
+							new File(dir, filename).renameTo(new File(dir, upperCase));
+						}
+						return "REMOTE1.RTS".equals(upperCase)
 								|| (isShareware()
-										? "HUNTBGIN.RTL".equals(filename) || "HUNTBGIN.WAD".equals(filename)
-										: "DARKWAR.RTL".equals(filename) || "DARKWAR.WAD".equals(filename));
+										? "HUNTBGIN.RTL".equals(upperCase) || "HUNTBGIN.WAD".equals(upperCase)
+										: "DARKWAR.RTL".equals(upperCase) || "DARKWAR.WAD".equals(upperCase));
 					}
 
 				}).length >= 3;
