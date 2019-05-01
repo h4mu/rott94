@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #if PLATFORM_DOS
 #include <conio.h>
@@ -52,6 +53,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "keyb.h"
 
 #define MAXMESSAGELENGTH      (COM_MAXTEXTSTRINGLENGTH-1)
+
 
 //****************************************************************************
 //
@@ -433,11 +435,25 @@ static int sdl_finger_filter(const SDL_Event *event)
 		keyEvent.key.state = SDL_PRESSED;
 	}
 	keyEvent.key.keysym.scancode = scancodeMapping[row][column];
+#ifdef DEBUG
 	SDL_Log("x\t%.3f\ty\t%.3f\trow\t%d\tcol\t%d\tsym\t%d\t%s\tfid\t%d", event->tfinger.x, event->tfinger.y, row, column, scancodeMapping[row][column], event->type == SDL_FINGERUP ? "up" : event->type == SDL_FINGERDOWN ? "down" : "move", event->tfinger.fingerId);
+#endif
 	return sdl_key_filter(&keyEvent);
 } /* sdl_finger_filter */
 
 unsigned int lastInteraction;
+
+static int sdl_joy_filter(const SDL_Event *event)
+{
+#ifdef DEBUG
+	printf("joy button %d pressed %d\n", event->jbutton.button, event->jbutton.state == SDL_PRESSED);
+#endif
+	if (event->jbutton.state == SDL_PRESSED)
+		sdl_sticks_joybits |= 1 << event->jbutton.button;
+	else
+		sdl_sticks_joybits &= ~(1 << event->jbutton.button);
+	return 0;
+}
 
 static int root_sdl_event_filter(const SDL_Event *event)
 {
@@ -461,6 +477,9 @@ static int root_sdl_event_filter(const SDL_Event *event)
         case SDL_FINGERDOWN:
         case SDL_FINGERUP:
         	return sdl_finger_filter(event);
+        case SDL_JOYBUTTONDOWN:
+        case SDL_JOYBUTTONUP:
+        	return sdl_joy_filter(event);
         case SDL_QUIT:
             /* !!! rcg TEMP */
             fprintf(stderr, "\n\n\nSDL_QUIT!\n\n\n");
@@ -650,6 +669,24 @@ void JoyStick_Vals (void)
 
 void INL_GetJoyDelta (word joy, int *dx, int *dy)
 {
+#if USE_SDL
+   if (joy < sdl_total_sticks)
+   {
+	   int16_t x = SDL_JoystickGetAxis (sdl_joysticks[joy], 0);
+	   int16_t y = SDL_JoystickGetAxis (sdl_joysticks[joy], 1);
+	   *dx = (int)(((float)x)*127.0f/((float)SHRT_MAX));
+	   *dy = (int)(((float)y)*127.0f/((float)SHRT_MAX));
+#ifdef DEBUG
+	   if (x != 0 || y != 0)
+		   printf("x %d y %d dx %d dy %d\n", x, y, *dx, *dy);
+#endif
+   }
+   else
+   {
+	   *dx = 0;
+	   *dy = 0;
+   }
+#else
    word        x, y;
    JoystickDef *def;
    static longword lasttime;
@@ -704,6 +741,7 @@ void INL_GetJoyDelta (word joy, int *dx, int *dy)
       *dy = 0;
 
    lasttime = GetTicCount();
+#endif
 }
 
 
@@ -856,8 +894,6 @@ void IN_SetupJoy (word joy, word minx, word maxx, word miny, word maxy)
 
 boolean INL_StartJoy (word joy)
 {
-   word x,y;
-
 #if USE_SDL
    if (!SDL_WasInit(SDL_INIT_JOYSTICK))
    {
@@ -878,7 +914,10 @@ boolean INL_StartJoy (word joy)
 
    if (joy >= sdl_total_sticks) return (false);
    sdl_joysticks[joy] = SDL_JoystickOpen (joy);
-#endif
+
+   return (true);
+#else
+   word x,y;
 
    IN_GetJoyAbs (joy, &x, &y);
 
@@ -893,6 +932,7 @@ boolean INL_StartJoy (word joy)
       IN_SetupJoy (joy, 0, x * 2, 0, y * 2);
       return (true);
    }
+#endif
 }
 
 
@@ -1116,7 +1156,7 @@ sdl_mouse_grabbed = 1;
    for (i = 0;i < MaxJoys;i++)
       {
       JoysPresent[i] = checkjoys ? INL_StartJoy(i) : false;
-      if (INL_StartJoy(i))
+      if (JoysPresent[i])
          {
          if (!quiet)
             printf("IN_Startup: Joystick Present\n");

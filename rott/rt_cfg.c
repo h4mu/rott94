@@ -696,12 +696,13 @@ boolean ParseConfigFile (void)
          joystickenabled = false;
 
       // precaution
-
+#if !USE_SDL
       if (!joyxmin || !joyxmax || !joyymin || !joyymax)
          joystickenabled = false;
 
       if (joystickenabled)
          IN_SetupJoy (joystickport, joyxmin, joyxmax, joyymin, joyymax);
+#endif
    }
    else
       retval = false;
@@ -951,8 +952,8 @@ void SetConfigDefaultValues (void)
    if (MousePresent)
       mouseenabled = true;
 
-   joystickenabled = false;
-   joypadenabled   = false;
+   joystickenabled = true;
+   joypadenabled   = true;
    joystickport    = 0;
    viewsize        = 7;
    mouseadjustment = 5;

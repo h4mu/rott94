@@ -3680,6 +3680,7 @@ void CP_Control (void)
 
 			case JOYENABLE:
             joystickenabled^=1;
+#if !USE_SDL
             if ( joystickenabled )
                {
                if ( !CalibrateJoystick() )
@@ -3692,6 +3693,7 @@ void CP_Control (void)
                {
                joypadenabled = 0;
                }
+#endif
             DrawCtlScreen();
             break;
 
@@ -3703,12 +3705,13 @@ void CP_Control (void)
                }
 
             joystickenabled = 1;
+#if !USE_SDL
             if ( !CalibrateJoystick() )
                {
                joystickenabled = 0;
                joystickport = 0;
                }
-
+#endif
             if ( joystickport )
                {
                CtlMenu[ 3 ].active = CP_Inactive;
@@ -3727,12 +3730,13 @@ void CP_Control (void)
             if ( ( joypadenabled ) && ( !joystickenabled ) )
                {
                joystickenabled=1;
+#if !USE_SDL
                if ( !CalibrateJoystick() )
                   {
                   joystickenabled = 0;
                   joypadenabled = 0;
                   }
-
+#endif
                DrawCtlScreen();
                }
             else
