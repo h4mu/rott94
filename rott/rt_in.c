@@ -897,6 +897,8 @@ boolean INL_StartJoy (word joy)
 #if USE_SDL
    if (!SDL_WasInit(SDL_INIT_JOYSTICK))
    {
+       SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
+       SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "0");
        SDL_Init(SDL_INIT_JOYSTICK);
        sdl_total_sticks = SDL_NumJoysticks();
        if (sdl_total_sticks > MaxJoys) sdl_total_sticks = MaxJoys;
