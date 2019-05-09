@@ -674,8 +674,8 @@ void INL_GetJoyDelta (word joy, int *dx, int *dy)
    {
 	   int16_t x = SDL_JoystickGetAxis (sdl_joysticks[joy], 0);
 	   int16_t y = SDL_JoystickGetAxis (sdl_joysticks[joy], 1);
-	   *dx = (int)(((float)x)*127.0f/((float)SHRT_MAX));
-	   *dy = (int)(((float)y)*127.0f/((float)SHRT_MAX));
+	   *dx = (x * 127) / SHRT_MAX;
+	   *dy = (y * 127) / SHRT_MAX;
 #ifdef DEBUG
 	   if (x != 0 || y != 0)
 		   printf("x %d y %d dx %d dy %d\n", x, y, *dx, *dy);
