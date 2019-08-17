@@ -4,8 +4,6 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="io.github.h4mu.rott94"
-    android:versionCode="1"
-    android:versionName="1.0"
     android:installLocation="auto">
 
     <!-- OpenGL ES 2.0 -->
@@ -48,6 +46,25 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="file" />
+                <data android:mimeType="*/*" />
+                <data android:host="*" />
+                <data android:pathPattern=".*\\.RTL" />
+                <data android:pathPattern=".*\\..*\\.RTL" />
+                <data android:pathPattern=".*\\..*\\..*\\.RTL" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.RTL" />
+                <data android:pathPattern=".*\\.RTC" />
+                <data android:pathPattern=".*\\..*\\.RTC" />
+                <data android:pathPattern=".*\\..*\\..*\\.RTC" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.RTC" />
+                <data android:pathPattern=".*\\.WAD" />
+                <data android:pathPattern=".*\\..*\\.WAD" />
+                <data android:pathPattern=".*\\..*\\..*\\.WAD" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.WAD" />
             </intent-filter>
         </activity>
     </application>
