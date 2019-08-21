@@ -14,8 +14,11 @@
    height="32px"
    id="svg2993"
    version="1.1"
-   inkscape:version="0.48.4 r9939"
-   sodipodi:docname="rott.svg">
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="rott.svg"
+   inkscape:export-filename="D:\h4mu\StudioProjects\android\app\src\main\res\mipmap-xxxhdpi\ic_launcher.png"
+   inkscape:export-xdpi="576"
+   inkscape:export-ydpi="576">
   <title
      id="title3880">rott icon</title>
   <defs
@@ -190,7 +193,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="14.142136"
-     inkscape:cx="25.789248"
+     inkscape:cx="14.01592"
      inkscape:cy="14.574039"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -202,10 +205,10 @@
      inkscape:snap-bbox-edge-midpoints="true"
      inkscape:snap-bbox-midpoints="true"
      inkscape:snap-global="true"
-     inkscape:window-width="1280"
-     inkscape:window-height="751"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
      inkscape:window-maximized="1"
      inkscape:snap-to-guides="false"
      inkscape:snap-nodes="true">
@@ -216,10 +219,10 @@
        visible="true"
        enabled="true"
        snapvisiblegridlinesonly="true"
-       spacingx="0.5px"
-       spacingy="0.5px"
-       originx="-0.5px"
-       originy="-0.5px"
+       spacingx="0.5"
+       spacingy="0.5"
+       originx="-0.5"
+       originy="-0.5"
        empcolor="#000000"
        empopacity="0.25098039"
        dotted="false"
@@ -282,15 +285,15 @@
        sodipodi:nodetypes="cccccc" />
     <text
        xml:space="preserve"
-       style="font-size:6px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;font-family:Webdings;-inkscape-font-specification:Webdings"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:condensed;line-height:0%;font-family:Impact;-inkscape-font-specification:'Impact, Condensed';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;font-size:8px;text-anchor:start;text-align:start;writing-mode:lr;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;"
        x="9.1092281"
        y="4.4183674"
        id="text3020"
-       sodipodi:linespacing="125%"
-       transform="matrix(0.72055401,0.69339882,-0.69339882,0.72055401,0,0)"><tspan
+       transform="rotate(43.899761)"><tspan
          sodipodi:role="line"
          id="tspan3022"
          x="9.1092281"
-         y="4.4183674">Unofficial</tspan></text>
+         y="4.4183674"
+         style="font-size:8px;line-height:1.25;-inkscape-font-specification:'Impact, Condensed';font-family:Impact;font-weight:normal;font-style:normal;font-stretch:condensed;font-variant:normal;text-anchor:start;text-align:start;writing-mode:lr;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;">Unofficial</tspan></text>
   </g>
 </svg>
