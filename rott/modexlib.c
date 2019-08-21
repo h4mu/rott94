@@ -432,22 +432,21 @@ void BuildHintTexture()
 {
 	lastInteraction = SDL_GetTicks();
 	SDL_RWops *file = SDL_RWFromFile("buttons.bmp", "rb");
-	if (!file)
+	if (file)
 	{
-		Error("File error: %s\n", SDL_GetError());
+		SDL_Surface *image = SDL_LoadBMP_RW(file, SDL_TRUE);
+		if (!image)
+		{
+			Error("Bitmap error: %s\n", SDL_GetError());
+		}
+		SDL_SetColorKey(image, SDL_TRUE, SDL_MapRGBA(image->format, 255, 255, 255, 0));
+		sdl_hint_texture = SDL_CreateTextureFromSurface(sdl_renderer, image);
+		if (!sdl_hint_texture)
+		{
+			Error("Texture error: %s\n", SDL_GetError());
+		}
+		SDL_FreeSurface(image);
 	}
-	SDL_Surface *image = SDL_LoadBMP_RW(file, SDL_TRUE);
-	if (!image)
-	{
-		Error("Bitmap error: %s\n", SDL_GetError());
-	}
-	SDL_SetColorKey(image, SDL_TRUE, SDL_MapRGBA(image->format, 255, 255, 255, 0));
-	sdl_hint_texture = SDL_CreateTextureFromSurface(sdl_renderer, image);
-	if (!sdl_hint_texture)
-	{
-		Error("Texture error: %s\n", SDL_GetError());
-	}
-	SDL_FreeSurface(image);
 }
 
 void GraphicsMode ( void )
@@ -765,21 +764,24 @@ void VL_DePlaneVGA (void)
 
 static void RenderCopyHintTexture()
 {
-	unsigned int deltaInteraction = SDL_GetTicks() - lastInteraction;
-	const unsigned int minDelay = 10000;
-	if (deltaInteraction < minDelay + 4600)
+	if (sdl_hint_texture)
 	{
-		if (deltaInteraction > minDelay + 4000)
+		unsigned int deltaInteraction = SDL_GetTicks() - lastInteraction;
+		const unsigned int minDelay = 10000;
+		if (deltaInteraction < minDelay + 4600)
 		{
-			unsigned int shade = (minDelay + 4600 - deltaInteraction) / 3;
-			SDL_SetTextureAlphaMod(sdl_hint_texture, shade < 1 ? 0 : shade);
-			SDL_RenderCopy(sdl_renderer, sdl_hint_texture, NULL, NULL);
-		}
-		else if (deltaInteraction > minDelay)
-		{
-			unsigned int shade = (deltaInteraction - minDelay) / 3;
-			SDL_SetTextureAlphaMod(sdl_hint_texture, shade > 200 ? 200 : shade);
-			SDL_RenderCopy(sdl_renderer, sdl_hint_texture, NULL, NULL);
+			if (deltaInteraction > minDelay + 4000)
+			{
+				unsigned int shade = (minDelay + 4600 - deltaInteraction) / 3;
+				SDL_SetTextureAlphaMod(sdl_hint_texture, shade < 1 ? 0 : shade);
+				SDL_RenderCopy(sdl_renderer, sdl_hint_texture, NULL, NULL);
+			}
+			else if (deltaInteraction > minDelay)
+			{
+				unsigned int shade = (deltaInteraction - minDelay) / 3;
+				SDL_SetTextureAlphaMod(sdl_hint_texture, shade > 200 ? 200 : shade);
+				SDL_RenderCopy(sdl_renderer, sdl_hint_texture, NULL, NULL);
+			}
 		}
 	}
 }
