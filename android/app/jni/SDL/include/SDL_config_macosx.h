@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2018 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -102,6 +102,8 @@
 #define HAVE_COPYSIGNF  1
 #define HAVE_COS    1
 #define HAVE_COSF   1
+#define HAVE_EXP    1
+#define HAVE_EXPF   1
 #define HAVE_FABS   1
 #define HAVE_FABSF  1
 #define HAVE_FLOOR  1
@@ -110,6 +112,8 @@
 #define HAVE_FMODF  1
 #define HAVE_LOG    1
 #define HAVE_LOGF   1
+#define HAVE_LOG10  1
+#define HAVE_LOG10F 1
 #define HAVE_POW    1
 #define HAVE_POWF   1
 #define HAVE_SCALBN 1
@@ -126,6 +130,8 @@
 #define HAVE_SYSCONF    1
 #define HAVE_SYSCTLBYNAME 1
 
+#define HAVE_GCC_ATOMICS 1
+
 /* Enable various audio drivers */
 #define SDL_AUDIO_DRIVER_COREAUDIO  1
 #define SDL_AUDIO_DRIVER_DISK   1
@@ -133,7 +139,11 @@
 
 /* Enable various input drivers */
 #define SDL_JOYSTICK_IOKIT  1
+#define SDL_JOYSTICK_HIDAPI  1
 #define SDL_HAPTIC_IOKIT    1
+
+/* Enable the dummy sensor driver */
+#define SDL_SENSOR_DUMMY  1
 
 /* Enable various shared object loading systems */
 #define SDL_LOADSO_DLOPEN   1
@@ -183,9 +193,15 @@
 #define SDL_VIDEO_RENDER_OGL_ES2 1
 #endif
 
-#ifndef SDL_VIDEO_RENDER_METAL
 /* Metal only supported on 64-bit architectures with 10.11+ */
 #if TARGET_CPU_X86_64 && (MAC_OS_X_VERSION_MAX_ALLOWED >= 101100)
+#define SDL_PLATFORM_SUPPORTS_METAL    1
+#else
+#define SDL_PLATFORM_SUPPORTS_METAL    0
+#endif
+
+#ifndef SDL_VIDEO_RENDER_METAL
+#if SDL_PLATFORM_SUPPORTS_METAL
 #define SDL_VIDEO_RENDER_METAL    1
 #else
 #define SDL_VIDEO_RENDER_METAL    0
@@ -209,12 +225,21 @@
 #define SDL_VIDEO_OPENGL_GLX    1
 #endif
 
-/* Enable Vulkan support */
-/* Metal/MoltenVK/Vulkan only supported on 64-bit architectures with 10.11+ */
-#if TARGET_CPU_X86_64 && (MAC_OS_X_VERSION_MAX_ALLOWED >= 101100)
+/* Enable Vulkan and Metal support */
+#ifndef SDL_VIDEO_VULKAN
+#if SDL_PLATFORM_SUPPORTS_METAL
 #define SDL_VIDEO_VULKAN 1
 #else
 #define SDL_VIDEO_VULKAN 0
+#endif
+#endif
+
+#ifndef SDL_VIDEO_METAL
+#if SDL_PLATFORM_SUPPORTS_METAL
+#define SDL_VIDEO_METAL 1
+#else
+#define SDL_VIDEO_METAL 0
+#endif
 #endif
 
 /* Enable system power support */

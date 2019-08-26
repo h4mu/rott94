@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2018 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -144,6 +144,8 @@
 #cmakedefine HAVE_COPYSIGNF 1
 #cmakedefine HAVE_COS 1
 #cmakedefine HAVE_COSF 1
+#cmakedefine HAVE_EXP 1
+#cmakedefine HAVE_EXPF 1
 #cmakedefine HAVE_FABS 1
 #cmakedefine HAVE_FABSF 1
 #cmakedefine HAVE_FLOOR 1
@@ -152,6 +154,8 @@
 #cmakedefine HAVE_FMODF 1
 #cmakedefine HAVE_LOG 1
 #cmakedefine HAVE_LOGF 1
+#cmakedefine HAVE_LOG10 1
+#cmakedefine HAVE_LOG10F 1
 #cmakedefine HAVE_POW 1
 #cmakedefine HAVE_POWF 1
 #cmakedefine HAVE_SCALBN 1
@@ -180,6 +184,7 @@
 #cmakedefine HAVE_SEM_TIMEDWAIT 1
 #cmakedefine HAVE_GETAUXVAL 1
 #cmakedefine HAVE_POLL 1
+#cmakedefine HAVE__EXIT 1
 
 #elif __WIN32__
 #cmakedefine HAVE_STDARG_H 1
@@ -205,6 +210,11 @@
 #cmakedefine HAVE_DINPUT_H @HAVE_DINPUT_H@
 #cmakedefine HAVE_XINPUT_H @HAVE_XINPUT_H@
 #cmakedefine HAVE_DXGI_H @HAVE_DXGI_H@
+
+#cmakedefine HAVE_ENDPOINTVOLUME_H @HAVE_ENDPOINTVOLUME_H@
+#cmakedefine HAVE_MMDEVICEAPI_H @HAVE_MMDEVICEAPI_H@
+#cmakedefine HAVE_AUDIOCLIENT_H @HAVE_AUDIOCLIENT_H@
+
 #cmakedefine HAVE_XINPUT_GAMEPAD_EX @HAVE_XINPUT_GAMEPAD_EX@
 #cmakedefine HAVE_XINPUT_STATE_EX @HAVE_XINPUT_STATE_EX@
 
@@ -219,6 +229,7 @@
 #cmakedefine SDL_FILE_DISABLED @SDL_FILE_DISABLED@
 #cmakedefine SDL_JOYSTICK_DISABLED @SDL_JOYSTICK_DISABLED@
 #cmakedefine SDL_HAPTIC_DISABLED @SDL_HAPTIC_DISABLED@
+#cmakedefine SDL_SENSOR_DISABLED @SDL_SENSOR_DISABLED@
 #cmakedefine SDL_LOADSO_DISABLED @SDL_LOADSO_DISABLED@
 #cmakedefine SDL_RENDER_DISABLED @SDL_RENDER_DISABLED@
 #cmakedefine SDL_THREADS_DISABLED @SDL_THREADS_DISABLED@
@@ -275,6 +286,7 @@
 #cmakedefine SDL_JOYSTICK_WINMM @SDL_JOYSTICK_WINMM@
 #cmakedefine SDL_JOYSTICK_USBHID @SDL_JOYSTICK_USBHID@
 #cmakedefine SDL_JOYSTICK_USBHID_MACHINE_JOYSTICK_H @SDL_JOYSTICK_USBHID_MACHINE_JOYSTICK_H@
+#cmakedefine SDL_JOYSTICK_HIDAPI @SDL_JOYSTICK_HIDAPI@
 #cmakedefine SDL_JOYSTICK_EMSCRIPTEN @SDL_JOYSTICK_EMSCRIPTEN@
 #cmakedefine SDL_HAPTIC_DUMMY @SDL_HAPTIC_DUMMY@
 #cmakedefine SDL_HAPTIC_LINUX @SDL_HAPTIC_LINUX@
@@ -282,6 +294,11 @@
 #cmakedefine SDL_HAPTIC_DINPUT @SDL_HAPTIC_DINPUT@
 #cmakedefine SDL_HAPTIC_XINPUT @SDL_HAPTIC_XINPUT@
 #cmakedefine SDL_HAPTIC_ANDROID @SDL_HAPTIC_ANDROID@
+#cmakedefine SDL_LIBUSB_DYNAMIC @SDL_LIBUSB_DYNAMIC@
+
+/* Enable various sensor drivers */
+#cmakedefine SDL_SENSOR_ANDROID @SDL_SENSOR_ANDROID@
+#cmakedefine SDL_SENSOR_DUMMY @SDL_SENSOR_DUMMY@
 
 /* Enable various shared object loading systems */
 #cmakedefine SDL_LOADSO_DLOPEN @SDL_LOADSO_DLOPEN@
@@ -325,9 +342,6 @@
 #cmakedefine SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC_CURSOR @SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC_CURSOR@
 #cmakedefine SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC_XKBCOMMON @SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC_XKBCOMMON@
 
-#cmakedefine SDL_VIDEO_DRIVER_MIR @SDL_VIDEO_DRIVER_MIR@
-#cmakedefine SDL_VIDEO_DRIVER_MIR_DYNAMIC @SDL_VIDEO_DRIVER_MIR_DYNAMIC@
-#cmakedefine SDL_VIDEO_DRIVER_MIR_DYNAMIC_XKBCOMMON @SDL_VIDEO_DRIVER_MIR_DYNAMIC_XKBCOMMON@
 #cmakedefine SDL_VIDEO_DRIVER_EMSCRIPTEN @SDL_VIDEO_DRIVER_EMSCRIPTEN@
 #cmakedefine SDL_VIDEO_DRIVER_X11 @SDL_VIDEO_DRIVER_X11@
 #cmakedefine SDL_VIDEO_DRIVER_X11_DYNAMIC @SDL_VIDEO_DRIVER_X11_DYNAMIC@
@@ -373,6 +387,9 @@
 
 /* Enable Vulkan support */
 #cmakedefine SDL_VIDEO_VULKAN @SDL_VIDEO_VULKAN@
+
+/* Enable Metal support */
+#cmakedefine SDL_VIDEO_METAL @SDL_VIDEO_METAL@
 
 /* Enable system power support */
 #cmakedefine SDL_POWER_ANDROID @SDL_POWER_ANDROID@

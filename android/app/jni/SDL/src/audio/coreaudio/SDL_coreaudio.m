@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2018 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -354,7 +354,7 @@ static BOOL update_audio_session(_THIS, SDL_bool open)
             return NO;
         }
 
-        if (open_playback_devices + open_capture_devices == 1) {
+        if (open && (open_playback_devices + open_capture_devices) == 1) {
             if (![session setActive:YES error:&err]) {
                 NSString *desc = err.description;
                 SDL_SetError("Could not activate Audio Session: %s", desc.UTF8String);
@@ -376,25 +376,26 @@ static BOOL update_audio_session(_THIS, SDL_bool open)
             /* An interruption end notification is not guaranteed to be sent if
              we were previously interrupted... resuming if needed when the app
              becomes active seems to be the way to go. */
+            // Note: object: below needs to be nil, as otherwise it filters by the object, and session doesn't send foreground / active notifications.  johna
             [center addObserver:listener
                        selector:@selector(applicationBecameActive:)
                            name:UIApplicationDidBecomeActiveNotification
-                         object:session];
+                         object:nil];
 
             [center addObserver:listener
                        selector:@selector(applicationBecameActive:)
                            name:UIApplicationWillEnterForegroundNotification
-                         object:session];
+                         object:nil];
 
             this->hidden->interruption_listener = CFBridgingRetain(listener);
         } else {
             if (this->hidden->interruption_listener != NULL) {
                 SDLInterruptionListener *listener = nil;
                 listener = (SDLInterruptionListener *) CFBridgingRelease(this->hidden->interruption_listener);
+                [center removeObserver:listener];
                 @synchronized (listener) {
                     listener.device = NULL;
                 }
-                [center removeObserver:listener];
             }
         }
     }
@@ -416,6 +417,34 @@ outputCallback(void *inUserData, AudioQueueRef inAQ, AudioQueueBufferRef inBuffe
     if (!SDL_AtomicGet(&this->enabled) || SDL_AtomicGet(&this->paused)) {
         /* Supply silence if audio is not enabled or paused */
         SDL_memset(inBuffer->mAudioData, this->spec.silence, inBuffer->mAudioDataBytesCapacity);
+    } else if (this->stream ) {
+        UInt32 remaining = inBuffer->mAudioDataBytesCapacity;
+        Uint8 *ptr = (Uint8 *) inBuffer->mAudioData;
+
+        while (remaining > 0) {
+            if ( SDL_AudioStreamAvailable(this->stream) == 0 ) {
+                /* Generate the data */
+                SDL_LockMutex(this->mixer_lock);
+                (*this->callbackspec.callback)(this->callbackspec.userdata,
+                                               this->hidden->buffer, this->hidden->bufferSize);
+                SDL_UnlockMutex(this->mixer_lock);
+                this->hidden->bufferOffset = 0;
+                SDL_AudioStreamPut(this->stream, this->hidden->buffer, this->hidden->bufferSize);
+            }
+            if ( SDL_AudioStreamAvailable(this->stream) > 0 ) {
+                int got;
+                UInt32 len = SDL_AudioStreamAvailable(this->stream);
+                if ( len > remaining )
+                    len = remaining;
+                got = SDL_AudioStreamGet(this->stream, ptr, len);
+                SDL_assert((got < 0) || (got == len));
+                if (got != len) {
+                    SDL_memset(ptr, this->spec.silence, len);
+                }
+                ptr = ptr + len;
+                remaining -= len;
+            }
+        }
     } else {
         UInt32 remaining = inBuffer->mAudioDataBytesCapacity;
         Uint8 *ptr = (Uint8 *) inBuffer->mAudioData;
@@ -727,6 +756,8 @@ audioqueue_thread(void *arg)
         SDL_SemPost(this->hidden->ready_semaphore);
         return 0;
     }
+
+    SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
 
     /* init was successful, alert parent thread and start running... */
     SDL_SemPost(this->hidden->ready_semaphore);

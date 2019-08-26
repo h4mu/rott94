@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2018 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -40,6 +40,8 @@
 
 #include "pointer-constraints-unstable-v1-client-protocol.h"
 #include "relative-pointer-unstable-v1-client-protocol.h"
+#include "xdg-shell-client-protocol.h"
+#include "xdg-shell-unstable-v6-client-protocol.h"
 
 #include <linux/input.h>
 #include <sys/select.h>
@@ -127,7 +129,7 @@ touch_update(SDL_TouchID id, float x, float y)
 }
 
 static void
-touch_del(SDL_TouchID id, float* x, float* y)
+touch_del(SDL_TouchID id, float* x, float* y, struct wl_surface **surface)
 {
     struct SDL_WaylandTouchPoint* tp = touch_points.head;
 
@@ -135,6 +137,7 @@ touch_del(SDL_TouchID id, float* x, float* y)
         if (tp->id == id) {
             *x = tp->x;
             *y = tp->y;
+            *surface = tp->surface;
 
             if (tp->prev) {
                 tp->prev->next = tp->next;
@@ -175,13 +178,23 @@ void
 Wayland_PumpEvents(_THIS)
 {
     SDL_VideoData *d = _this->driverdata;
+    int err;
+
+    WAYLAND_wl_display_flush(d->display);
 
     if (SDL_IOReady(WAYLAND_wl_display_get_fd(d->display), SDL_FALSE, 0)) {
-        WAYLAND_wl_display_dispatch(d->display);
+        err = WAYLAND_wl_display_dispatch(d->display);
+    } else {
+        err = WAYLAND_wl_display_dispatch_pending(d->display);
     }
-    else
-    {
-        WAYLAND_wl_display_dispatch_pending(d->display);
+    if (err == -1 && !d->display_disconnected) {
+        /* Something has failed with the Wayland connection -- for example,
+         * the compositor may have shut down and closed its end of the socket,
+         * or there is a library-specific error. No recovery is possible. */
+        d->display_disconnected = 1;
+        /* Only send a single quit message, as application shutdown might call
+         * SDL_PumpEvents */
+        SDL_SendQuit();
     }
 }
 
@@ -248,15 +261,27 @@ ProcessHitTest(struct SDL_WaylandInput *input, uint32_t serial)
     if (window->hit_test) {
         const SDL_Point point = { wl_fixed_to_int(input->sx_w), wl_fixed_to_int(input->sy_w) };
         const SDL_HitTestResult rc = window->hit_test(window, &point, window->hit_test_data);
-        static const uint32_t directions[] = {
+
+        static const uint32_t directions_wl[] = {
             WL_SHELL_SURFACE_RESIZE_TOP_LEFT, WL_SHELL_SURFACE_RESIZE_TOP,
             WL_SHELL_SURFACE_RESIZE_TOP_RIGHT, WL_SHELL_SURFACE_RESIZE_RIGHT,
             WL_SHELL_SURFACE_RESIZE_BOTTOM_RIGHT, WL_SHELL_SURFACE_RESIZE_BOTTOM,
             WL_SHELL_SURFACE_RESIZE_BOTTOM_LEFT, WL_SHELL_SURFACE_RESIZE_LEFT
         };
+
+        /* the names are different (ZXDG_TOPLEVEL_V6_RESIZE_EDGE_* vs
+           WL_SHELL_SURFACE_RESIZE_*), but the values are the same. */
+        const uint32_t *directions_zxdg = directions_wl;
+
         switch (rc) {
             case SDL_HITTEST_DRAGGABLE:
-                wl_shell_surface_move(window_data->shell_surface, input->seat, serial);
+                if (input->display->shell.xdg) {
+                    xdg_toplevel_move(window_data->shell_surface.xdg.roleobj.toplevel, input->seat, serial);
+                } else if (input->display->shell.zxdg) {
+                    zxdg_toplevel_v6_move(window_data->shell_surface.zxdg.roleobj.toplevel, input->seat, serial);
+                } else {
+                    wl_shell_surface_move(window_data->shell_surface.wl, input->seat, serial);
+                }
                 return SDL_TRUE;
 
             case SDL_HITTEST_RESIZE_TOPLEFT:
@@ -267,7 +292,13 @@ ProcessHitTest(struct SDL_WaylandInput *input, uint32_t serial)
             case SDL_HITTEST_RESIZE_BOTTOM:
             case SDL_HITTEST_RESIZE_BOTTOMLEFT:
             case SDL_HITTEST_RESIZE_LEFT:
-                wl_shell_surface_resize(window_data->shell_surface, input->seat, serial, directions[rc - SDL_HITTEST_RESIZE_TOPLEFT]);
+                if (input->display->shell.xdg) {
+                    xdg_toplevel_resize(window_data->shell_surface.xdg.roleobj.toplevel, input->seat, serial, directions_zxdg[rc - SDL_HITTEST_RESIZE_TOPLEFT]);
+                } else if (input->display->shell.zxdg) {
+                    zxdg_toplevel_v6_resize(window_data->shell_surface.zxdg.roleobj.toplevel, input->seat, serial, directions_zxdg[rc - SDL_HITTEST_RESIZE_TOPLEFT]);
+                } else {
+                    wl_shell_surface_resize(window_data->shell_surface.wl, input->seat, serial, directions_wl[rc - SDL_HITTEST_RESIZE_TOPLEFT]);
+                }
                 return SDL_TRUE;
 
             default: return SDL_FALSE;
@@ -377,16 +408,15 @@ touch_handler_down(void *data, struct wl_touch *touch, unsigned int serial,
                    unsigned int timestamp, struct wl_surface *surface,
                    int id, wl_fixed_t fx, wl_fixed_t fy)
 {
-    float x, y;
-    SDL_WindowData* window;
-
-    window = (SDL_WindowData *)wl_surface_get_user_data(surface);
-
-    x = wl_fixed_to_double(fx) / window->sdlwindow->w;
-    y = wl_fixed_to_double(fy) / window->sdlwindow->h;
+    SDL_WindowData *window_data = (SDL_WindowData *)wl_surface_get_user_data(surface);
+    const double dblx = wl_fixed_to_double(fx);
+    const double dbly = wl_fixed_to_double(fy);
+    const float x = dblx / window_data->sdlwindow->w;
+    const float y = dbly / window_data->sdlwindow->h;
 
     touch_add(id, x, y, surface);
-    SDL_SendTouch(1, (SDL_FingerID)id, SDL_TRUE, x, y, 1.0f);
+
+    SDL_SendTouch(1, (SDL_FingerID)id, window_data->sdlwindow, SDL_TRUE, x, y, 1.0f);
 }
 
 static void
@@ -394,25 +424,31 @@ touch_handler_up(void *data, struct wl_touch *touch, unsigned int serial,
                  unsigned int timestamp, int id)
 {
     float x = 0, y = 0;
+    struct wl_surface *surface = NULL;
+    SDL_Window *window = NULL;
 
-    touch_del(id, &x, &y);
-    SDL_SendTouch(1, (SDL_FingerID)id, SDL_FALSE, x, y, 0.0f);
+    touch_del(id, &x, &y, &surface);
+
+    if (surface) {
+        SDL_WindowData *window_data = (SDL_WindowData *)wl_surface_get_user_data(surface);
+        window = window_data->sdlwindow;
+    }
+
+    SDL_SendTouch(1, (SDL_FingerID)id, window, SDL_FALSE, x, y, 0.0f);
 }
 
 static void
 touch_handler_motion(void *data, struct wl_touch *touch, unsigned int timestamp,
                      int id, wl_fixed_t fx, wl_fixed_t fy)
 {
-    float x, y;
-    SDL_WindowData* window;
-
-    window = (SDL_WindowData *)wl_surface_get_user_data(touch_surface(id));
-
-    x = wl_fixed_to_double(fx) / window->sdlwindow->w;
-    y = wl_fixed_to_double(fy) / window->sdlwindow->h;
+    SDL_WindowData *window_data = (SDL_WindowData *)wl_surface_get_user_data(touch_surface(id));
+    const double dblx = wl_fixed_to_double(fx);
+    const double dbly = wl_fixed_to_double(fy);
+    const float x = dblx / window_data->sdlwindow->w;
+    const float y = dbly / window_data->sdlwindow->h;
 
     touch_update(id, x, y);
-    SDL_SendTouchMotion(1, (SDL_FingerID)id, x, y, 1.0f);
+    SDL_SendTouchMotion(1, (SDL_FingerID)id, window_data->sdlwindow, x, y, 1.0f);
 }
 
 static void
@@ -592,7 +628,7 @@ seat_handle_capabilities(void *data, struct wl_seat *seat,
     }
 
     if ((caps & WL_SEAT_CAPABILITY_TOUCH) && !input->touch) {
-        SDL_AddTouch(1, "wayland_touch");
+        SDL_AddTouch(1, SDL_TOUCH_DEVICE_DIRECT, "wayland_touch");
         input->touch = wl_seat_get_touch(seat);
         wl_touch_set_user_data(input->touch, input);
         wl_touch_add_listener(input->touch, &touch_listener,
@@ -727,7 +763,7 @@ static const struct wl_data_offer_listener data_offer_listener = {
 
 static void
 data_device_handle_data_offer(void *data, struct wl_data_device *wl_data_device,
-			                  struct wl_data_offer *id)
+                              struct wl_data_offer *id)
 {
     SDL_WaylandDataOffer *data_offer = NULL;
 
@@ -745,7 +781,7 @@ data_device_handle_data_offer(void *data, struct wl_data_device *wl_data_device,
 
 static void
 data_device_handle_enter(void *data, struct wl_data_device *wl_data_device,
-		                 uint32_t serial, struct wl_surface *surface,
+                         uint32_t serial, struct wl_surface *surface,
                          wl_fixed_t x, wl_fixed_t y, struct wl_data_offer *id)
 {
     SDL_WaylandDataDevice *data_device = data;
@@ -788,7 +824,7 @@ data_device_handle_leave(void *data, struct wl_data_device *wl_data_device)
 
 static void
 data_device_handle_motion(void *data, struct wl_data_device *wl_data_device,
-		                  uint32_t time, wl_fixed_t x, wl_fixed_t y)
+                          uint32_t time, wl_fixed_t x, wl_fixed_t y)
 {
 }
 
@@ -827,7 +863,7 @@ data_device_handle_drop(void *data, struct wl_data_device *wl_data_device)
 
 static void
 data_device_handle_selection(void *data, struct wl_data_device *wl_data_device,
-			                 struct wl_data_offer *id)
+                             struct wl_data_offer *id)
 {    
     SDL_WaylandDataDevice *data_device = data;
     SDL_WaylandDataOffer *offer = NULL;
@@ -950,6 +986,7 @@ SDL_WaylandDataDevice* Wayland_get_data_device(struct SDL_WaylandInput *input)
     return input->data_device;
 }
 
+/* !!! FIXME: just merge these into display_handle_global(). */
 void Wayland_display_add_relative_pointer_manager(SDL_VideoData *d, uint32_t id)
 {
     d->relative_pointer_manager =
@@ -1065,6 +1102,9 @@ int Wayland_input_lock_pointer(struct SDL_WaylandInput *input)
         return -1;
 
     if (!d->pointer_constraints)
+        return -1;
+
+    if (!input->pointer)
         return -1;
 
     if (!input->relative_pointer) {
