@@ -20,5 +20,13 @@ android:
     - extra-google-m2repository
     - extra-android-m2repository
 before_install:
-  - sdkmanager --list
+  - mkdir -p /usr/local/android-sdk/licenses && echo "\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c2829b004d1fee" > /usr/local/android-sdk/licenses/android-sdk-license
   - cd android
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+    - $HOME/.android/build-cache
