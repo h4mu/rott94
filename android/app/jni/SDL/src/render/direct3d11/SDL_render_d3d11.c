@@ -1818,6 +1818,10 @@ D3D11_UpdateVertexBuffer(SDL_Renderer *renderer,
     HRESULT result = S_OK;
     const int vbidx = rendererData->currentVertexBuffer;
 
+    if (dataSizeInBytes == 0) {
+        return 0;  /* nothing to do. */
+    }
+
     if (rendererData->vertexBuffers[vbidx] && rendererData->vertexBufferSizes[vbidx] >= dataSizeInBytes) {
         D3D11_MAPPED_SUBRESOURCE mappedResource;
         result = ID3D11DeviceContext_Map(rendererData->d3dContext,
@@ -1861,6 +1865,8 @@ D3D11_UpdateVertexBuffer(SDL_Renderer *renderer,
             WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateBuffer [vertex buffer]"), result);
             return -1;
         }
+
+        rendererData->vertexBufferSizes[vbidx] = dataSizeInBytes;
 
         ID3D11DeviceContext_IASetVertexBuffers(rendererData->d3dContext,
             0,

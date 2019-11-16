@@ -35,8 +35,8 @@
 #define ACTION_DOWN 0
 #define ACTION_UP 1
 #define ACTION_MOVE 2
-#define ACTION_CANCEL 3
-#define ACTION_OUTSIDE 4
+/* #define ACTION_CANCEL 3 */
+/* #define ACTION_OUTSIDE 4 */
 #define ACTION_POINTER_DOWN 5
 #define ACTION_POINTER_UP 6
 
@@ -48,7 +48,6 @@ void Android_InitTouch(void)
 
 void Android_QuitTouch(void)
 {
-    return;
 }
 
 void Android_OnTouch(SDL_Window *window, int touch_device_id_in, int pointer_finger_id_in, int action, float x, float y, float p)

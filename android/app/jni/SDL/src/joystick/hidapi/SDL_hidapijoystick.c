@@ -31,6 +31,7 @@
 #include "SDL_joystick.h"
 #include "../SDL_sysjoystick.h"
 #include "SDL_hidapijoystick_c.h"
+#include "../../SDL_hints_c.h"
 
 #if defined(__WIN32__)
 #include "../../core/windows/SDL_windows.h"
@@ -564,13 +565,13 @@ HIDAPI_XboxControllerName(Uint16 vendor_id, Uint16 product_id)
 }
 
 static SDL_bool
-HIDAPI_IsDeviceSupported(Uint16 vendor_id, Uint16 product_id, Uint16 version)
+HIDAPI_IsDeviceSupported(Uint16 vendor_id, Uint16 product_id, Uint16 version, const char *name)
 {
     int i;
 
     for (i = 0; i < SDL_arraysize(SDL_HIDAPI_drivers); ++i) {
         SDL_HIDAPI_DeviceDriver *driver = SDL_HIDAPI_drivers[i];
-        if (driver->enabled && driver->IsSupportedDevice(vendor_id, product_id, version, -1)) {
+        if (driver->enabled && driver->IsSupportedDevice(vendor_id, product_id, version, -1, name)) {
             return SDL_TRUE;
         }
     }
@@ -599,7 +600,7 @@ HIDAPI_GetDeviceDriver(SDL_HIDAPI_Device *device)
 
     for (i = 0; i < SDL_arraysize(SDL_HIDAPI_drivers); ++i) {
         SDL_HIDAPI_DeviceDriver *driver = SDL_HIDAPI_drivers[i];
-        if (driver->enabled && driver->IsSupportedDevice(device->vendor_id, device->product_id, device->version, device->interface_number)) {
+        if (driver->enabled && driver->IsSupportedDevice(device->vendor_id, device->product_id, device->version, device->interface_number, device->name)) {
             return driver;
         }
     }
@@ -641,7 +642,7 @@ SDL_HIDAPIDriverHintChanged(void *userdata, const char *name, const char *oldVal
 {
     int i;
     SDL_HIDAPI_Device *device = SDL_HIDAPI_devices;
-    SDL_bool enabled = (!hint || !*hint || ((*hint != '0') && (SDL_strcasecmp(hint, "false") != 0)));
+    SDL_bool enabled = SDL_GetStringBoolean(hint, SDL_TRUE);
 
     if (SDL_strcmp(name, SDL_HINT_JOYSTICK_HIDAPI) == 0) {
         for (i = 0; i < SDL_arraysize(SDL_HIDAPI_drivers); ++i) {
@@ -914,7 +915,7 @@ HIDAPI_UpdateDeviceList(void)
 }
 
 SDL_bool
-HIDAPI_IsDevicePresent(Uint16 vendor_id, Uint16 product_id, Uint16 version)
+HIDAPI_IsDevicePresent(Uint16 vendor_id, Uint16 product_id, Uint16 version, const char *name)
 {
     SDL_HIDAPI_Device *device;
 
@@ -924,13 +925,17 @@ HIDAPI_IsDevicePresent(Uint16 vendor_id, Uint16 product_id, Uint16 version)
     }
 
     /* Don't update the device list for devices we know aren't supported */
-    if (!HIDAPI_IsDeviceSupported(vendor_id, product_id, version)) {
+    if (!HIDAPI_IsDeviceSupported(vendor_id, product_id, version, name)) {
         return SDL_FALSE;
     }
 
     /* Make sure the device list is completely up to date when we check for device presence */
     HIDAPI_UpdateDeviceList();
 
+    /* Note that this isn't a perfect check - there may be multiple devices with 0 VID/PID,
+       or a different name than we have it listed here, etc, but if we support the device
+       and we have something similar in our device list, mark it as present.
+     */
     device = SDL_HIDAPI_devices;
     while (device) {
         if (device->vendor_id == vendor_id && device->product_id == product_id && device->driver) {

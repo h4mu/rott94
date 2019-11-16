@@ -818,7 +818,7 @@ int SDL_atoi(const char *string)
 double SDL_atof(const char *string)
 {
 #ifdef HAVE_ATOF
-    return (double) atof(string);
+    return atof(string);
 #else
     return SDL_strtod(string, NULL);
 #endif /* HAVE_ATOF */
@@ -1387,15 +1387,18 @@ SDL_PrintString(char *text, size_t maxlen, SDL_FormatInfo *info, const char *str
 
     sz = SDL_strlen(string);
     if (info && info->width > 0 && (size_t)info->width > sz) {
-        char fill = info->pad_zeroes ? '0' : ' ';
+        const char fill = info->pad_zeroes ? '0' : ' ';
         size_t width = info->width - sz;
+        size_t filllen;
+
         if (info->precision >= 0 && (size_t)info->precision < sz)
             width += sz - (size_t)info->precision;
-        while (width-- > 0 && maxlen > 0) {
-            *text++ = fill;
-            ++length;
-            --maxlen;
-        }
+
+        filllen = SDL_min(width, maxlen);
+        SDL_memset(text, fill, filllen);
+        text += filllen;
+        length += filllen;
+        maxlen -= filllen;
     }
 
     slen = SDL_strlcpy(text, string, maxlen);
@@ -1580,7 +1583,7 @@ SDL_PrintFloat(char *text, size_t maxlen, SDL_FormatInfo *info, double arg)
 
     width = info->width - (int)(text - textstart);
     if (width > 0) {
-        char fill = info->pad_zeroes ? '0' : ' ';
+        const char fill = info->pad_zeroes ? '0' : ' ';
         char *end = text+left-1;
         len = (text - textstart);
         for (len = (text - textstart); len--; ) {
@@ -1596,10 +1599,10 @@ SDL_PrintFloat(char *text, size_t maxlen, SDL_FormatInfo *info, double arg)
             text += len;
             left -= len;
         }
-        while (len--) {
-            if (textstart+len < end) {
-                textstart[len] = fill;
-            }
+
+        if (end != textstart) {
+            const size_t filllen = SDL_min(len, ((size_t) (end - textstart)) - 1);
+            SDL_memset(textstart, fill, filllen);
         }
     }
 

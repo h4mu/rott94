@@ -20,9 +20,9 @@ dnl Set various version strings - taken gratefully from the GTk sources
 #
 SDL_MAJOR_VERSION=2
 SDL_MINOR_VERSION=0
-SDL_MICRO_VERSION=10
+SDL_MICRO_VERSION=11
 SDL_INTERFACE_AGE=0
-SDL_BINARY_AGE=10
+SDL_BINARY_AGE=11
 SDL_VERSION=$SDL_MAJOR_VERSION.$SDL_MINOR_VERSION.$SDL_MICRO_VERSION
 
 AC_SUBST(SDL_MAJOR_VERSION)
@@ -1303,6 +1303,82 @@ AS_HELP_STRING([--enable-libsamplerate-shared], [dynamically load libsamplerate 
     fi
 }
 
+dnl Check for ARM instruction support using gas syntax
+CheckARM()
+{
+    AC_ARG_ENABLE(arm-simd,
+AC_HELP_STRING([--enable-arm-simd], [use SIMD assembly blitters on ARM [[default=yes]]]),
+                  enable_arm_simd=$enableval, enable_arm_simd=yes)
+    if test x$enable_video = xyes -a x$enable_assembly = xyes -a x$enable_arm_simd = xyes; then
+        save_CFLAGS="$CFLAGS"
+        have_arm_simd=no
+        CFLAGS="-x assembler-with-cpp $CFLAGS"
+        
+        AC_MSG_CHECKING(for ARM SIMD)
+        AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+        .text
+        .arch armv6
+        .object_arch armv4
+        .arm
+        .altmacro
+        #ifndef __ARM_EABI__
+        #error EABI is required (to be sure that calling conventions are compatible)
+        #endif
+        pld [r0]
+        uqadd8 r0, r0, r0
+        ]])], have_arm_simd=yes)
+        AC_MSG_RESULT($have_arm_simd)
+        
+        CFLAGS="$save_CFLAGS"
+        
+        if test x$have_arm_simd = xyes; then
+            AC_DEFINE(SDL_ARM_SIMD_BLITTERS)
+dnl            SOURCES="$SOURCES $srcdir/src/video/arm/pixman-arm-simd*.c"
+            SOURCES="$SOURCES $srcdir/src/video/arm/pixman-arm-simd*.S"
+            WARN_ABOUT_ARM_SIMD_ASM_MIT="yes"
+        fi
+    fi
+}
+
+dnl Check for ARM NEON instruction support using gas syntax
+CheckNEON()
+{
+    AC_ARG_ENABLE(arm-neon,
+AC_HELP_STRING([--enable-arm-neon], [use NEON assembly blitters on ARM [[default=yes]]]),
+                  enable_arm_neon=$enableval, enable_arm_neon=yes)
+    if test x$enable_video = xyes -a x$enable_assembly = xyes -a x$enable_arm_neon = xyes; then
+        save_CFLAGS="$CFLAGS"
+        have_arm_neon=no
+        CFLAGS="-x assembler-with-cpp $CFLAGS"
+        
+        AC_MSG_CHECKING(for ARM NEON)
+        AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+        .text
+        .fpu neon
+        .arch armv7a
+        .object_arch armv4
+        .eabi_attribute 10, 0
+        .arm
+        .altmacro
+        #ifndef __ARM_EABI__
+        #error EABI is required (to be sure that calling conventions are compatible)
+        #endif
+        pld [r0]
+        vmovn.u16 d0, q0
+        ]])], have_arm_neon=yes)
+        AC_MSG_RESULT($have_arm_neon)
+        
+        CFLAGS="$save_CFLAGS"
+        
+        if test x$have_arm_neon = xyes; then
+            AC_DEFINE(SDL_ARM_NEON_BLITTERS)
+dnl            SOURCES="$SOURCES $srcdir/src/video/arm/pixman-arm-neon*.c"
+            SOURCES="$SOURCES $srcdir/src/video/arm/pixman-arm-neon*.S"
+            WARN_ABOUT_ARM_NEON_ASM_MIT="yes"
+        fi
+    fi
+}
+
 dnl See if GCC's -fvisibility=hidden is supported (gcc4 and later, usually).
 dnl  Details of this flag are here: http://gcc.gnu.org/wiki/Visibility
 CheckVisibilityHidden()
@@ -1610,10 +1686,10 @@ AS_HELP_STRING([--enable-video-x11], [use X11 video driver [[default=yes]]]),
                 # This isn't necessary for X11, but fixes GLX detection
                 if test "x$x_includes" = xNONE && \
                    test "x$x_libraries" = xNONE && \
-                   test -d /usr/X11R6/include && \
-                   test -d /usr/X11R6/lib; then
-                    x_includes="/usr/X11R6/include"
-                    x_libraries="/usr/X11R6/lib"
+                   test -d /opt/X11/include && \
+                   test -d /opt/X11/lib; then
+                    x_includes="/opt/X11/include"
+                    x_libraries="/opt/X11/lib"
                 fi
                 ;;
         esac
@@ -1626,15 +1702,16 @@ AS_HELP_STRING([--enable-x11-shared], [dynamically load X11 support [[default=ma
 
             case "$host" in
                 *-*-darwin*)
-                    x11_lib='/usr/X11R6/lib/libX11.6.dylib'
-                    x11ext_lib='/usr/X11R6/lib/libXext.6.dylib'
-                    xcursor_lib='/usr/X11R6/lib/libXcursor.1.dylib'
-                    xinerama_lib='/usr/X11R6/lib/libXinerama.1.dylib'
-                    xinput_lib='/usr/X11R6/lib/libXi.6.dylib'
-                    xrandr_lib='/usr/X11R6/lib/libXrandr.2.dylib'
-                    xrender_lib='/usr/X11R6/lib/libXrender.1.dylib'
-                    xss_lib='/usr/X11R6/lib/libXss.1.dylib'
-                    xvidmode_lib='/usr/X11R6/lib/libXxf86vm.1.dylib'
+                    # Apple now puts this in /opt/X11
+                    x11_lib='/opt/X11/lib/libX11.6.dylib'
+                    x11ext_lib='/opt/X11/lib/libXext.6.dylib'
+                    xcursor_lib='/opt/X11/lib/libXcursor.1.dylib'
+                    xinerama_lib='/opt/X11/lib/libXinerama.1.dylib'
+                    xinput_lib='/opt/X11/lib/libXi.6.dylib'
+                    xrandr_lib='/opt/X11/lib/libXrandr.2.dylib'
+                    xrender_lib='/opt/X11/lib/libXrender.1.dylib'
+                    xss_lib='/opt/X11/lib/libXss.1.dylib'
+                    xvidmode_lib='/opt/X11/lib/libXxf86vm.1.dylib'
                     ;;
                 *-*-openbsd*)
                     x11_lib='libX11.so'
@@ -2291,7 +2368,7 @@ CheckOpenGLESX11()
         if test x$video_opengl_egl = xyes; then
             AC_DEFINE(SDL_VIDEO_OPENGL_EGL, 1, [ ])
         fi
-            
+        
         if test x$enable_video_opengles1 = xyes; then
             AC_MSG_CHECKING(for OpenGL ES v1 headers)
             video_opengles_v1=no
@@ -3021,8 +3098,6 @@ XINPUT_STATE_EX s1;
         AC_DEFINE(HAVE_AUDIOCLIENT_H,1,[])
     fi
 
-    AC_CHECK_HEADER(endpointvolume.h,AC_DEFINE(HAVE_ENDPOINTVOLUME_H,1,[]))
-
     AC_ARG_ENABLE(wasapi,
 AS_HELP_STRING([--enable-wasapi], [use the Windows WASAPI audio driver [[default=yes]]]),
                                 , enable_wasapi=yes)
@@ -3074,7 +3149,7 @@ CheckUSBHID()
                     AC_CHECK_HEADER(libusb.h, [USB_CFLAGS="-DHAVE_LIBUSB_H"])
                     AC_CHECK_LIB(usb, hid_init, [USB_LIBS="$USB_LIBS -lusb"])
                 fi
-                    
+                
                 save_CFLAGS="$CFLAGS"
                 CFLAGS="$CFLAGS $USB_CFLAGS"
 
@@ -3397,6 +3472,8 @@ case "$host" in
         CheckDiskAudio
         CheckDummyAudio
         CheckDLOPEN
+        CheckARM
+        CheckNEON
         CheckOSS
         CheckALSA
         CheckPulseAudio
@@ -4100,7 +4177,7 @@ VERSION_OBJECTS=`echo $VERSION_SOURCES`
 VERSION_DEPENDS=`echo $VERSION_SOURCES`
 VERSION_OBJECTS=`echo "$VERSION_OBJECTS" | sed 's,[[^ ]]*/\([[^ ]]*\)\.rc,$(objects)/\1.o,g'`
 VERSION_DEPENDS=`echo "$VERSION_DEPENDS" | sed "s,\\([[^ ]]*\\)/\\([[^ ]]*\\)\\.rc,\\\\
-\\$(objects)/\\2.o: \\1/\\2.rc\\\\
+\\$(objects)/\\2.o: \\1/\\2.rc \\$(objects)/.created\\\\
 	\\$(WINDRES) \\$< \\$@,g"`
 
 SDLMAIN_OBJECTS=`echo $SDLMAIN_SOURCES`
@@ -4249,6 +4326,23 @@ if test x$have_fcitx_frontend_h_hdr = xyes; then
 else
     SUMMARY="${SUMMARY}Using fcitx         : NO\n"
 fi
+
+if test x$WARN_ABOUT_ARM_SIMD_ASM_MIT = xyes; then
+    SUMMARY="${SUMMARY}\nSDL is being built with ARM SIMD optimizations, which\n"
+    SUMMARY="${SUMMARY}uses code licensed under the MIT license. If this is a\n"
+    SUMMARY="${SUMMARY}problem, please disable that code by rerunning the\n"
+    SUMMARY="${SUMMARY}configure script with:\n"
+    SUMMARY="${SUMMARY}\n    --disable-arm-simd\n"
+fi
+
+if test x$WARN_ABOUT_ARM_NEON_ASM_MIT = xyes; then
+    SUMMARY="${SUMMARY}\nSDL is being built with ARM NEON optimizations, which\n"
+    SUMMARY="${SUMMARY}uses code licensed under the MIT license. If this is a\n"
+    SUMMARY="${SUMMARY}problem, please disable that code by rerunning the\n"
+    SUMMARY="${SUMMARY}configure script with:\n"
+    SUMMARY="${SUMMARY}\n    --disable-arm-neon\n"
+fi
+
 AC_CONFIG_COMMANDS([summary], [echo -en "$SUMMARY"], [SUMMARY="$SUMMARY"])
 
 AC_OUTPUT
