@@ -1,5 +1,7 @@
-[![Build Status](https://travis-ci.org/h4mu/rott94.svg?branch=master)](https://travis-ci.org/h4mu/rott94)
 #Rott94
+
+
+[![Build Status](https://travis-ci.org/h4mu/rott94.svg?branch=master)](https://travis-ci.org/h4mu/rott94)
 
 ## About
 This is a source port of Apogee's DOS FPS game [Rise of the Triad](http://en.wikipedia.org/wiki/Rise_of_the_Triad), originally released in 1994 (Shareware) and 1995 (Full version).
