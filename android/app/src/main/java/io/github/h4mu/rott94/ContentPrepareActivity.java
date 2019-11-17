@@ -30,6 +30,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import org.libsdl.app.SDL;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -51,9 +53,7 @@ public class ContentPrepareActivity extends Activity {
 	private static final int BUFFER_SIZE = 8192;
 
 	static {
-		System.loadLibrary("SDL2");
-		System.loadLibrary("SDL2_mixer");
-		System.loadLibrary("main");
+		SDL.loadLibrary("main");
 	}
 	
 	@Override

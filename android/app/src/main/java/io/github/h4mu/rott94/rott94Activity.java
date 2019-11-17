@@ -88,4 +88,17 @@ public class rott94Activity extends SDLActivity
         }
         return arguments.toArray(new String[0]);
     }
+
+    @Override
+    protected String[] getLibraries() {
+        return new String[] {
+                "hidapi",
+                "SDL2",
+                // "SDL2_image",
+                 "SDL2_mixer",
+                // "SDL2_net",
+                // "SDL2_ttf",
+                "main"
+        };
+    }
 }
