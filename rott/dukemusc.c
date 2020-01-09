@@ -405,6 +405,10 @@ void PlayMusic(char *_filename)
 }
 #endif
 
+#ifdef __ANDROID__
+#   include <jni.h>
+#endif
+
 #ifdef ROTT
 // ROTT Special - SBF
 int MUSIC_PlaySongROTT(unsigned char *song, int size, int loopflag)
@@ -415,22 +419,38 @@ int MUSIC_PlaySongROTT(unsigned char *song, int size, int loopflag)
 #else
     int handle;
 #endif
-    
+#ifndef __ANDROID__
     MUSIC_StopSong();
-
     // save the file somewhere, so SDL_mixer can load it
     GetPathFromEnvironment(filename, ApogeePath, "tmpsong.mid");
+#else
+    strcpy(filename, ApogeePath);
+    strcat(filename, "/tmpsong.mid");
+#endif
     handle = SafeOpenWrite(filename);
-    
+
     SafeWrite(handle, song, size);
 #if USE_SDL
     SDL_RWclose(handle);
 #else
     close(handle);
 #endif
-    
-    music_songdata = song;
 
+    music_songdata = song;
+#ifdef __ANDROID__
+    JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
+    jobject activity = (jobject)SDL_AndroidGetActivity();
+    jclass clActivity = (*env)->GetObjectClass(env, activity);
+    jmethodID idPlayMusic = (*env)->GetMethodID(env, clActivity, "playMusic", "(Ljava/lang/String;Z)V");
+    jstring midiFilePath = (*env)->NewStringUTF(env, filename);
+
+    (*env)->CallVoidMethod(env, activity, idPlayMusic, midiFilePath, loopflag);
+
+    (*env)->DeleteLocalRef(env, midiFilePath);
+    (*env)->DeleteLocalRef(env, idPlayMusic);
+    (*env)->DeleteLocalRef(env, clActivity);
+    (*env)->DeleteLocalRef(env, activity);
+#else
     // finally, we can load it with SDL_mixer
     music_musicchunk = Mix_LoadMUS(filename);
     if (music_musicchunk == NULL) {
@@ -438,7 +458,7 @@ int MUSIC_PlaySongROTT(unsigned char *song, int size, int loopflag)
     }
     
     Mix_PlayMusic(music_musicchunk, (loopflag == MUSIC_PlayOnce) ? 0 : -1);
-
+#endif
     return(MUSIC_Ok);
 } // MUSIC_PlaySongROTT
 #endif

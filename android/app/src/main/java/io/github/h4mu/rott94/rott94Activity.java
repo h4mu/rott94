@@ -20,8 +20,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 package io.github.h4mu.rott94;
 
 import android.database.Cursor;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import org.libsdl.app.SDLActivity;
 
@@ -35,6 +37,9 @@ import java.util.List;
 
 public class rott94Activity extends SDLActivity
 {
+    private static final String TAG = "Rott94";
+    private MediaPlayer mediaPlayer;
+
     @Override
     protected String[] getArguments() {
         List<String> arguments = new ArrayList<>();
@@ -87,6 +92,40 @@ public class rott94Activity extends SDLActivity
             }
         }
         return arguments.toArray(new String[0]);
+    }
+
+    private void playMusic(String midiFilePath, boolean shouldLoop) {
+        try {
+            if (mediaPlayer != null) {
+                mediaPlayer.stop();
+            }
+
+            mediaPlayer = MediaPlayer.create(this, Uri.fromFile(new File(midiFilePath)));
+            if (mediaPlayer != null) {
+                mediaPlayer.setLooping(shouldLoop);
+                mediaPlayer.start();
+            }
+        } catch(Exception exception) {
+            Log.w(TAG, "PlayMusic: ", exception);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        Log.v(TAG, "onPause()");
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
+        }
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        Log.v(TAG, "onResume()");
+        if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
+            mediaPlayer.start();
+        }
+        super.onResume();
     }
 
     @Override
