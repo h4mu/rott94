@@ -440,14 +440,29 @@ int MUSIC_PlaySongROTT(unsigned char *song, int size, int loopflag)
 #ifdef __ANDROID__
     JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
     jobject activity = (jobject)SDL_AndroidGetActivity();
+    if (!activity)
+    {
+        return MUSIC_Error;
+    }
     jclass clActivity = (*env)->GetObjectClass(env, activity);
+    if (!clActivity)
+    {
+        return MUSIC_Error;
+    }
     jmethodID idPlayMusic = (*env)->GetMethodID(env, clActivity, "playMusic", "(Ljava/lang/String;Z)V");
+    if (!idPlayMusic)
+    {
+        return MUSIC_Error;
+    }
     jstring midiFilePath = (*env)->NewStringUTF(env, filename);
+    if (!midiFilePath)
+    {
+        return MUSIC_Error;
+    }
 
     (*env)->CallVoidMethod(env, activity, idPlayMusic, midiFilePath, loopflag);
 
     (*env)->DeleteLocalRef(env, midiFilePath);
-    (*env)->DeleteLocalRef(env, idPlayMusic);
     (*env)->DeleteLocalRef(env, clActivity);
     (*env)->DeleteLocalRef(env, activity);
 #else
