@@ -27,9 +27,9 @@ deploy:
   api_key:
     secure: MbDt4ueH/nONbWuWM/+z1Q0b7Ds3/MIYvhuv4KaMcK6/kvYb5HQaYdjIil4ZZcGI3oG6tm/Azy2XsN/9HEiF8WBjwnXdza3QWPPxtaHQWrF6XPutcBt1WV0l5XrORAhbQG336TmyIt1JkWW8hZmO5XFVj8PJuMCCMgwlO7lkYIg=
   file_glob: true
-  file: app/build/outputs/apk/**/*.apk
+  file: app/build/outputs/apk/**/*debug.apk
   skip_cleanup: true
-  draft: true
+  draft: false
   prerelease: true
   on:
     repo: h4mu/rott94
