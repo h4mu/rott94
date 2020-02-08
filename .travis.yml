@@ -14,6 +14,7 @@ before_install:
 - mkdir -p /usr/local/android-sdk/licenses && echo -e "\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c2829b004d1fee"
   > /usr/local/android-sdk/licenses/android-sdk-license
 - cd android
+- sed -i -e "s/versionName .*/versionName \"`git describe --abbrev=0`\"/g" -e "s/versionCode .*/versionCode `git tag | wc -l`/g" -e "/versionNameSuffix/d" app/build.gradle
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
