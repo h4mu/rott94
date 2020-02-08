@@ -1,0 +1,48 @@
+Categories:
+  - Games
+License: GPL-2.0-only
+WebSite: https://www.facebook.com/Rott94MobileSourcePort/
+SourceCode: https://github.com/h4mu/rott94
+IssueTracker: https://github.com/h4mu/rott94/issues
+Changelog: https://github.com/h4mu/rott94/releases
+
+Summary: Rise of the Triad source port SuperROTT
+Description: |-
+    This is a source port of Apogee's DOS FPS game [http://en.wikipedia.org/wiki/Rise_of_the_Triad Rise of the Triad], originally
+    released in 1994 (Shareware) and 1995 (Full version). This is the SuperROTT
+    (aka CD-ROM) edition.
+
+    Main Features:
+    * Uses SDL2 for portablility and performance
+    * Intuitive touch controls
+    * Joystick/gamepad support
+    * 3rd party content supported
+
+    Known Limitations:
+    * Multiplayer not supported
+
+    Note: You will need the original game content files and place them in the game
+    folder on the (emulated) SD Card before you can play.
+
+RepoType: git
+Repo: https://github.com/h4mu/rott94.git
+
+Builds:
+  - versionName: v0.87-beta
+    versionCode: 7
+    commit: v0.87-beta
+    subdir: android
+    gradle:
+      - superrott
+    output: app/build/outputs/apk/superrott/release/app-superrott-release-unsigned.apk
+    forceversion: true
+    forcevercode: true
+    prebuild: sed -i -e "s/versionName .*/versionName \"`git describe --abbrev=0`\"/g"
+        -e "s/versionCode .*/versionCode `git tag | wc -l`/g" -e "/versionNameSuffix/d"
+        app/build.gradle
+    scandelete:
+      - android/app/jni/SDL/Xcode/*
+      - android/app/jni/SDL_mixer/Xcode/*
+
+AutoUpdateMode: Version v%v
+UpdateCheckMode: Tags
