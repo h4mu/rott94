@@ -1,0 +1,2 @@
+This is a source port of Apogee's DOS FPS game Rise of the Triad, originally
+released in 1994 (Shareware) and 1995 (Full version).

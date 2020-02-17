@@ -1,0 +1,14 @@
+This is a source port of Apogee's DOS FPS game [http://en.wikipedia.org/wiki/Rise_of_the_Triad Rise of the Triad], originally
+released in 1994 (Shareware) and 1995 (Full version).
+
+Main Features:
+* Uses SDL2 for portablility and performance
+* Intuitive touch controls
+* Joystick/gamepad support
+* 3rd party content supported
+
+Known Limitations:
+* Multiplayer not supported
+
+Note: You will need the original game content files and place them in the game
+folder on the (emulated) SD Card before you can play.
