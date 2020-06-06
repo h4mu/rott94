@@ -11,7 +11,7 @@ build:
   verbosity: minimal
 artifacts:
 - path: Windows\out
-  name: Rott94 Windows files
+  name: Rott94 Windows $(configuration) files
 deploy:
 - provider: GitHub
   auth_token:
@@ -21,3 +21,4 @@ deploy:
   force_update: true
   on:
     branch: master
+    APPVEYOR_REPO_TAG: true
