@@ -1,12 +1,17 @@
 version: 0.6.{build}
 image: Visual Studio 2017
+configuration:
+- Release Shareware
+- Release CDROM
+- Release
+platform: Win32
 build:
   project: Windows\Rott94.sln
   parallel: true
   verbosity: minimal
 artifacts:
 - path: Windows\out
-  name: Windows files
+  name: Rott94 Windows files
 deploy:
 - provider: GitHub
   auth_token:
