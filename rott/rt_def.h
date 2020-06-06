@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <io.h>
 //#define alloca(x) _alloca(x)
 #define access(x, y) _access(x, y)
+#define R_OK  4
 #define F_OK  0
 #elif (defined __GNUC__)
 #define __int64 long long

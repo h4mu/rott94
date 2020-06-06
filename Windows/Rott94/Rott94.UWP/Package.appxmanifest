@@ -14,7 +14,7 @@
     <Resource Language="x-generate" />
   </Resources>
   <Applications>
-    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="Rott94_Windows.App">
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="Rott94_UWP.App">
       <m2:VisualElements DisplayName="Rott94 Shareware" Description="Modern Windows source port of the game classic that is Rise of the Triad: The Hunt Begins ." BackgroundColor="#464646" ForegroundText="light" Square150x150Logo="Assets\Logo.png" Square30x30Logo="Assets\SmallLogo.png">
         <m2:DefaultTile>
           <m2:ShowNameOnTiles>

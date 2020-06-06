@@ -29,11 +29,18 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Package.StoreAssociation.xml" />
-    <None Include="Rott94.Windows_TemporaryKey.pfx" />
+    <None Include="Rott94.UWP_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\assets\buttons.bmp">
       <Filter>Assets</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Rott94.Shared\ContentManagement.cpp" />
+    <ClCompile Include="..\..\..\android\app\jni\SDL\src\main\winrt\SDL_winrt_main_NonXAML.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Rott94.Shared\ContentManagement.h" />
   </ItemGroup>
 </Project>

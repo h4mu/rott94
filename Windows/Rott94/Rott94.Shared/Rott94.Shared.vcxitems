@@ -17,7 +17,6 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\android\jni\SDL\src\main\winrt\SDL_winrt_main_NonXAML.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\cin_actr.c">
       <CompileAsWinRT>false</CompileAsWinRT>
     </ClCompile>
@@ -198,9 +197,5 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\rott\audiolib\usrhooks.c">
       <CompileAsWinRT>false</CompileAsWinRT>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)ContentManagement.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="$(MSBuildThisFileDirectory)ContentManagement.h" />
   </ItemGroup>
 </Project>
