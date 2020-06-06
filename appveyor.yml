@@ -1,0 +1,18 @@
+version: 0.6.{build}
+image: Visual Studio 2017
+build:
+  project: Windows\Rott94.sln
+  parallel: true
+  verbosity: minimal
+artifacts:
+- path: Windows\out
+  name: Windows files
+deploy:
+- provider: GitHub
+  auth_token:
+    secure: w6iQzWlXjuqDj4Jxt4x/cC1Dpn5Q3Ej6eDjNIrm2IClF7xXEYbzHNfv2vFfCdxOY
+  draft: true
+  prerelease: true
+  force_update: true
+  on:
+    branch: master

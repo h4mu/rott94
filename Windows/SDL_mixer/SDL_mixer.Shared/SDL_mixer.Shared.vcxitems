@@ -34,6 +34,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\android\app\jni\SDL_mixer\music_mad.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\android\app\jni\SDL_mixer\music_mod.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\android\app\jni\SDL_mixer\music_ogg.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\android\app\jni\SDL_mixer\native_midi\native_midi_common.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\android\app\jni\SDL_mixer\native_midi\native_midi_win32.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\android\app\jni\SDL_mixer\wavestream.c" />
   </ItemGroup>
   <ItemGroup>
@@ -53,6 +55,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\android\app\jni\SDL_mixer\music_mad.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\android\app\jni\SDL_mixer\music_mod.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\android\app\jni\SDL_mixer\music_ogg.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\android\app\jni\SDL_mixer\native_midi\native_midi.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\android\app\jni\SDL_mixer\native_midi\native_midi_common.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\android\app\jni\SDL_mixer\SDL_mixer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\android\app\jni\SDL_mixer\wavestream.h" />
   </ItemGroup>
