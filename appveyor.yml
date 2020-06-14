@@ -1,17 +1,28 @@
-version: 0.6.{build}
+version: 0.8.{build}
 image: Visual Studio 2017
 configuration:
 - Release Shareware
 - Release CDROM
 - Release
+- Android
 platform: Win32
 build:
   project: Windows\Rott94.sln
   parallel: true
   verbosity: minimal
+for:
+-
+  matrix:
+    only:
+      - configuration: Android
+
+  build_script:
+  - pushd android && gradlew.bat connectedCheck && popd
 artifacts:
 - path: Windows\out
   name: Rott94 Windows $(configuration) files
+- path: android\app\build\outputs\apk\**\*debug.apk
+  name: Rott94 $(configuration) files
 deploy:
 - provider: GitHub
   auth_token:
