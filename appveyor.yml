@@ -17,7 +17,7 @@ for:
       - configuration: Android
 
   build_script:
-  - pushd android && gradlew.bat connectedCheck && popd
+  - pushd android && gradlew.bat connectedCheck && gradlew.bat --stop && popd
 cache:
   - '%USERPROFILE%\.gradle -> android\build.gradle'
 artifacts:
