@@ -19,7 +19,7 @@ for:
   build_script:
   - pushd android && gradlew.bat connectedCheck && popd
 cache:
-  - %USERPROFILE%\.gradle -> android\build.gradle
+  - '%USERPROFILE%\.gradle -> android\build.gradle'
 artifacts:
 - path: Windows\out
   name: Rott94 Windows $(configuration) files
