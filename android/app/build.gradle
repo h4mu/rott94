@@ -10,7 +10,7 @@ android {
         versionName "1.0"
         externalNativeBuild {
             ndkBuild {
-                arguments "APP_PLATFORM=android-14"
+                arguments "APP_PLATFORM=android-14", "NDK_PROJECT_PATH=app"
             }
         }
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
