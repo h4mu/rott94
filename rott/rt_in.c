@@ -99,6 +99,7 @@ ModemMessage MSG;
 
 #if USE_SDL
 static SDL_Joystick* sdl_joysticks[MaxJoys];
+static SDL_GameController* sdl_controllers[MaxJoys];
 static int sdl_mouse_delta_x = 0;
 static int sdl_mouse_delta_y = 0;
 static word sdl_mouse_button_mask = 0;
@@ -443,15 +444,44 @@ static int sdl_finger_filter(const SDL_Event *event)
 
 unsigned int lastInteraction;
 
+static int sdl_joyhat_filter(const SDL_Event *event) {
+    static SDL_Scancode lastScanCode;
+    SDL_Event keyEvent;
+    keyEvent.key.keysym.mod = 0;
+    keyEvent.type = SDL_KEYDOWN;
+    keyEvent.key.state = SDL_PRESSED;
+    switch (event->jhat.value)
+    {
+        case SDL_HAT_UP:
+            lastScanCode = SDL_SCANCODE_UP;
+            break;
+        case SDL_HAT_LEFT:
+            lastScanCode = SDL_SCANCODE_LEFT;
+            break;
+        case SDL_HAT_RIGHT:
+            lastScanCode = SDL_SCANCODE_RIGHT;
+            break;
+        case SDL_HAT_DOWN:
+            lastScanCode = SDL_SCANCODE_DOWN;
+            break;
+        default:
+            keyEvent.type = SDL_KEYUP;
+            keyEvent.key.state = SDL_RELEASED;
+            break;
+    }
+    keyEvent.key.keysym.scancode = lastScanCode;
+    return sdl_key_filter(&keyEvent);
+}
+
 static int sdl_joy_filter(const SDL_Event *event)
 {
 #ifdef DEBUG
 	printf("joy button %d pressed %d\n", event->jbutton.button, event->jbutton.state == SDL_PRESSED);
 #endif
-	if (event->jbutton.state == SDL_PRESSED)
-		sdl_sticks_joybits |= 1 << event->jbutton.button;
-	else
-		sdl_sticks_joybits &= ~(1 << event->jbutton.button);
+    if (event->jbutton.state == SDL_PRESSED)
+        sdl_sticks_joybits |= 1 << event->jbutton.button;
+    else
+        sdl_sticks_joybits &= ~(1 << event->jbutton.button);
 	return 0;
 }
 
@@ -480,6 +510,8 @@ static int root_sdl_event_filter(const SDL_Event *event)
         case SDL_JOYBUTTONDOWN:
         case SDL_JOYBUTTONUP:
         	return sdl_joy_filter(event);
+        case SDL_JOYHATMOTION:
+            return sdl_joyhat_filter(event);
         case SDL_QUIT:
             /* !!! rcg TEMP */
             fprintf(stderr, "\n\n\nSDL_QUIT!\n\n\n");
@@ -642,8 +674,16 @@ void IN_GetJoyAbs (word joy, word *xp, word *yp)
 #else
    if (joy < sdl_total_sticks)
    {
-	   Joy_x = SDL_JoystickGetAxis (sdl_joysticks[joy], 0);
-	   Joy_y = SDL_JoystickGetAxis (sdl_joysticks[joy], 1);
+      if (SDL_IsGameController(sdl_joysticks[joy]))
+      {
+         Joy_x = SDL_GameControllerGetAxis (sdl_controllers[joy], 0);
+	 Joy_y = SDL_GameControllerGetAxis (sdl_controllers[joy], 1);
+      }
+      else
+      {
+         Joy_x = SDL_JoystickGetAxis (sdl_joysticks[joy], 0);
+	     Joy_y = SDL_JoystickGetAxis (sdl_joysticks[joy], 1);
+      }
    } else {
 	   Joy_x = 0;
 	   Joy_y = 0;
@@ -659,7 +699,22 @@ void JoyStick_Vals (void)
 
 }
 
-
+#if USE_SDL
+int GetAxis(word joy, SDL_GameControllerAxis axis)
+{
+   const int16_t deadzone = 8000;
+   int16_t val;
+   if (SDL_IsGameController(sdl_joysticks[joy]))
+   {
+	   val = SDL_GameControllerGetAxis (sdl_controllers[joy], axis);
+   }
+   else
+   {
+           val = SDL_JoystickGetAxis (sdl_joysticks[joy], axis);
+   }
+   return val < -deadzone || val > deadzone ? (val * 127) / SHRT_MAX : 0;
+}
+#endif
 //******************************************************************************
 //
 // INL_GetJoyDelta () - Returns the relative movement of the specified
@@ -672,13 +727,11 @@ void INL_GetJoyDelta (word joy, int *dx, int *dy)
 #if USE_SDL
    if (joy < sdl_total_sticks)
    {
-	   int16_t x = SDL_JoystickGetAxis (sdl_joysticks[joy], 0);
-	   int16_t y = SDL_JoystickGetAxis (sdl_joysticks[joy], 1);
-	   *dx = (x * 127) / SHRT_MAX;
-	   *dy = (y * 127) / SHRT_MAX;
+	   *dx = GetAxis(joy, 0);
+	   *dy = GetAxis(joy, 1);
 #ifdef DEBUG
-	   if (x != 0 || y != 0)
-		   printf("x %d y %d dx %d dy %d\n", x, y, *dx, *dy);
+	   if (*dx != 0 || *dy != 0)
+		   printf("dx %d dy %d\n", *dx, *dy);
 #endif
    }
    else
@@ -915,7 +968,17 @@ boolean INL_StartJoy (word joy)
    }
 
    if (joy >= sdl_total_sticks) return (false);
-   sdl_joysticks[joy] = SDL_JoystickOpen (joy);
+
+   if (SDL_IsGameController(joy))
+   {
+      sdl_joysticks[joy] = NULL;
+      sdl_controllers[joy] = SDL_GameControllerOpen(joy);
+   }
+   else
+   {
+      sdl_joysticks[joy] = SDL_JoystickOpen (joy);
+      sdl_controllers[joy] = NULL;
+   }
 
    return (true);
 #else
@@ -949,7 +1012,17 @@ void INL_ShutJoy (word joy)
 {
    JoysPresent[joy] = false;
 #ifndef DOS
-   if (joy < sdl_total_sticks) SDL_JoystickClose (sdl_joysticks[joy]);
+   if (joy < sdl_total_sticks)
+   {
+      if (SDL_IsGameController(joy))
+      {
+         SDL_GameControllerClose(sdl_controllers[joy]);
+      }
+      else
+      {
+         SDL_JoystickClose(sdl_joysticks[joy]);
+      }
+   }
 #endif
 }
 
