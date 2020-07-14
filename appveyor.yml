@@ -1,0 +1,37 @@
+version: 0.8.{build}
+image: Visual Studio 2017
+configuration:
+- Release Shareware
+- Release CDROM
+- Release
+- Android
+platform: Win32
+build:
+  project: Windows\Rott94.sln
+  parallel: true
+  verbosity: minimal
+for:
+-
+  matrix:
+    only:
+      - configuration: Android
+
+  build_script:
+  - pushd android && gradlew.bat connectedCheck && gradlew.bat --stop && popd
+cache:
+  - '%USERPROFILE%\.gradle -> android\build.gradle'
+artifacts:
+- path: Windows\out
+  name: Rott94 Windows $(configuration) files
+- path: android\app\build\outputs\apk\**\*debug.apk
+  name: Rott94 $(configuration) files
+deploy:
+- provider: GitHub
+  auth_token:
+    secure: w6iQzWlXjuqDj4Jxt4x/cC1Dpn5Q3Ej6eDjNIrm2IClF7xXEYbzHNfv2vFfCdxOY
+  draft: true
+  prerelease: true
+  force_update: true
+  on:
+    branch: master
+    APPVEYOR_REPO_TAG: true
