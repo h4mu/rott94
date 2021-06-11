@@ -1,4 +1,4 @@
-#Rott94
+# Rott94
 
 [![Build Status](https://travis-ci.org/h4mu/rott94.svg?branch=master)](https://travis-ci.org/h4mu/rott94)
 [![Build status](https://ci.appveyor.com/api/projects/status/nuyplgeg1yeugqbd/branch/master?svg=true)](https://ci.appveyor.com/project/h4mu/rott94/branch/master)
@@ -22,8 +22,8 @@ When running the game and if the game files are in the right place the intro ani
 
 The screen surface is divided into 9 equal parts in a 3x3 matrix, a touch in each of these represents the following actions:
 
- | | |
-:---|:---:|---:
-Move Forward|Enter/Switch weapon|Move Forward
-Turn Left|Space/Open|Turn Right
-Move Back|Escape|Shoot
+|  |  |  |
+:--- | :---: | ---:
+Move Forward | Enter/Switch weapon | Move Forward
+Turn Left | Space/Open | Turn Right
+Move Back | Escape | Shoot
