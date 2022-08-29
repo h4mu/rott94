@@ -15,8 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\android\app\jni\SDL\src\main\windows\SDL_windows_main.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <None Include="Directory.Build.targets" />
   </ItemGroup>
 </Project>
