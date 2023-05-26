@@ -1,8 +1,8 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="DownloadContentFiles" BeforeTargets="BuildGenerateSources">
     <PropertyGroup>
-      <SdlUrl>https://github.com/libsdl-org/SDL/releases/download/release-2.24.0/SDL2-devel-2.24.0-VC.zip</SdlUrl>
-      <SdlMixerUrl>https://github.com/libsdl-org/SDL_mixer/releases/download/release-2.6.2/SDL2_mixer-devel-2.6.2-VC.zip</SdlMixerUrl>
+      <SdlUrl>https://github.com/libsdl-org/SDL/releases/download/release-2.26.5/SDL2-devel-2.26.5-VC.zip</SdlUrl>
+      <SdlMixerUrl>https://github.com/libsdl-org/SDL_mixer/releases/download/release-2.6.3/SDL2_mixer-devel-2.6.3-VC.zip</SdlMixerUrl>
     </PropertyGroup>
 
     <DownloadFile
