@@ -182,7 +182,8 @@ int      buttonscan[NUMBUTTONS] = {sc_Control, sc_Alt, sc_RShift, sc_Space,
                                    sc_Comma,sc_Period,sc_BackSpace,sc_A,
                                    sc_UpArrow, sc_RightArrow,
                                    sc_DownArrow, sc_LeftArrow,
-                                   sc_Tab, sc_T, sc_Z };
+                                   sc_Tab, sc_T, sc_Z,
+                                   sc_P, sc_O };
 
 int      joyxmax = 0, joyymax = 0, joyxmin = 0, joyymin = 0;
 
@@ -5155,6 +5156,48 @@ void CheckWeaponChange (objtype * ob)
 			{pstate->new_weapon = pstate->missileweapon;
 			 StartWeaponChange;
 			}
+		}
+	 else if (pstate->buttonstate[bt_nextweapon])
+		{
+			int current_weapon = pstate->weapon;
+			int next_weapon = current_weapon;
+			do {
+				next_weapon = (next_weapon + 1) % MAXWEAPONS;
+				if (next_weapon <= wp_mp40) {
+					if (pstate->HASBULLETWEAPON[next_weapon]) {
+						pstate->new_weapon = next_weapon;
+						StartWeaponChange;
+						break;
+					}
+				} else {
+					if (pstate->missileweapon != -1 && next_weapon == pstate->missileweapon) {
+						pstate->new_weapon = next_weapon;
+						StartWeaponChange;
+						break;
+					}
+				}
+			} while (next_weapon != current_weapon);
+		}
+	 else if (pstate->buttonstate[bt_prevweapon])
+		{
+			int current_weapon = pstate->weapon;
+			int prev_weapon = current_weapon;
+			do {
+				prev_weapon = (prev_weapon - 1 + MAXWEAPONS) % MAXWEAPONS;
+				if (prev_weapon <= wp_mp40) {
+					if (pstate->HASBULLETWEAPON[prev_weapon]) {
+						pstate->new_weapon = prev_weapon;
+						StartWeaponChange;
+						break;
+					}
+				} else {
+					if (pstate->missileweapon != -1 && prev_weapon == pstate->missileweapon) {
+						pstate->new_weapon = prev_weapon;
+						StartWeaponChange;
+						break;
+					}
+				}
+			} while (prev_weapon != current_weapon);
 		}
 }
 

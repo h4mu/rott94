@@ -142,10 +142,10 @@ int quicksaveslot=-1;
 //
 //******************************************************************************
 
-char order[ 21 ] = {
+char order[ 23 ] = {
    di_west, di_east, di_north, di_south, bt_run, bt_use, bt_attack,
    bt_strafe, bt_strafeleft, bt_straferight, bt_lookup, bt_lookdown,
-   bt_aimbutton, bt_horizonup, bt_horizondown, bt_swapweapon, bt_dropweapon,
+   bt_aimbutton, bt_horizonup, bt_horizondown, bt_swapweapon, bt_nextweapon, bt_prevweapon, bt_dropweapon,
    bt_turnaround, bt_autorun, bt_message, bt_directmsg
    };
 
@@ -562,6 +562,8 @@ CP_MenuNames NormalKeyNames[] =
    "AIM UP             \x9      ",
    "AIM DOWN           \x9      ",
    "TOGGLE WEAPON      \x9      ",
+   "NEXT WEAPON        \x9      ",
+   "PREV WEAPON        \x9      ",
    "DROP WEAPON        \x9      ",
    "VOLTE-FACE         \x9      ",
    "AUTORUN            \x9      ",
@@ -571,7 +573,7 @@ CP_MenuNames NormalKeyNames[] =
 
 #define NORMALKEY_X  74
 #define NORMALKEY_Y  16
-CP_iteminfo NormalKeyItems = { NORMALKEY_X, 17, 21, 0, 16, NormalKeyNames, mn_tinyfont };
+CP_iteminfo NormalKeyItems = { NORMALKEY_X, 17, 23, 0, 16, NormalKeyNames, mn_tinyfont };
 
 CP_itemtype NormalKeyMenu[] =
    {
@@ -589,16 +591,18 @@ CP_itemtype NormalKeyMenu[] =
       { 1, "\0", 'L', (menuptr)DefineKey },
       { 1, "\0", 'A', (menuptr)DefineKey },
       { 1, "\0", 'A', (menuptr)DefineKey },
+      { 1, "\0", 'A', (menuptr)DefineKey },
       { 1, "\0", 'T', (menuptr)DefineKey },
+      { 1, "\0", 'N', (menuptr)DefineKey },
+      { 1, "\0", 'P', (menuptr)DefineKey },
       { 1, "\0", 'D', (menuptr)DefineKey },
       { 1, "\0", 'V', (menuptr)DefineKey },
-      { 1, "\0", 'A', (menuptr)DefineKey },
       { 1, "\0", 'A', (menuptr)DefineKey },
       { 1, "\0", 'S', (menuptr)DefineKey },
       { 1, "\0", 'D', (menuptr)DefineKey }
    };
 
-#define NUMCONTROLNAMES 21
+#define NUMCONTROLNAMES 23
 
 CP_MenuNames ControlNames[] =
    {
@@ -619,6 +623,8 @@ CP_MenuNames ControlNames[] =
    "AIM UP",
    "AIM DOWN",
    "TOGGLE WEAPON",
+   "NEXT WEAPON",
+   "PREV WEAPON",
    "DROP WEAPON",
    "VOLTE-FACE",
    "AUTORUN",
@@ -629,7 +635,7 @@ int controlorder[ NUMCONTROLNAMES ] = {
    bt_nobutton, di_west, di_east, di_north, di_south, bt_run, bt_use,
    bt_attack, bt_strafe, bt_strafeleft, bt_straferight, bt_lookup,
    bt_lookdown, bt_aimbutton, bt_horizonup, bt_horizondown,
-   bt_swapweapon, bt_dropweapon, bt_turnaround, bt_autorun, bt_map
+   bt_swapweapon, bt_nextweapon, bt_prevweapon, bt_dropweapon, bt_turnaround, bt_autorun, bt_map
    };
 
 #define CONTROLSELECT_X  106
@@ -654,6 +660,8 @@ CP_itemtype ControlSelectMenu[] =
       { 1, "\0", 'A', NULL },
       { 1, "\0", 'A', NULL },
       { 1, "\0", 'T', NULL },
+      { 1, "\0", 'N', NULL },
+      { 1, "\0", 'P', NULL },
       { 1, "\0", 'D', NULL },
       { 1, "\0", 'V', NULL },
       { 1, "\0", 'A', NULL },
