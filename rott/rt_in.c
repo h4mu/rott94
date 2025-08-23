@@ -205,8 +205,6 @@ static int sdl_mouse_button_filter(SDL_Event const *event)
 
 static int sdl_mouse_motion_filter(SDL_Event const *event)
 {
-    static int mouse_x = 0;
-    static int mouse_y = 0;
     int mouse_relative_x = 0;
     int mouse_relative_y = 0;
 
@@ -214,33 +212,12 @@ static int sdl_mouse_motion_filter(SDL_Event const *event)
     {
         mouse_relative_x = event->jball.xrel/100;
         mouse_relative_y = event->jball.yrel/100;
-       	mouse_x += mouse_relative_x;
-       	mouse_y += mouse_relative_y;
     } /* if */
     else
     {
-        if (sdl_mouse_grabbed || sdl_fullscreen)
-        {
-          	mouse_relative_x = event->motion.xrel;
-       	    mouse_relative_y = event->motion.yrel;
-           	mouse_x += mouse_relative_x;
-           	mouse_y += mouse_relative_y;
-        } /* if */
-        else
-        {
-          	mouse_relative_x = event->motion.x - mouse_x;
-           	mouse_relative_y = event->motion.y - mouse_y;
-           	mouse_x = event->motion.x;
-           	mouse_y = event->motion.y;
-        } /* else */
+        mouse_relative_x = event->motion.xrel;
+        mouse_relative_y = event->motion.yrel;
     } /* else */
-
-#if 0
-   	if (mouse_x < 0) mouse_x = 0;
-   	if (mouse_x > surface->w) mouse_x = surface->w;
-   	if (mouse_y < 0) mouse_y = 0;
-   	if (mouse_y > surface->h) mouse_y = surface->h;
-#endif
 
     /* set static vars... */
     sdl_mouse_delta_x += mouse_relative_x;
