@@ -278,9 +278,9 @@ static int sdl_key_filter(const SDL_Event *event)
       if (!sdl_fullscreen)
       {
         sdl_mouse_grabbed = ((sdl_mouse_grabbed) ? 0 : 1);
-        if (sdl_mouse_grabbed)
-            grab_mode = SDL_TRUE;
+        grab_mode = sdl_mouse_grabbed ? SDL_TRUE : SDL_FALSE;
         SDL_SetWindowGrab(sdl_window, grab_mode);
+        SDL_SetRelativeMouseMode(grab_mode);
       }
       return(0);
     } /* if */
