@@ -1367,7 +1367,6 @@ void IN_ReadControl (int player, ControlInfo *info)
          realdelta = false;
       break;
 
-#if 0
       case ctrl_Joystick1:
       case ctrl_Joystick2:
          INL_GetJoyDelta (type - ctrl_Joystick, &dx, &dy);
@@ -1380,8 +1379,6 @@ void IN_ReadControl (int player, ControlInfo *info)
          buttons = IN_GetMouseButtons ();
          realdelta = true;
       break;
-           
-#endif
    default:
        ;
    }
