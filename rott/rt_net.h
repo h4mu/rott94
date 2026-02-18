@@ -85,7 +85,7 @@ typedef struct DemoType {
   short momx;
   short momy;
   word  dangle;
-  word  buttons;
+  longword buttons;
 } DemoType;
 
 // Demo Header Structure
@@ -100,7 +100,7 @@ typedef struct MoveType {
   short momx;
   short momy;
   word  dangle;
-  word  buttons;
+  longword buttons;
   char  Sounddata[0];
 } MoveType;
 
