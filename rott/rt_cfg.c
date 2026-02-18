@@ -646,6 +646,8 @@ boolean ParseConfigFile (void)
       ReadInt ("Map",         &buttonscan[24]);
       ReadInt ("SendMessage", &buttonscan[25]);
       ReadInt ("DirectMessage",&buttonscan[26]);
+      ReadInt ("NextWeapon",    &buttonscan[27]);
+      ReadInt ("PrevWeapon",    &buttonscan[28]);
 
       ReadInt ("MouseButton0",&buttonmouse[0]);
       ReadInt ("MouseButton1",&buttonmouse[1]);
@@ -2029,6 +2031,8 @@ void WriteConfig (void)
    WriteParameter (file,"Map              ", buttonscan[24]);
    WriteParameter (file,"SendMessage      ", buttonscan[25]);
    WriteParameter (file,"DirectMessage    ", buttonscan[26]);
+   WriteParameter (file,"NextWeapon       ", buttonscan[27]);
+   WriteParameter (file,"PrevWeapon       ", buttonscan[28]);
 
    SafeWriteString(file,"\n;\n");
    SafeWriteString(file,"; Mouse buttons\n");

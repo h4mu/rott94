@@ -352,7 +352,7 @@ typedef enum
  }
  thingtype;
 
-#define NUMTXBUTTONS    16
+#define NUMTXBUTTONS    32
 enum    {
 		  bt_nobutton=-1,
 		  bt_attack=0,
@@ -382,6 +382,8 @@ enum    {
         bt_map=24,
         bt_message=25,
         bt_directmsg=26,
+        bt_nextweapon=27,
+        bt_prevweapon=28,
         NUMBUTTONS
 };
 

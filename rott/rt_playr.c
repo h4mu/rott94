@@ -182,7 +182,8 @@ int      buttonscan[NUMBUTTONS] = {sc_Control, sc_Alt, sc_RShift, sc_Space,
                                    sc_Comma,sc_Period,sc_BackSpace,sc_A,
                                    sc_UpArrow, sc_RightArrow,
                                    sc_DownArrow, sc_LeftArrow,
-                                   sc_Tab, sc_T, sc_Z };
+                                   sc_Tab, sc_T, sc_Z,
+                                   sc_P, sc_O };
 
 int      joyxmax = 0, joyymax = 0, joyxmin = 0, joyymin = 0;
 
@@ -5156,6 +5157,71 @@ void CheckWeaponChange (objtype * ob)
 			 StartWeaponChange;
 			}
 		}
+
+	 else if (pstate->buttonstate[bt_nextweapon] && !pstate->buttonheld[bt_nextweapon])
+	 {
+		 int next = -1;
+		 int weapons[4];
+		 int count = 0;
+		 int i;
+
+		 if (pstate->HASBULLETWEAPON[wp_pistol]) weapons[count++] = wp_pistol;
+		 if (pstate->HASBULLETWEAPON[wp_twopistol]) weapons[count++] = wp_twopistol;
+		 if (pstate->HASBULLETWEAPON[wp_mp40]) weapons[count++] = wp_mp40;
+		 if (pstate->missileweapon != -1) weapons[count++] = pstate->missileweapon;
+
+		 if (count > 1)
+		 {
+			 for (i = 0; i < count; i++)
+			 {
+				 if (weapons[i] == pstate->weapon)
+				 {
+					 next = weapons[(i + 1) % count];
+					 break;
+				 }
+			 }
+			 if (next == -1) next = weapons[0];
+
+			 if (next != pstate->weapon)
+			 {
+				 pstate->new_weapon = next;
+				 if (next <= wp_mp40) pstate->bulletweapon = next;
+				 StartWeaponChange;
+			 }
+		 }
+	 }
+	 else if (pstate->buttonstate[bt_prevweapon] && !pstate->buttonheld[bt_prevweapon])
+	 {
+		 int prev = -1;
+		 int weapons[4];
+		 int count = 0;
+		 int i;
+
+		 if (pstate->HASBULLETWEAPON[wp_pistol]) weapons[count++] = wp_pistol;
+		 if (pstate->HASBULLETWEAPON[wp_twopistol]) weapons[count++] = wp_twopistol;
+		 if (pstate->HASBULLETWEAPON[wp_mp40]) weapons[count++] = wp_mp40;
+		 if (pstate->missileweapon != -1) weapons[count++] = pstate->missileweapon;
+
+		 if (count > 1)
+		 {
+			 for (i = 0; i < count; i++)
+			 {
+				 if (weapons[i] == pstate->weapon)
+				 {
+					 prev = weapons[(i + count - 1) % count];
+					 break;
+				 }
+			 }
+			 if (prev == -1) prev = weapons[count - 1];
+
+			 if (prev != pstate->weapon)
+			 {
+				 pstate->new_weapon = prev;
+				 if (prev <= wp_mp40) pstate->bulletweapon = prev;
+				 StartWeaponChange;
+			 }
+		 }
+	 }
 }
 
 
