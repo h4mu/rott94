@@ -399,7 +399,7 @@ void XFlipPage ( void )
 
 #else
 
-#include "SDL.h"
+#include <SDL3/SDL.h>
 
 #ifndef STUB_FUNCTION
 
@@ -430,30 +430,30 @@ extern unsigned int lastInteraction;
 
 void BuildHintTexture()
 {
-	lastInteraction = SDL_GetTicks();
-	SDL_RWops *file = SDL_RWFromFile("buttons.bmp", "rb");
+	lastInteraction = (unsigned int)SDL_GetTicks();
+	SDL_IOStream *file = SDL_IOFromFile("buttons.bmp", "rb");
 	if (file)
 	{
-		SDL_Surface *image = SDL_LoadBMP_RW(file, SDL_TRUE);
+		SDL_Surface *image = SDL_LoadBMP_IO(file, true);
 		if (!image)
 		{
 			Error("Bitmap error: %s\n", SDL_GetError());
 		}
-		SDL_SetColorKey(image, SDL_TRUE, SDL_MapRGBA(image->format, 255, 255, 255, 0));
+		SDL_SetSurfaceColorKey(image, true, SDL_MapRGBA(SDL_GetPixelFormatDetails(image->format), SDL_GetSurfacePalette(image), 255, 255, 255, 0));
 		sdl_hint_texture = SDL_CreateTextureFromSurface(sdl_renderer, image);
 		if (!sdl_hint_texture)
 		{
 			Error("Texture error: %s\n", SDL_GetError());
 		}
-		SDL_FreeSurface(image);
+		SDL_DestroySurface(image);
 	}
 }
 
 void GraphicsMode ( void )
 {
-    Uint32 flags = 0;
+    SDL_WindowFlags flags = 0;
 
-	if (SDL_InitSubSystem (SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
+	if (!SDL_InitSubSystem (SDL_INIT_VIDEO | SDL_INIT_AUDIO))
 	{
 	    Error ("Could not initialize SDL: %s\n", SDL_GetError());
 	}
@@ -461,26 +461,24 @@ void GraphicsMode ( void )
     #if defined(PLATFORM_MACOSX)
         // FIXME: remove this.  --ryan.
         flags = SDL_WINDOW_FULLSCREEN;
-        SDL_WM_GrabInput(SDL_GRAB_ON);
+        // SDL_WM_GrabInput(SDL_GRAB_ON); // Removed in SDL3
     #endif
-    SDL_ShowCursor (0);
+    SDL_HideCursor ();
     if (sdl_fullscreen)
-        flags = SDL_WINDOW_FULLSCREEN;
+        flags |= SDL_WINDOW_FULLSCREEN;
 	sdl_window = SDL_CreateWindow("Rise of the Triad",
-							  SDL_WINDOWPOS_UNDEFINED,
-							  SDL_WINDOWPOS_UNDEFINED,
 							  iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT,
 							  flags);
 	if (sdl_window == NULL)
 	{
 		Error ("Could not open window: %s\n", SDL_GetError());
 	}
-	sdl_renderer = SDL_CreateRenderer(sdl_window, -1, /*SDL_RENDERER_SOFTWARE*/ 0);
+	sdl_renderer = SDL_CreateRenderer(sdl_window, NULL);
 	if (sdl_renderer == NULL)
 	{
 		Error ("Could not create renderer: %s\n", SDL_GetError());
 	}
-	SDL_RenderSetLogicalSize(sdl_renderer, iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT);
+	SDL_SetRenderLogicalPresentation(sdl_renderer, iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 	sdl_texture = SDL_CreateTexture(sdl_renderer,
 			SDL_PIXELFORMAT_ARGB8888, //SDL_PIXELFORMAT_RGB565,
 			SDL_TEXTUREACCESS_STREAMING,
@@ -489,12 +487,12 @@ void GraphicsMode ( void )
 	{
 		Error ("Texture error: %s\n", SDL_GetError());
 	}
-	sdl_surface = SDL_CreateRGBSurface(0, iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, 8, 0, 0, 0, 0);
+	sdl_surface = SDL_CreateSurface(iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, SDL_PIXELFORMAT_INDEX8);
 	if (sdl_surface == NULL)
 	{
 		Error ("Could not create surface: %s\n", SDL_GetError());
 	}
-	sdl_surface32 = SDL_CreateRGBSurface(0, iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, 32, 0, 0, 0, 0);
+	sdl_surface32 = SDL_CreateSurface(iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, SDL_PIXELFORMAT_ARGB8888);
 	if (sdl_surface32 == NULL)
 	{
 		Error ("Could not create surface: %s\n", SDL_GetError());
@@ -505,8 +503,10 @@ void GraphicsMode ( void )
 void blitScreen32(uint32_t *dst)
 {
     uint8_t *src = sdl_surface->pixels;
-    SDL_Palette* palette = sdl_surface->format->palette;
+    SDL_Palette* palette = SDL_GetSurfacePalette(sdl_surface);
     int x, y;
+
+    if (!palette) return;
 
     for (y = iGLOBAL_SCREENHEIGHT; y > 0; y--)
 		for (x = iGLOBAL_SCREENWIDTH; x > 0; x--)
@@ -766,21 +766,21 @@ static void RenderCopyHintTexture()
 {
 	if (sdl_hint_texture)
 	{
-		unsigned int deltaInteraction = SDL_GetTicks() - lastInteraction;
+		unsigned int deltaInteraction = (unsigned int)SDL_GetTicks() - lastInteraction;
 		const unsigned int minDelay = 10000;
 		if (deltaInteraction < minDelay + 4600)
 		{
 			if (deltaInteraction > minDelay + 4000)
 			{
 				unsigned int shade = (minDelay + 4600 - deltaInteraction) / 3;
-				SDL_SetTextureAlphaMod(sdl_hint_texture, shade < 1 ? 0 : shade);
-				SDL_RenderCopy(sdl_renderer, sdl_hint_texture, NULL, NULL);
+				SDL_SetTextureAlphaMod(sdl_hint_texture, (Uint8)(shade < 1 ? 0 : shade));
+				SDL_RenderTexture(sdl_renderer, sdl_hint_texture, NULL, NULL);
 			}
 			else if (deltaInteraction > minDelay)
 			{
 				unsigned int shade = (deltaInteraction - minDelay) / 3;
-				SDL_SetTextureAlphaMod(sdl_hint_texture, shade > 200 ? 200 : shade);
-				SDL_RenderCopy(sdl_renderer, sdl_hint_texture, NULL, NULL);
+				SDL_SetTextureAlphaMod(sdl_hint_texture, (Uint8)(shade > 200 ? 200 : shade));
+				SDL_RenderTexture(sdl_renderer, sdl_hint_texture, NULL, NULL);
 			}
 		}
 	}
@@ -800,7 +800,7 @@ void VH_UpdateScreen (void)
 	blitScreen32(sdl_surface32->pixels);
 	SDL_UpdateTexture(sdl_texture, NULL, sdl_surface32->pixels, sdl_surface32->pitch);
 	SDL_RenderClear(sdl_renderer);
-	SDL_RenderCopy(sdl_renderer, sdl_texture, NULL, NULL);
+	SDL_RenderTexture(sdl_renderer, sdl_texture, NULL, NULL);
 	RenderCopyHintTexture();
 	SDL_RenderPresent(sdl_renderer);
 }
@@ -839,7 +839,7 @@ void XFlipPage ( void )
 	blitScreen32(sdl_surface32->pixels);
 	SDL_UpdateTexture(sdl_texture, NULL, sdl_surface32->pixels, sdl_surface32->pitch);
 	SDL_RenderClear(sdl_renderer);
-	SDL_RenderCopy(sdl_renderer, sdl_texture, NULL, NULL);
+	SDL_RenderTexture(sdl_renderer, sdl_texture, NULL, NULL);
 	RenderCopyHintTexture();
 	SDL_RenderPresent(sdl_renderer);
  
@@ -851,16 +851,13 @@ void XFlipPage ( void )
 
 void EnableScreenStretch(void)
 {
-   int i,offset;
-
    if (iGLOBAL_SCREENWIDTH <= 320 || StretchScreen) return;
 
    if (unstretch_sdl_surface == NULL)
    {
       /* should really be just 320x200, but there is code all over the
          places which crashes then */
-      unstretch_sdl_surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
-         iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, 8, 0, 0, 0, 0);
+      unstretch_sdl_surface = SDL_CreateSurface(iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, SDL_PIXELFORMAT_INDEX8);
    }
 
    displayofs = (byte*)unstretch_sdl_surface->pixels +
@@ -901,7 +898,7 @@ static void StretchMemPicture ()
   dest.y = 0;
   dest.w = iGLOBAL_SCREENWIDTH;
   dest.h = iGLOBAL_SCREENHEIGHT;
-  SDL_SoftStretch(unstretch_sdl_surface, &src, sdl_surface, &dest);
+  SDL_BlitSurfaceScaled(unstretch_sdl_surface, &src, sdl_surface, &dest, SDL_SCALEMODE_NEAREST);
 }
 
 // bna function added start

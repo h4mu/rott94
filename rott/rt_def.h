@@ -322,9 +322,13 @@ typedef enum
 /* boolean is serialized at the moment, and watcomc made it a byte. */
 
 typedef unsigned char boolean;
+#ifndef __bool_true_false_are_defined
+#ifndef __cplusplus
 enum {
   false, true
 };
+#endif
+#endif
 #endif
 
 
