@@ -40,7 +40,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #if USE_SDL
 /* Need to redefine main to SDL_main on some platforms... */
-#include "SDL.h"
+#include <SDL3/SDL.h>
 #endif
 
 #include "rt_actor.h"
@@ -3034,7 +3034,7 @@ void WriteLBMfile (char *filename, byte *data, int width, int height)
    long    length;
    bmhd_t  basebmhd;
 #if USE_SDL
-   SDL_RWops* handle;
+   SDL_IOStream* handle;
 #else
    int     handle;
 #endif
@@ -3143,7 +3143,7 @@ void WriteLBMfile (char *filename, byte *data, int width, int height)
    SafeWrite (handle, lbm, lbmptr-lbm);
 
 #if USE_SDL
-   SDL_RWclose(handle);
+   SDL_CloseIO(handle);
 #else
    close (handle);
 #endif
@@ -3332,7 +3332,7 @@ void WritePCX (char * file, byte * source)
    byte *tempbuffer;
    byte pal[0x300];
 #if USE_SDL
-   SDL_RWops* pcxhandle;
+   SDL_IOStream* pcxhandle;
 #else
    int pcxhandle;
 #endif
@@ -3411,7 +3411,7 @@ void WritePCX (char * file, byte * source)
    SafeWrite (pcxhandle, &pal[0], 768);
 
 #if USE_SDL
-   SDL_RWclose(pcxhandle);
+   SDL_CloseIO(pcxhandle);
 #else
    close (pcxhandle);
 #endif

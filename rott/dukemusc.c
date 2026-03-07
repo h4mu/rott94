@@ -33,12 +33,8 @@
 #define cdecl
 #endif
 
-#include "SDL.h"
-#ifdef __EMSCRIPTEN__
-#	include <SDL/SDL_mixer.h>
-#else
-#	include "SDL_mixer.h"
-#endif
+#include <SDL3/SDL.h>
+#include <SDL3_mixer/SDL_mixer.h>
 #ifdef ROTT
 #include "rt_def.h"      // ROTT music hack
 #include "rt_cfg.h"      // ROTT music hack
@@ -64,7 +60,7 @@ int MUSIC_ErrorCode = MUSIC_Ok;
 static char warningMessage[80];
 static char errorMessage[80];
 static int fx_initialized = 0;
-static int numChannels = MIX_CHANNELS;
+static int numChannels = 8;
 static void (*callback)(unsigned long);
 static int reverseStereo = 0;
 static int reverbDelay = 256;
@@ -189,7 +185,7 @@ static int music_initialized = 0;
 static int music_context = 0;
 static int music_loopflag = MUSIC_PlayOnce;
 static char *music_songdata = NULL;
-static Mix_Music *music_musicchunk = NULL;
+static MIX_Audio *music_audio = NULL;
 
 int MUSIC_Init(int SoundCard, int Address)
 {
@@ -242,7 +238,10 @@ void MUSIC_SetMaxFMMidiChannel(int channel)
 
 void MUSIC_SetVolume(int volume)
 {
-    Mix_VolumeMusic(volume >> 1);  // convert 0-255 to 0-128.
+    extern MIX_Track *music_track;
+    if (music_track) {
+        MIX_SetTrackGain(music_track, (float)volume / 255.0f);
+    }
 } // MUSIC_SetVolume
 
 
@@ -260,7 +259,11 @@ void MUSIC_ResetMidiChannelVolumes(void)
 
 int MUSIC_GetVolume(void)
 {
-    return(Mix_VolumeMusic(-1) << 1);  // convert 0-128 to 0-255.
+    extern MIX_Track *music_track;
+    if (music_track) {
+        return (int)(MIX_GetTrackGain(music_track) * 255.0f);
+    }
+    return 0;
 } // MUSIC_GetVolume
 
 
@@ -272,42 +275,41 @@ void MUSIC_SetLoopFlag(int loopflag)
 
 int MUSIC_SongPlaying(void)
 {
-    return((Mix_PlayingMusic()) ? __FX_TRUE : __FX_FALSE);
+    extern MIX_Track *music_track;
+    return((music_track && MIX_TrackPlaying(music_track)) ? __FX_TRUE : __FX_FALSE);
 } // MUSIC_SongPlaying
 
 
 void MUSIC_Continue(void)
 {
-    if (Mix_PausedMusic())
-        Mix_ResumeMusic();
+    extern MIX_Track *music_track;
+    if (music_track && MIX_TrackPaused(music_track))
+        MIX_ResumeTrack(music_track);
     else if (music_songdata)
-        MUSIC_PlaySong(music_songdata, MUSIC_PlayOnce);
+        MUSIC_PlaySong((unsigned char *)music_songdata, MUSIC_PlayOnce);
 } // MUSIC_Continue
 
 
 void MUSIC_Pause(void)
 {
-    Mix_PauseMusic();
+    extern MIX_Track *music_track;
+    if (music_track) {
+        MIX_PauseTrack(music_track);
+    }
 } // MUSIC_Pause
 
 
 int MUSIC_StopSong(void)
 {
-    //if (!fx_initialized)
-    if (!Mix_QuerySpec(NULL, NULL, NULL))
-    {
-        setErrorMessage("Need FX system initialized, too. Sorry.");
-        return(MUSIC_Error);
-    } // if
-
-    if ( (Mix_PlayingMusic()) || (Mix_PausedMusic()) )
-        Mix_HaltMusic();
-
-    if (music_musicchunk)
-        Mix_FreeMusic(music_musicchunk);
-
+    extern MIX_Track *music_track;
+    if (music_track && (MIX_TrackPlaying(music_track) || MIX_TrackPaused(music_track))) {
+        MIX_StopTrack(music_track, 0);
+    }
+    if (music_audio) {
+        MIX_DestroyAudio(music_audio);
+        music_audio = NULL;
+    }
     music_songdata = NULL;
-    music_musicchunk = NULL;
     return(MUSIC_Ok);
 } // MUSIC_StopSong
 
@@ -413,67 +415,35 @@ void PlayMusic(char *_filename)
 // ROTT Special - SBF
 int MUSIC_PlaySongROTT(unsigned char *song, int size, int loopflag)
 {
-    char filename[MAX_PATH];
-#if USE_SDL
-    SDL_RWops* handle;
-#else
-    int handle;
-#endif
-#ifndef __ANDROID__
+    // ROTT uses fx_man.c's MUSIC_PlaySongROTT implementation when compiled for ROTT.
+    // However, if we are in dukemusc.c, it might be a different build configuration.
+    // In the current project, both fx_man.c and dukemusc.c seem to be compiled.
+    // Looking at the Makefile, dukemusc.o is included in OBJS.
+    // Let's implement it here just in case.
+
+    extern MIX_Mixer *sdl_mixer;
+    extern MIX_Track *music_track;
+
     MUSIC_StopSong();
-    // save the file somewhere, so SDL_mixer can load it
-    GetPathFromEnvironment(filename, ApogeePath, "tmpsong.mid");
-#else
-    strcpy(filename, ApogeePath);
-    strcat(filename, "/tmpsong.mid");
-#endif
-    handle = SafeOpenWrite(filename);
 
-    SafeWrite(handle, song, size);
-#if USE_SDL
-    SDL_RWclose(handle);
-#else
-    close(handle);
-#endif
+    music_songdata = (char *)song;
 
-    music_songdata = song;
-#ifdef __ANDROID__
-    JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
-    jobject activity = (jobject)SDL_AndroidGetActivity();
-    if (!activity)
-    {
-        return MUSIC_Error;
-    }
-    jclass clActivity = (*env)->GetObjectClass(env, activity);
-    if (!clActivity)
-    {
-        return MUSIC_Error;
-    }
-    jmethodID idPlayMusic = (*env)->GetMethodID(env, clActivity, "playMusic", "(Ljava/lang/String;Z)V");
-    if (!idPlayMusic)
-    {
-        return MUSIC_Error;
-    }
-    jstring midiFilePath = (*env)->NewStringUTF(env, filename);
-    if (!midiFilePath)
-    {
-        return MUSIC_Error;
-    }
-
-    (*env)->CallVoidMethod(env, activity, idPlayMusic, midiFilePath, loopflag);
-
-    (*env)->DeleteLocalRef(env, midiFilePath);
-    (*env)->DeleteLocalRef(env, clActivity);
-    (*env)->DeleteLocalRef(env, activity);
-#else
     // finally, we can load it with SDL_mixer
-    music_musicchunk = Mix_LoadMUS(filename);
-    if (music_musicchunk == NULL) {
-        return MUSIC_Error;
+    if (sdl_mixer) {
+        music_audio = MIX_LoadAudioNoCopy(sdl_mixer, song, size, false);
+        if (music_audio == NULL) {
+            return MUSIC_Error;
+        }
+
+        if (music_track) {
+            SDL_PropertiesID props = SDL_CreateProperties();
+            SDL_SetNumberProperty(props, MIX_PROP_PLAY_LOOPS_NUMBER, (loopflag == MUSIC_PlayOnce) ? 0 : -1);
+            MIX_SetTrackAudio(music_track, music_audio);
+            MIX_PlayTrack(music_track, props);
+            SDL_DestroyProperties(props);
+        }
     }
-    
-    Mix_PlayMusic(music_musicchunk, (loopflag == MUSIC_PlayOnce) ? 0 : -1);
-#endif
+
     return(MUSIC_Ok);
 } // MUSIC_PlaySongROTT
 #endif
@@ -524,14 +494,18 @@ void MUSIC_GetSongLength(songposition *pos)
 
 int MUSIC_FadeVolume(int tovolume, int milliseconds)
 {
-    Mix_FadeOutMusic(milliseconds);
+    extern MIX_Track *music_track;
+    if (music_track) {
+        MIX_StopTrack(music_track, MIX_TrackMSToFrames(music_track, milliseconds));
+    }
     return(MUSIC_Ok);
 } // MUSIC_FadeVolume
 
 
 int MUSIC_FadeActive(void)
 {
-    return((Mix_FadingMusic() == MIX_FADING_OUT) ? __FX_TRUE : __FX_FALSE);
+    extern MIX_Track *music_track;
+    return((music_track && MIX_GetTrackFadeFrames(music_track) < 0) ? __FX_TRUE : __FX_FALSE);
 } // MUSIC_FadeActive
 
 

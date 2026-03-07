@@ -1379,7 +1379,7 @@ void CA_RLEWexpand (word *source, word *dest,long length, unsigned rlewtag)
 ======================
 */
 #if USE_SDL
-#	include "SDL.h"
+#	include <SDL3/SDL.h>
 #endif
 
 void CheckRTLVersion
@@ -1389,7 +1389,7 @@ void CheckRTLVersion
 
    {
 #if USE_SDL
-	SDL_RWops* filehandle;
+	SDL_IOStream* filehandle;
 #else
    int  filehandle;
 #endif
@@ -1424,7 +1424,7 @@ void CheckRTLVersion
       }
 
 #if USE_SDL
-   SDL_RWclose(filehandle);
+   SDL_CloseIO(filehandle);
 #else
    close( filehandle );
 #endif
@@ -1448,7 +1448,7 @@ void ReadROTTMap
    {
    RTLMAP RTLMap;
 #if USE_SDL
-	SDL_RWops* filehandle;
+	SDL_IOStream* filehandle;
 #else
    int  filehandle;
 #endif
@@ -1465,8 +1465,8 @@ void ReadROTTMap
    // Load map header
    //
 #if USE_SDL
-   SDL_RWseek( filehandle, RTL_HEADER_OFFSET + mapnum * sizeof( RTLMap ),
-      RW_SEEK_SET );
+   SDL_SeekIO( filehandle, RTL_HEADER_OFFSET + mapnum * sizeof( RTLMap ),
+      SDL_IO_SEEK_SET );
 #else
    lseek( filehandle, RTL_HEADER_OFFSET + mapnum * sizeof( RTLMap ),
       SEEK_SET );
@@ -1514,7 +1514,7 @@ void ReadROTTMap
       compressed = RTLMap.planelength[ plane ];
 		buffer     = SafeMalloc( compressed );
 #if USE_SDL
-      SDL_RWseek( filehandle, pos, RW_SEEK_SET );
+      SDL_SeekIO( filehandle, pos, SDL_IO_SEEK_SET );
 #else
       lseek( filehandle, pos, SEEK_SET );
 #endif
@@ -1536,7 +1536,7 @@ void ReadROTTMap
 		SafeFree( buffer );
       }
 #if USE_SDL
-   SDL_RWclose(filehandle);
+   SDL_CloseIO(filehandle);
 #else
    close( filehandle );
 #endif
@@ -1628,7 +1628,7 @@ void GetMapFileInfo
    {
    RTLMAP RTLMap[ 100 ];
 #if USE_SDL
-	SDL_RWops* filehandle;
+	SDL_IOStream* filehandle;
 #else
    int  filehandle;
 #endif
@@ -1643,13 +1643,13 @@ void GetMapFileInfo
    // Load map header
    //
 #if USE_SDL
-   SDL_RWseek( filehandle, RTL_HEADER_OFFSET, RW_SEEK_SET );
+   SDL_SeekIO( filehandle, RTL_HEADER_OFFSET, SDL_IO_SEEK_SET );
 #else
    lseek( filehandle, RTL_HEADER_OFFSET, SEEK_SET );
 #endif
    SafeRead( filehandle, &RTLMap, sizeof( RTLMap ) );
 #if USE_SDL
-   SDL_RWclose(filehandle);
+   SDL_CloseIO(filehandle);
 #else
    close( filehandle );
 #endif
@@ -1726,7 +1726,7 @@ unsigned GetMapCRC
 
    {
 #if USE_SDL
-	SDL_RWops* filehandle;
+	SDL_IOStream* filehandle;
 #else
    int  filehandle;
 #endif
@@ -1741,14 +1741,14 @@ unsigned GetMapCRC
    // Load map header
    //
 #if USE_SDL
-   SDL_RWseek( filehandle, RTL_HEADER_OFFSET + num * sizeof( RTLMap ), RW_SEEK_SET );
+   SDL_SeekIO( filehandle, RTL_HEADER_OFFSET + num * sizeof( RTLMap ), SDL_IO_SEEK_SET );
 #else
    lseek( filehandle, RTL_HEADER_OFFSET + num * sizeof( RTLMap ), SEEK_SET );
 #endif
    SafeRead( filehandle, &RTLMap, sizeof( RTLMap ) );
 
 #if USE_SDL
-   SDL_RWclose(filehandle);
+   SDL_CloseIO(filehandle);
 #else
    close( filehandle );
 #endif
@@ -1830,7 +1830,7 @@ void LoadTedMap
    int     plane;
    int     i;
 #if USE_SDL
-   SDL_RWops* maphandle;
+   SDL_IOStream* maphandle;
 #else
    int     maphandle;
 #endif
@@ -1873,7 +1873,7 @@ void LoadTedMap
       }
 
 #if USE_SDL
-   SDL_RWseek( maphandle, pos, RW_SEEK_SET );
+   SDL_SeekIO( maphandle, pos, SDL_IO_SEEK_SET );
 #else
    lseek( maphandle, pos, SEEK_SET );
 #endif
@@ -1904,7 +1904,7 @@ void LoadTedMap
       pos = mapheader.planestart[ plane ];
 
 #if USE_SDL
-      SDL_RWseek( maphandle, pos, RW_SEEK_SET );
+      SDL_SeekIO( maphandle, pos, SDL_IO_SEEK_SET );
 #else
       lseek( maphandle, pos, SEEK_SET );
 #endif
@@ -1930,7 +1930,7 @@ void LoadTedMap
 	SafeFree( tinf );
 
 #if USE_SDL
-	if (SDL_RWclose(maphandle))
+	if (SDL_CloseIO(maphandle))
 #else
    if ( close( maphandle ) )
 #endif

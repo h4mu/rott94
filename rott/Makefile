@@ -18,7 +18,7 @@ CC ?= gcc
 
 CFLAGS ?= -g -O0
 CFLAGS += -Wall
-CFLAGS += $(shell sdl2-config --cflags)
+CFLAGS += $(shell pkg-config sdl3 --cflags)
 CFLAGS += $(EXTRACFLAGS)
 
 CPPFLAGS += -DUSE_SDL=1
@@ -27,8 +27,8 @@ CPPFLAGS += $(EXTRACPPFLAGS)
 
 LDFLAGS += $(EXTRALDFLAGS)
 
-LDLIBS += $(shell sdl2-config --libs)
-LDLIBS += -lSDL2_mixer
+LDLIBS += $(shell pkg-config sdl3 --libs)
+LDLIBS += $(shell pkg-config sdl3-mixer --libs)
 LDLIBS += -lm
 LDLIBS += $(EXTRALDLIBS)
 
@@ -81,23 +81,17 @@ OBJS += w_wad.o
 OBJS += watcom.o
 OBJS += z_zone.o
 OBJS += byteordr.o
-OBJS += dukemusc.o
+OBJS += fx_man.o
 OBJS += winrott.o
-
-AUDIOLIB := audiolib/audiolib.a
 
 all: $(ROTT)
 
-$(ROTT): $(OBJS) $(AUDIOLIB)
+$(ROTT): $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 $(OBJS): develop.h
-
-$(AUDIOLIB):
-	$(MAKE) -C audiolib
 
 tidy: 
 	$(RM) $(OBJS) $(ROTT) $(ROTT).exe
 
 clean: tidy
-	$(MAKE) -C audiolib $@

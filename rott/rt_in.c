@@ -29,8 +29,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #if USE_SDL
-#include "SDL.h"
-#include "SDL_touch.h"
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_touch.h>
+#include <math.h>
 #endif
 
 #include "rt_main.h"
@@ -99,7 +100,7 @@ ModemMessage MSG;
 
 #if USE_SDL
 static SDL_Joystick* sdl_joysticks[MaxJoys];
-static SDL_GameController* sdl_controllers[MaxJoys];
+static SDL_Gamepad* sdl_controllers[MaxJoys];
 static int sdl_mouse_delta_x = 0;
 static int sdl_mouse_delta_y = 0;
 static word sdl_mouse_button_mask = 0;
@@ -107,7 +108,7 @@ static int sdl_total_sticks = 0;
 static word *sdl_stick_button_state = NULL;
 static word sdl_sticks_joybits = 0;
 static int sdl_mouse_grabbed = 0;
-static unsigned int scancodes[SDL_NUM_SCANCODES];
+static unsigned int scancodes[SDL_SCANCODE_COUNT];
 extern boolean sdl_fullscreen;
 extern SDL_Window *sdl_window;
 #endif
@@ -194,13 +195,13 @@ static int sdl_mouse_button_filter(SDL_Event const *event)
          *   (That is, this is what Int 33h (AX=0x05) returns...)
          */
 
-    Uint8 bmask = SDL_GetMouseState(NULL, NULL);
+    SDL_MouseButtonFlags bmask = SDL_GetMouseState(NULL, NULL);
     sdl_mouse_button_mask = 0;  /* this is a static var. */
     if (bmask & SDL_BUTTON_LMASK) sdl_mouse_button_mask |= 1;
     if (bmask & SDL_BUTTON_RMASK) sdl_mouse_button_mask |= 2;
     if (bmask & SDL_BUTTON_MMASK) sdl_mouse_button_mask |= 4;
     return(0);
-} /* sdl_mouse_up_filter */
+} /* sdl_mouse_button_filter */
 
 
 static int sdl_mouse_motion_filter(SDL_Event const *event)
@@ -208,15 +209,15 @@ static int sdl_mouse_motion_filter(SDL_Event const *event)
     int mouse_relative_x = 0;
     int mouse_relative_y = 0;
 
-    if (event->type == SDL_JOYBALLMOTION)
+    if (event->type == SDL_EVENT_JOYSTICK_BALL_MOTION)
     {
         mouse_relative_x = event->jball.xrel/100;
         mouse_relative_y = event->jball.yrel/100;
     } /* if */
     else
     {
-        mouse_relative_x = event->motion.xrel;
-        mouse_relative_y = event->motion.yrel;
+        mouse_relative_x = (int)event->motion.xrel;
+        mouse_relative_y = (int)event->motion.yrel;
     } /* else */
 
     /* set static vars... */
@@ -238,11 +239,11 @@ static int handle_keypad_enter_hack(const SDL_Event *event)
     static int kp_enter_hack = 0;
     int retval = 0;
 
-    if (event->key.keysym.scancode == SDL_SCANCODE_RETURN)
+    if (event->key.scancode == SDL_SCANCODE_RETURN)
     {
-        if (event->key.state == SDL_PRESSED)
+        if (event->key.down)
         {
-            if (event->key.keysym.mod & KMOD_SHIFT)
+            if (event->key.mod & SDL_KMOD_SHIFT)
             {
                 kp_enter_hack = 1;
                 retval = scancodes[SDL_SCANCODE_KP_ENTER];
@@ -270,31 +271,21 @@ static int sdl_key_filter(const SDL_Event *event)
     int strippedkey;
     int extended;
 
-    if ( (event->key.keysym.scancode == SDL_SCANCODE_G) &&
-         (event->key.state == SDL_PRESSED) &&
-         (event->key.keysym.mod & KMOD_CTRL) )
+    if ( (event->key.scancode == SDL_SCANCODE_G) &&
+         (event->key.down) &&
+         (event->key.mod & SDL_KMOD_CTRL) )
     {
       if (!sdl_fullscreen)
       {
         sdl_mouse_grabbed = !sdl_mouse_grabbed;
-        SDL_SetRelativeMouseMode(sdl_mouse_grabbed ? SDL_TRUE : SDL_FALSE);
+        SDL_SetWindowRelativeMouseMode(sdl_window, sdl_mouse_grabbed ? true : false);
       }
       return(0);
     } /* if */
 
-//    else if ( ( (event->key.keysym.scancode == SDL_SCANCODE_RETURN) ||
-//                (event->key.keysym.scancode == SDL_SCANCODE_KP_ENTER) ) &&
-//              (event->key.state == SDL_PRESSED) &&
-//              (event->key.keysym.mod & KMOD_ALT) )
-//    {
-//        if (SDL_WM_ToggleFullScreen(SDL_GetVideoSurface()))
-//            sdl_fullscreen ^= 1;
-//        return(0);
-//    } /* if */
-
     /* HDG: put this above the scancode lookup otherwise it is never reached */
-    if ( (event->key.keysym.scancode == SDL_SCANCODE_PAUSE) &&
-         (event->key.state == SDL_PRESSED))
+    if ( (event->key.scancode == SDL_SCANCODE_PAUSE) &&
+         (event->key.down))
     {
         PausePressed = true;
         return(0);
@@ -303,18 +294,18 @@ static int sdl_key_filter(const SDL_Event *event)
     k = handle_keypad_enter_hack(event);
     if (!k)
     {
-        k = scancodes[event->key.keysym.scancode == SDL_SCANCODE_AC_BACK ? SDL_SCANCODE_ESCAPE : event->key.keysym.scancode];
+        k = scancodes[event->key.scancode == SDL_SCANCODE_AC_BACK ? SDL_SCANCODE_ESCAPE : event->key.scancode];
         if (!k)   /* No DOS equivalent defined. */
             return(0);
     } /* if */
 
     /* Fix elweirdo SDL capslock/numlock handling, always treat as press */
-    if ( (event->key.keysym.scancode != SDL_SCANCODE_CAPSLOCK) &&
-         (event->key.keysym.scancode != SDL_SCANCODE_NUMLOCKCLEAR)  &&
-         (event->key.state == SDL_RELEASED) )
+    if ( (event->key.scancode != SDL_SCANCODE_CAPSLOCK) &&
+         (event->key.scancode != SDL_SCANCODE_NUMLOCKCLEAR)  &&
+         (!event->key.down) )
         k += 128;  /* +128 signifies that the key is released in DOS. */
 
-    if (event->key.keysym.scancode == SDL_SCANCODE_SCROLLLOCK)
+    if (event->key.scancode == SDL_SCANCODE_SCROLLLOCK)
         PanicPressed = true;
 
     else
@@ -328,8 +319,8 @@ static int sdl_key_filter(const SDL_Event *event)
         {
             KeyboardQueue[ Keytail ] = extended;
             Keytail = ( Keytail + 1 )&( KEYQMAX - 1 );
-            k = scancodes[event->key.keysym.scancode] & 0xFF;
-            if (event->key.state == SDL_RELEASED)
+            k = scancodes[event->key.scancode] & 0xFF;
+            if (!event->key.down)
                 k += 128;  /* +128 signifies that the key is released in DOS. */
         }
 
@@ -358,13 +349,13 @@ static int fingersDown[10] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
 
 static int get_finger_id(const SDL_Event *event)
 {
-	return event->tfinger.fingerId % (sizeof(fingersDown) / sizeof(fingersDown[0]));
+	return (int)(event->tfinger.fingerID % (sizeof(fingersDown) / sizeof(fingersDown[0])));
 }
 
 static int sdl_finger_filter(const SDL_Event *event)
 {
 	SDL_Event keyEvent;
-	keyEvent.key.keysym.mod = 0;
+	keyEvent.key.mod = 0;
 	int column = (int)floor(event->tfinger.x / .333f);
 	int row = (int)floor(event->tfinger.y / .333f);
     if (column < 0)
@@ -383,10 +374,10 @@ static int sdl_finger_filter(const SDL_Event *event)
     {
         row = 2;
     }
-	if (event->type == SDL_FINGERUP)
+	if (event->type == SDL_EVENT_FINGER_UP)
 	{
-		keyEvent.type = SDL_KEYUP;
-		keyEvent.key.state = SDL_RELEASED;
+		keyEvent.type = SDL_EVENT_KEY_UP;
+		keyEvent.key.down = false;
 		fingersDown[get_finger_id(event)] = -1;
 	}
 	else
@@ -398,20 +389,20 @@ static int sdl_finger_filter(const SDL_Event *event)
 		}
 		else if (fingersDown[get_finger_id(event)] != linearCoord)
 		{
-			keyEvent.type = SDL_KEYUP;
-			keyEvent.key.state = SDL_RELEASED;
+			keyEvent.type = SDL_EVENT_KEY_UP;
+			keyEvent.key.down = false;
 			int oldRow = fingersDown[get_finger_id(event)] / 3;
 			int oldColumn = fingersDown[get_finger_id(event)] % 3;
-			keyEvent.key.keysym.scancode = scancodeMapping[oldRow][oldColumn];
+			keyEvent.key.scancode = scancodeMapping[oldRow][oldColumn];
 			sdl_key_filter(&keyEvent);
 			fingersDown[get_finger_id(event)] = linearCoord;
 		}
-		keyEvent.type = SDL_KEYDOWN;
-		keyEvent.key.state = SDL_PRESSED;
+		keyEvent.type = SDL_EVENT_KEY_DOWN;
+		keyEvent.key.down = true;
 	}
-	keyEvent.key.keysym.scancode = scancodeMapping[row][column];
+	keyEvent.key.scancode = scancodeMapping[row][column];
 #ifdef DEBUG
-	SDL_Log("x\t%.3f\ty\t%.3f\trow\t%d\tcol\t%d\tsym\t%d\t%s\tfid\t%d", event->tfinger.x, event->tfinger.y, row, column, scancodeMapping[row][column], event->type == SDL_FINGERUP ? "up" : event->type == SDL_FINGERDOWN ? "down" : "move", event->tfinger.fingerId);
+	SDL_Log("x\t%.3f\ty\t%.3f\trow\t%d\tcol\t%d\tsym\t%d\t%s\tfid\t%lu", event->tfinger.x, event->tfinger.y, row, column, (int)scancodeMapping[row][column], event->type == SDL_EVENT_FINGER_UP ? "up" : event->type == SDL_EVENT_FINGER_DOWN ? "down" : "move", (unsigned long)event->tfinger.fingerID);
 #endif
 	return sdl_key_filter(&keyEvent);
 } /* sdl_finger_filter */
@@ -421,9 +412,9 @@ unsigned int lastInteraction;
 static int sdl_joyhat_filter(const SDL_Event *event) {
     static SDL_Scancode lastScanCode;
     SDL_Event keyEvent;
-    keyEvent.key.keysym.mod = 0;
-    keyEvent.type = SDL_KEYDOWN;
-    keyEvent.key.state = SDL_PRESSED;
+    keyEvent.key.mod = 0;
+    keyEvent.type = SDL_EVENT_KEY_DOWN;
+    keyEvent.key.down = true;
     switch (event->jhat.value)
     {
         case SDL_HAT_UP:
@@ -439,54 +430,55 @@ static int sdl_joyhat_filter(const SDL_Event *event) {
             lastScanCode = SDL_SCANCODE_DOWN;
             break;
         default:
-            keyEvent.type = SDL_KEYUP;
-            keyEvent.key.state = SDL_RELEASED;
+            keyEvent.type = SDL_EVENT_KEY_UP;
+            keyEvent.key.down = false;
             break;
     }
-    keyEvent.key.keysym.scancode = lastScanCode;
+    keyEvent.key.scancode = lastScanCode;
     return sdl_key_filter(&keyEvent);
 }
 
 static int sdl_joy_filter(const SDL_Event *event)
 {
 #ifdef DEBUG
-	printf("joy button %d pressed %d\n", event->jbutton.button, event->jbutton.state == SDL_PRESSED);
+	printf("joy button %d pressed %d\n", event->jbutton.button, event->jbutton.down);
 #endif
-    if (event->jbutton.state == SDL_PRESSED)
+    if (event->jbutton.down) {
         sdl_sticks_joybits |= 1 << event->jbutton.button;
-    else
+    } else {
         sdl_sticks_joybits &= ~(1 << event->jbutton.button);
+    }
 	return 0;
 }
 
 static int root_sdl_event_filter(const SDL_Event *event)
 {
-	lastInteraction = SDL_GetTicks();
+	lastInteraction = (unsigned int)SDL_GetTicks();
     switch (event->type)
     {
-        case SDL_KEYUP:
-        case SDL_KEYDOWN:
+        case SDL_EVENT_KEY_UP:
+        case SDL_EVENT_KEY_DOWN:
             return sdl_key_filter(event);
-        case SDL_MOUSEMOTION:
+        case SDL_EVENT_MOUSE_MOTION:
             if (event->motion.which == SDL_TOUCH_MOUSEID)
             	break;
-        case SDL_JOYBALLMOTION:
+        case SDL_EVENT_JOYSTICK_BALL_MOTION:
             return sdl_mouse_motion_filter(event);
-        case SDL_MOUSEBUTTONUP:
-        case SDL_MOUSEBUTTONDOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
             if (event->button.which == SDL_TOUCH_MOUSEID)
             	break;
             return sdl_mouse_button_filter(event);
-        case SDL_FINGERMOTION:
-        case SDL_FINGERDOWN:
-        case SDL_FINGERUP:
+        case SDL_EVENT_FINGER_MOTION:
+        case SDL_EVENT_FINGER_DOWN:
+        case SDL_EVENT_FINGER_UP:
         	return sdl_finger_filter(event);
-        case SDL_JOYBUTTONDOWN:
-        case SDL_JOYBUTTONUP:
+        case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
+        case SDL_EVENT_JOYSTICK_BUTTON_UP:
         	return sdl_joy_filter(event);
-        case SDL_JOYHATMOTION:
+        case SDL_EVENT_JOYSTICK_HAT_MOTION:
             return sdl_joyhat_filter(event);
-        case SDL_QUIT:
+        case SDL_EVENT_QUIT:
             /* !!! rcg TEMP */
             fprintf(stderr, "\n\n\nSDL_QUIT!\n\n\n");
             SDL_Quit();
@@ -517,7 +509,7 @@ void IN_PumpEvents(void)
    static int first_pump = 1;
    if (first_pump) {
        if (sdl_mouse_grabbed || sdl_fullscreen)
-           SDL_SetRelativeMouseMode(SDL_TRUE);
+           SDL_SetWindowRelativeMouseMode(sdl_window, true);
        first_pump = 0;
    }
    sdl_handle_events();
@@ -654,15 +646,15 @@ void IN_GetJoyAbs (word joy, word *xp, word *yp)
 #else
    if (joy < sdl_total_sticks)
    {
-      if (SDL_IsGameController(sdl_joysticks[joy]))
+      if (sdl_controllers[joy])
       {
-         Joy_x = SDL_GameControllerGetAxis (sdl_controllers[joy], 0);
-	 Joy_y = SDL_GameControllerGetAxis (sdl_controllers[joy], 1);
+         Joy_x = SDL_GetGamepadAxis (sdl_controllers[joy], SDL_GAMEPAD_AXIS_LEFTX);
+	 Joy_y = SDL_GetGamepadAxis (sdl_controllers[joy], SDL_GAMEPAD_AXIS_LEFTY);
       }
       else
       {
-         Joy_x = SDL_JoystickGetAxis (sdl_joysticks[joy], 0);
-	     Joy_y = SDL_JoystickGetAxis (sdl_joysticks[joy], 1);
+         Joy_x = SDL_GetJoystickAxis (sdl_joysticks[joy], 0);
+	     Joy_y = SDL_GetJoystickAxis (sdl_joysticks[joy], 1);
       }
    } else {
 	   Joy_x = 0;
@@ -680,17 +672,17 @@ void JoyStick_Vals (void)
 }
 
 #if USE_SDL
-int GetAxis(word joy, SDL_GameControllerAxis axis)
+int GetAxis(word joy, SDL_GamepadAxis axis)
 {
    const int16_t deadzone = 8000;
    int16_t val;
-   if (SDL_IsGameController(sdl_joysticks[joy]))
+   if (sdl_controllers[joy])
    {
-	   val = SDL_GameControllerGetAxis (sdl_controllers[joy], axis);
+	   val = SDL_GetGamepadAxis (sdl_controllers[joy], axis);
    }
    else
    {
-           val = SDL_JoystickGetAxis (sdl_joysticks[joy], axis);
+           val = SDL_GetJoystickAxis (sdl_joysticks[joy], (int)axis);
    }
    return val < -deadzone || val > deadzone ? (val * 127) / SHRT_MAX : 0;
 }
@@ -928,12 +920,14 @@ void IN_SetupJoy (word joy, word minx, word maxx, word miny, word maxy)
 boolean INL_StartJoy (word joy)
 {
 #if USE_SDL
-   if (!SDL_WasInit(SDL_INIT_JOYSTICK))
+   if (!(SDL_WasInit(SDL_INIT_JOYSTICK) & SDL_INIT_JOYSTICK))
    {
-       SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
+       // SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
        SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "0");
-       SDL_Init(SDL_INIT_JOYSTICK);
-       sdl_total_sticks = SDL_NumJoysticks();
+       SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD);
+       int num_sticks;
+       SDL_JoystickID *joysticks = SDL_GetJoysticks(&num_sticks);
+       sdl_total_sticks = num_sticks;
        if (sdl_total_sticks > MaxJoys) sdl_total_sticks = MaxJoys;
 
        if ((sdl_stick_button_state == NULL) && (sdl_total_sticks > 0))
@@ -944,23 +938,25 @@ boolean INL_StartJoy (word joy)
            else
                memset(sdl_stick_button_state, '\0', sizeof (word) * sdl_total_sticks);
        }
-       SDL_JoystickEventState(SDL_ENABLE);
+       SDL_SetJoystickEventsEnabled(true);
+
+       if (joysticks) {
+           for (int i = 0; i < sdl_total_sticks; i++) {
+               if (SDL_IsGamepad(joysticks[i])) {
+                   sdl_controllers[i] = SDL_OpenGamepad(joysticks[i]);
+                   sdl_joysticks[i] = SDL_GetGamepadJoystick(sdl_controllers[i]);
+               } else {
+                   sdl_joysticks[i] = SDL_OpenJoystick(joysticks[i]);
+                   sdl_controllers[i] = NULL;
+               }
+           }
+           SDL_free(joysticks);
+       }
    }
 
    if (joy >= sdl_total_sticks) return (false);
 
-   if (SDL_IsGameController(joy))
-   {
-      sdl_joysticks[joy] = NULL;
-      sdl_controllers[joy] = SDL_GameControllerOpen(joy);
-   }
-   else
-   {
-      sdl_joysticks[joy] = SDL_JoystickOpen (joy);
-      sdl_controllers[joy] = NULL;
-   }
-
-   return (true);
+   return (sdl_joysticks[joy] != NULL);
 #else
    word x,y;
 
@@ -994,13 +990,13 @@ void INL_ShutJoy (word joy)
 #ifndef DOS
    if (joy < sdl_total_sticks)
    {
-      if (SDL_IsGameController(joy))
+      if (sdl_controllers[joy])
       {
-         SDL_GameControllerClose(sdl_controllers[joy]);
+         SDL_CloseGamepad(sdl_controllers[joy]);
       }
       else
       {
-         SDL_JoystickClose(sdl_joysticks[joy]);
+         SDL_CloseJoystick(sdl_joysticks[joy]);
       }
    }
 #endif
@@ -1226,7 +1222,7 @@ sdl_mouse_grabbed = 1;
 
    if ((checkcyberman || checkassassin) && (swiftstatus = SWIFT_Initialize ()))
    {
-      int dynamic;
+      // int dynamic;
 
       if (checkcyberman)
          {
@@ -1239,7 +1235,7 @@ sdl_mouse_grabbed = 1;
          assassinenabled = true;
          }
 
-      dynamic = SWIFT_GetDynamicDeviceData ();
+      // dynamic = SWIFT_GetDynamicDeviceData ();
 
       SWIFT_TactileFeedback (40, 20, 20);
 
