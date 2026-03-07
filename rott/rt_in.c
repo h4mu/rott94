@@ -1222,7 +1222,7 @@ sdl_mouse_grabbed = 1;
 
    if ((checkcyberman || checkassassin) && (swiftstatus = SWIFT_Initialize ()))
    {
-      int dynamic;
+      // int dynamic;
 
       if (checkcyberman)
          {
@@ -1235,7 +1235,7 @@ sdl_mouse_grabbed = 1;
          assassinenabled = true;
          }
 
-      dynamic = SWIFT_GetDynamicDeviceData ();
+      // dynamic = SWIFT_GetDynamicDeviceData ();
 
       SWIFT_TactileFeedback (40, 20, 20);
 
