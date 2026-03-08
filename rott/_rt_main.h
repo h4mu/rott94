@@ -28,12 +28,12 @@ void PollKeyboard(void);
 void FixColorMap( void );
 
 #define QUITTIMEINTERVAL ((35*6)-5)
-boolean CheckForQuickLoad ( void );
+bool CheckForQuickLoad ( void );
 
 #if SAVE_SCREEN
 
 void WriteLBMfile (char *filename, byte *data, int width, int height);
-void GetFileName (boolean saveLBM);
+void GetFileName (bool saveLBM);
 void DrawRottTitle ( void );
 
 void WritePCX (char * file, byte * source);

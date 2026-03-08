@@ -37,7 +37,7 @@ eventtype * lastevent;
 // LOCALS
 
 static int numevents=0;
-static boolean eventsystemstarted=false;
+static bool eventsystemstarted=false;
 
 
 /*
@@ -391,8 +391,8 @@ void ParseSprite ( eventtype * event )
 void ParseFlic ( eventtype * event )
 {
    char name[10];
-   boolean loop;
-   boolean usefile;
+   bool loop;
+   bool usefile;
 
    GetToken (false);
    strcpy(&(name[0]),token);

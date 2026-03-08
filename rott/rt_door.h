@@ -99,7 +99,7 @@ typedef struct doorstruct
 		  byte        flags;
 		  short int   ticcount;
 		  signed char eindex;
-		  boolean     vertical;
+		  bool     vertical;
 		  int         soundhandle;
 		  int         position;
 		  enum    {dr_open,dr_closed,dr_opening,dr_closing}       action;
@@ -163,7 +163,7 @@ typedef struct mwall
   signed short midtexture;
   signed short bottomtexture;
   word      flags;
-  boolean   vertical;
+  bool   vertical;
   int       sidepic;
 
   struct mwall *next;
@@ -197,11 +197,11 @@ extern pwallobj_t          *pwallobjlist[MAXPWALLS];
 extern int                 pwallnum;
 																																			 // 0xffff = fully open
 extern byte                areaconnect[NUMAREAS][NUMAREAS];
-extern boolean             areabyplayer[NUMAREAS];
+extern bool             areabyplayer[NUMAREAS];
 
 
 void ActivateAllPushWalls(void);
-boolean CheckTile(int,int);
+bool CheckTile(int,int);
 void FindEmptyTile(int*,int*);
 int  Number_of_Empty_Tiles_In_Area_Around(int,int);
 void AddTouchplateAction(touchplatetype*,int);
@@ -224,7 +224,7 @@ void SpawnDoor(int,int,int,int);
 void SpawnMaskedWall (int tilex, int tiley, int which, int flags);
 void OpenDoor(int);
 void CloseDoor(int);
-void OperateDoor (int keys, int door, boolean localplayer );
+void OperateDoor (int keys, int door, bool localplayer );
 void DoorOpen(int);
 void DoorOpening(int);
 void DoorClosing(int door);
@@ -233,7 +233,7 @@ void SpawnPushWall (int tilex, int tiley, int lock, int texture, int dir, int ty
 void MovePWalls(void);
 void WallPushing (int pwall);
 void PushWall (int pwall, int dir);
-void OperatePushWall (int pwall, int dir, boolean localplayer );
+void OperatePushWall (int pwall, int dir, bool localplayer );
 void ActivatePushWall (long pwall);
 void ActivateMoveWall (long pwall);
 int  UpdateMaskedWall (int num);

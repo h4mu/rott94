@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef _rt_error_public
 #define _rt_error_public
 
-extern boolean DivisionError;
+extern bool DivisionError;
 
 void UL_ErrorStartup ( void );
 void UL_ErrorShutdown ( void );

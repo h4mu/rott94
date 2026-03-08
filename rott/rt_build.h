@@ -36,7 +36,7 @@ void ClearMenuBuf ( void );
 void SetAlternateMenuBuf ( void );
 void SetMenuTitle ( const char * menutitle );
 
-void PositionMenuBuf( int angle, int distance, boolean drawbackground );
+void PositionMenuBuf( int angle, int distance, bool drawbackground );
 void RefreshMenuBuf( int time );
 void FlipMenuBuf ( void );
 
@@ -53,8 +53,8 @@ void DrawMenuBufPropString (int px, int py, const char *string);
 void DrawTMenuBufPropString (int px, int py, const char *string);
 
 void DrawTMenuBufBox (int x, int y, int width, int height);
-void DrawTMenuBufHLine (int x, int y, int width, boolean up);
-void DrawTMenuBufVLine (int x, int y, int height, boolean up);
+void DrawTMenuBufHLine (int x, int y, int width, bool up);
+void DrawTMenuBufVLine (int x, int y, int height, bool up);
 void MenuBufCPrintLine (const char *s);
 void MenuBufCPrint (const char *s);
 void MenuBufPrint (const char *s);

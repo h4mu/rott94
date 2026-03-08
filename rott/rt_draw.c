@@ -313,7 +313,7 @@ void BuildTables (void)
 ========================
 */
 
-boolean TransformObject (int x, int y, int *dispx, int *dispheight)
+bool TransformObject (int x, int y, int *dispx, int *dispheight)
 {
 
   fixed gx,gy,gxt,gyt,nx,ny;
@@ -499,7 +499,7 @@ void TransformPoint (int x, int y, int * screenx, int * height, int * texture, i
 ========================
 */
 
-boolean TransformSimplePoint (int x, int y, int * screenx, int * height, int * texture, int vertical)
+bool TransformSimplePoint (int x, int y, int * screenx, int * height, int * texture, int vertical)
 {
 
   fixed gxt,gyt,nx,ny;
@@ -555,11 +555,11 @@ boolean TransformSimplePoint (int x, int y, int * screenx, int * height, int * t
 ========================
 */
 
-boolean TransformPlane (int x1, int y1, int x2, int y2, visobj_t * plane)
+bool TransformPlane (int x1, int y1, int x2, int y2, visobj_t * plane)
 {
-  boolean result2;
-  boolean result1;
-  boolean vertical;
+  bool result2;
+  bool result1;
+  bool vertical;
   int txstart,txend;
 
   vertical=((x2-x1)==0);
@@ -818,7 +818,7 @@ void DrawMaskedWalls (void)
   int   gx,gy;
   unsigned short int  *tilespot;
   byte   *visspot;
-  boolean result;
+  bool result;
   statobj_t *statptr;
   objtype   *obj;
   maskedwallobj_t* tmwall;
@@ -942,7 +942,7 @@ void DrawScaleds (void)
   int   gx,gy;
   unsigned short int  *tilespot;
   byte   *visspot;
-  boolean result;
+  bool result;
   statobj_t *statptr;
   objtype   *obj;
   maskedwallobj_t* tmwall;
@@ -1997,7 +1997,7 @@ void TransformDoors( void )
 {
    int i;
    int numvisible;
-   boolean result;
+   bool result;
    int gx,gy;
    visobj_t visdoorlist[MAXVISIBLEDOORS],*doorptr;
 
@@ -2085,7 +2085,7 @@ void TransformPushWalls( void )
   byte   *visspot;
   visobj_t *savedptr;
   int numvisible;
-  boolean result;
+  bool result;
 
    whereami=15;
   savedptr=visptr;
@@ -2570,7 +2570,7 @@ void InterpolateMaskedWall (visobj_t * plane)
    patch_t *p2 = NULL;
    patch_t *p3 = NULL;
    int pl;
-   boolean drawbottom,drawmiddle,drawtop;
+   bool drawbottom,drawmiddle,drawtop;
    int topoffset;
 
    whereami=19;
@@ -3082,7 +3082,7 @@ void DoLoadGameSequence ( void )
 //
 //******************************************************************************
 byte * RotatedImage;
-boolean RotateBufferStarted = false;
+bool RotateBufferStarted = false;
 void StartupRotateBuffer ( int masked)
 {
 	int k;////zxcv
@@ -3572,7 +3572,7 @@ void RotationFun ( void )
    ShutdownRotateBuffer ();
 }
 
-boolean ScreenSaverStarted=false;
+bool ScreenSaverStarted=false;
 screensaver_t * ScreenSaver;
 #define PAUSETIME  (70)
 
@@ -5052,7 +5052,7 @@ void DestroyEarth ( void )
    SafeFree(back);
 }
 
-boolean DestroyedAllEggs ( void )
+bool DestroyedAllEggs ( void )
 {
    statobj_t * temp;
 
@@ -5688,7 +5688,7 @@ void DrawPreviousCredits ( int num, CreditType * Credits )
 //
 //******************************************************************************
 
-extern boolean dopefish;
+extern bool dopefish;
 void WarpCreditString ( int time, byte * back, int num, CreditType * Credits)
 {
    int dy;
@@ -5697,7 +5697,7 @@ void WarpCreditString ( int time, byte * back, int num, CreditType * Credits)
    int y;
    int width;
    int height;
-   boolean soundplayed;
+   bool soundplayed;
 
 
    LastScan = 0;

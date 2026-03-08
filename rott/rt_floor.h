@@ -36,7 +36,7 @@ void DrawPlanes (void);
 void SetPlaneViewSize( void );
 void MakeSkyTile (byte * tile);
 void DrawFullSky( void );
-boolean SkyExists (void);
+bool SkyExists (void);
 
 #endif
 

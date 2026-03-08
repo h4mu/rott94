@@ -101,9 +101,9 @@ void US_CPrint (const char *s);
 // Input rtns
 //
 
-boolean US_LineInput (int x, int y, char *buf, const char *def, boolean escok,
+bool US_LineInput (int x, int y, char *buf, const char *def, bool escok,
                       int maxchars, int maxwidth, int color);
-boolean US_lineinput (int x, int y, char *buf, const char *def, boolean escok,
+bool US_lineinput (int x, int y, char *buf, const char *def, bool escok,
                       int maxchars, int maxwidth, int color);
 int CalibrateJoystick(void);
 

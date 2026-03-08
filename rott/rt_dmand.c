@@ -33,18 +33,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //MED
 #include "memcheck.h"
 
-static boolean Recording=false;
-static boolean Feeder=false;
+static bool Recording=false;
+static bool Feeder=false;
 static byte * RecordingBuffer;
 static int Playingvoice;
 static int RecordingPointer;
 static int FeederPointer;
-static boolean Playback=false;
-static boolean Playing=false;
+static bool Playback=false;
+static bool Playing=false;
 static byte * PlaybackBuffer;
 static int PlaybackPointer;
 static int PlayingPointer;
-static boolean RecordingSemaphore=false;
+static bool RecordingSemaphore=false;
 
 //#define FX_StartDemandFeedPlayback MV_StartDemandFeedPlayback
 //#define FX_StartRecording          MV_StartRecording
@@ -238,7 +238,7 @@ void SD_UpdateRecordingSound ( char * ptr, int length )
 //
 //***************************************************************************
 
-boolean SD_StartRecordingSound ( void )
+bool SD_StartRecordingSound ( void )
 {
    int status;
 
@@ -313,7 +313,7 @@ void SD_ClearRecordingActive ( void )
 //
 //***************************************************************************
 
-boolean SD_RecordingActive ( void )
+bool SD_RecordingActive ( void )
 {
    return RecordingSemaphore;
 }
@@ -389,7 +389,7 @@ recordstate SD_GetSoundData ( byte * data, word length )
 //
 //***************************************************************************
 
-boolean SD_SoundDataReady ( void )
+bool SD_SoundDataReady ( void )
 {
    if (SD_Started==false)
       return false;

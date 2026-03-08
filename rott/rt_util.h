@@ -44,7 +44,7 @@ extern  int      _argc;
 extern  char **  _argv;
 
 void  markgetch( void );
-boolean StringsNotEqual (char * s1, char * s2, int length);
+bool StringsNotEqual (char * s1, char * s2, int length);
 void  GetPalette(char * pal);
 void  ClearGraphicsScreen( void );
 void  ClearBuffer( char * buf, int size );
@@ -113,8 +113,8 @@ int   SideOfLine(int x1, int y1, int x2, int y2, int x3, int y3);
 void hsort(char * base, int nel, int width, int (*compare)(), void (*switcher)());
 
 char * UL_GetPath (char * path, char *dir);
-boolean UL_ChangeDirectory (char *path);
-boolean UL_ChangeDrive (char *drive);
+bool UL_ChangeDirectory (char *path);
+bool UL_ChangeDrive (char *drive);
 void AbortCheck (char * abortstring);
 
 void FixFilePath(char *filename);

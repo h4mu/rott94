@@ -80,7 +80,7 @@ typedef  enum
 
 typedef  struct
 {
-	boolean     button0,
+	bool     button0,
 					button1,
 					button2,
 					button3;
@@ -123,9 +123,9 @@ typedef struct
 
 typedef struct
 {
-   boolean messageon;
-   boolean directed;
-   boolean inmenu;
+   bool messageon;
+   bool directed;
+   bool inmenu;
    int     remoteridicule;
    int     towho;
    int     textnum;
@@ -139,21 +139,21 @@ typedef struct
 //
 //***************************************************************************
 
-extern boolean MousePresent;
-extern boolean JoysPresent[MaxJoys];
-extern boolean JoyPadPresent;
+extern bool MousePresent;
+extern bool JoysPresent[MaxJoys];
+extern bool JoyPadPresent;
 extern int     mouseadjustment;
 extern int     threshold;
 
-extern boolean  Paused;
+extern bool  Paused;
 extern volatile int LastScan;
 /* extern KeyboardDef KbdDefs;
 extern JoystickDef JoyDefs[];
 extern ControlType Controls[MAXPLAYERS]; */
 
-extern boolean  SpaceBallPresent;
-extern boolean  CybermanPresent;
-extern boolean  AssassinPresent;
+extern bool  SpaceBallPresent;
+extern bool  CybermanPresent;
+extern bool  AssassinPresent;
 extern char LastASCII;
 extern volatile int LastScan;
 
@@ -179,10 +179,10 @@ extern const char ScanChars[128];
 void INL_GetMouseDelta(int *x,int *y);
 word IN_GetMouseButtons (void);
 void IN_IgnoreMouseButtons( void );
-boolean INL_StartMouse (void);
+bool INL_StartMouse (void);
 void INL_ShutMouse (void);
 void IN_Startup(void);
-void IN_Default (boolean gotit, ControlType in);
+void IN_Default (bool gotit, ControlType in);
 void IN_Shutdown (void);
 void IN_SetKeyHook(void (*hook)());
 void IN_ClearKeysDown (void);
@@ -191,16 +191,16 @@ void IN_SetControlType (int player, ControlType type);
 ScanCode IN_WaitForKey (void);
 char IN_WaitForASCII (void);
 void IN_StartAck (void);
-boolean IN_CheckAck (void);
+bool IN_CheckAck (void);
 void IN_Ack (void);
-boolean IN_UserInput (long delay);
+bool IN_UserInput (long delay);
 void IN_GetJoyAbs (word joy, word *xp, word *yp);
 void INL_GetJoyDelta (word joy, int *dx, int *dy);
 word INL_GetJoyButtons (word joy);
 //word IN_GetJoyButtonsDB (word joy);
 void INL_SetJoyScale (word joy);
 void IN_SetupJoy (word joy, word minx, word maxx, word miny, word maxy);
-boolean INL_StartJoy (word joy);
+bool INL_StartJoy (word joy);
 void INL_ShutJoy (word joy);
 byte IN_JoyButtons (void);
 void IN_UpdateKeyboard (void);

@@ -53,7 +53,7 @@ typedef struct msgt
 
 extern messagetype Messages[MAXMSGS];
 
-extern boolean MessagesEnabled;
+extern bool MessagesEnabled;
 
 
 void RestoreMessageBackground( void );
@@ -65,7 +65,7 @@ int StringLength (char *string);
 void UpdateModemMessage (int num, char c);
 void ModemMessageDeleteChar (int num);
 void DeleteMessage ( int num );
-void FinishModemMessage( int num, boolean send );
+void FinishModemMessage( int num, bool send );
 void DeletePriorityMessage( int flags );
 
 #endif

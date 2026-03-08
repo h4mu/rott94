@@ -908,7 +908,7 @@ void DoMap (int cx, int cy)
    int x,y;
    int dx;
    int dy;
-   boolean done;
+   bool done;
    int quitkey;
    ControlInfo control;
 

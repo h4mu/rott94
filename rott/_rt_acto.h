@@ -273,11 +273,11 @@ typedef struct
 //========================== Function Prototypes ==============================
 
 void     MissileMovement(objtype*);
-boolean  MissileTryMove(objtype*,int,int,int);
+bool  MissileTryMove(objtype*,int,int,int);
 void     T_DarkSnakeChase(objtype*);
 void     HeatSeek(objtype*);
-boolean  CheckDoor(objtype *ob,doorobj_t*,int,int);
-boolean  NextToDoor(objtype*ob);
+bool  CheckDoor(objtype *ob,doorobj_t*,int,int);
+bool  NextToDoor(objtype*ob);
 void     MissileHit (objtype *ob,void*);
 int      Near(objtype*,void*,int);
 void     FirstSighting(objtype*);
@@ -289,8 +289,8 @@ void     SelectDodgeDir(objtype*);
 void     SelectRollDir (objtype*);
 void     SelectTouchDir(objtype*);
 void     SelectMineDir(objtype*);
-boolean  WallCheck(int,int);
-boolean  NMEspincheck(objtype*);
+bool  WallCheck(int,int);
+bool  NMEspincheck(objtype*);
 void     TurnActorIntoSprite(objtype*ob);
 void     ActivateEnemy(objtype*);
 #endif

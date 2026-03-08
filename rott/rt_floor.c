@@ -372,7 +372,7 @@ int GetFloorCeilingLump ( int num )
 ===================
 */
 
-boolean SkyExists (void)
+bool SkyExists (void)
 {
    if (MAPSPOT(1,0,0) >= 234)
       {

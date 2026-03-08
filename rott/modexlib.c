@@ -44,9 +44,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 static void StretchMemPicture ();
 // GLOBAL VARIABLES
 
-boolean StretchScreen=0;//bn�++
-extern boolean iG_aimCross;
-extern boolean sdl_fullscreen;
+bool StretchScreen=0;//bn�++
+extern bool iG_aimCross;
+extern bool sdl_fullscreen;
 extern int iG_X_center;
 extern int iG_Y_center;
 byte 	   *iG_buf_center;
@@ -60,7 +60,7 @@ byte  *page3start;
 int    screensize;
 byte  *bufferofs;
 byte  *displayofs;
-boolean graphicsmode=false;
+bool graphicsmode=false;
 byte        *bufofsTopLimit;
 byte        *bufofsBottomLimit;
 
@@ -905,7 +905,7 @@ static void StretchMemPicture ()
 }
 
 // bna function added start
-extern	boolean ingame;
+extern	bool ingame;
 int		iG_playerTilt;
 
 void DrawCenterAim ()

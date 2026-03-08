@@ -61,10 +61,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 static int soundstart;
 static int soundtype;
 int SD_Started=false;
-static boolean PositionStored=false;
+static bool PositionStored=false;
 static int NumBadSounds=0;
 static int remotestart;
-static boolean SoundsRemapped = false;
+static bool SoundsRemapped = false;
 
 #ifdef DOS
 int musicnums[ 11 ] = {
@@ -217,7 +217,7 @@ int SD_SetupFXCard ( int * numvoices, int * numbits, int * numchannels)
 //
 //***************************************************************************
 
-int SD_Startup ( boolean bombonerror )
+int SD_Startup ( bool bombonerror )
 {
    int status;
    int card;
@@ -225,7 +225,7 @@ int SD_Startup ( boolean bombonerror )
    int channels;
    int bits;
    int i;
-   extern boolean IS8250;
+   extern bool IS8250;
 
    if (SD_Started==true)
       SD_Shutdown();
@@ -338,7 +338,7 @@ int SD_Startup ( boolean bombonerror )
 //
 //***************************************************************************
 
-boolean SD_SoundOkay ( int sndnum )
+bool SD_SoundOkay ( int sndnum )
 {
    if (SD_Started==false)
       return false;
@@ -1024,7 +1024,7 @@ void MU_JukeBoxMenu
 // MusicStarted - see if the music is started
 //
 //***************************************************************************
-boolean MusicStarted( void )
+bool MusicStarted( void )
 {
    return MU_Started;
 }
@@ -1035,7 +1035,7 @@ boolean MusicStarted( void )
 //
 //***************************************************************************
 
-int MU_Startup ( boolean bombonerror )
+int MU_Startup ( bool bombonerror )
 {
    int status;
    int card;
@@ -1499,7 +1499,7 @@ void MU_LoadMusic (byte * buf, int size)
    byte *ptr;
    int i;
    int songnumber;
-   boolean differentsong=false;
+   bool differentsong=false;
    int vsize;
 
    //
