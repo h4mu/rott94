@@ -1240,8 +1240,8 @@ void SpawnStatic (int tilex, int tiley, int mtype, int zoffset)
         temp->z = nominalheight;
         }
      else if (zoffset!=-1)
-		  {
-		  if ((zoffset&0xff00)==0xb000)
+     {
+        if ((zoffset&0xff00)==0xb000)
            Set_NewZ_to_MapValue(&(temp->z),zoffset,"static",tilex,tiley);
 		  else if (IsPlatform(tilex,tiley))
 			  temp->z = PlatformHeight(tilex,tiley);

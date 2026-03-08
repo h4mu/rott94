@@ -1484,7 +1484,7 @@ void ScanForSavedGames ()
    chdir (ApogeePath);
 #endif
 
-   if (!_dos_findfirst (filename, 0, &f))
+   if (!_dos_findfirst (filename, 0, &f)) {
       do
       {
          strcpy(str,&f.name[7]);
@@ -1498,8 +1498,9 @@ void ScanForSavedGames ()
          }
 
       } while (!_dos_findnext (&f));
+   }
 
-      if (found)
+   if (found)
       {
          if (MainMenu[loadgame].active == CP_Inactive)
             MainMenu[loadgame].active = CP_Active;
