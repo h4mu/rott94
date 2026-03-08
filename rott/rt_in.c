@@ -654,7 +654,7 @@ void IN_GetJoyAbs (word joy, word *xp, word *yp)
 #else
    if (joy < sdl_total_sticks)
    {
-      if (SDL_IsGameController(sdl_joysticks[joy]))
+      if (sdl_controllers[joy] != NULL)
       {
          Joy_x = SDL_GameControllerGetAxis (sdl_controllers[joy], 0);
 	 Joy_y = SDL_GameControllerGetAxis (sdl_controllers[joy], 1);
@@ -684,7 +684,7 @@ int GetAxis(word joy, SDL_GameControllerAxis axis)
 {
    const int16_t deadzone = 8000;
    int16_t val;
-   if (SDL_IsGameController(sdl_joysticks[joy]))
+   if (sdl_controllers[joy] != NULL)
    {
 	   val = SDL_GameControllerGetAxis (sdl_controllers[joy], axis);
    }
@@ -994,13 +994,15 @@ void INL_ShutJoy (word joy)
 #ifndef DOS
    if (joy < sdl_total_sticks)
    {
-      if (SDL_IsGameController(joy))
+      if (sdl_controllers[joy] != NULL)
       {
          SDL_GameControllerClose(sdl_controllers[joy]);
+         sdl_controllers[joy] = NULL;
       }
       else
       {
          SDL_JoystickClose(sdl_joysticks[joy]);
+         sdl_joysticks[joy] = NULL;
       }
    }
 #endif

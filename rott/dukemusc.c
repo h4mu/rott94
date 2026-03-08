@@ -281,7 +281,7 @@ void MUSIC_Continue(void)
     if (Mix_PausedMusic())
         Mix_ResumeMusic();
     else if (music_songdata)
-        MUSIC_PlaySong(music_songdata, MUSIC_PlayOnce);
+        MUSIC_PlaySong((unsigned char *)music_songdata, MUSIC_PlayOnce);
 } // MUSIC_Continue
 
 
@@ -318,7 +318,7 @@ int MUSIC_PlaySong(unsigned char *song, int loopflag)
 
     MUSIC_StopSong();
 
-    music_songdata = song;
+    music_songdata = (char *)song;
 
     // !!! FIXME: This could be a problem...SDL/SDL_mixer wants a RWops, which
     // !!! FIXME:  is an i/o abstraction. Since we already have the MIDI data
@@ -388,10 +388,18 @@ void PlayMusic(char *_filename)
 
     // save the file somewhere, so SDL_mixer can load it
     GetPathFromEnvironment(filename, MAX_PATH, "tmpsong.mid");
-    handle = SafeOpenWrite(filename, filetype_binary);
+#if USE_SDL
+    {
+    SDL_RWops *rw = SafeOpenWrite(filename);
+    SafeWrite(rw, song, size);
+    SDL_RWclose(rw);
+    }
+#else
+    handle = SafeOpenWrite(filename);
     
     SafeWrite(handle, song, size);
     close(handle);
+#endif
     free(song);
     
     //music_songdata = song;
@@ -414,11 +422,7 @@ void PlayMusic(char *_filename)
 int MUSIC_PlaySongROTT(unsigned char *song, int size, int loopflag)
 {
     char filename[MAX_PATH];
-#if USE_SDL
-    SDL_RWops* handle;
-#else
-    int handle;
-#endif
+
 #ifndef __ANDROID__
     MUSIC_StopSong();
     // save the file somewhere, so SDL_mixer can load it
@@ -427,16 +431,22 @@ int MUSIC_PlaySongROTT(unsigned char *song, int size, int loopflag)
     strcpy(filename, ApogeePath);
     strcat(filename, "/tmpsong.mid");
 #endif
-    handle = SafeOpenWrite(filename);
 
-    SafeWrite(handle, song, size);
 #if USE_SDL
-    SDL_RWclose(handle);
+    {
+    SDL_RWops *rw = SafeOpenWrite(filename);
+    SafeWrite(rw, song, size);
+    SDL_RWclose(rw);
+    }
 #else
+    {
+    int handle = SafeOpenWrite(filename);
+    SafeWrite(handle, song, size);
     close(handle);
+    }
 #endif
 
-    music_songdata = song;
+    music_songdata = (char *)song;
 #ifdef __ANDROID__
     JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
     jobject activity = (jobject)SDL_AndroidGetActivity();

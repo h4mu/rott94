@@ -31,12 +31,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef __STANDARD_H
 #define __STANDARD_H
 
+#include <stdbool.h>
+
+#ifdef bool
+#define boolean bool
+#else
 typedef int boolean;
+#endif
 typedef int errorcode;
 
 #ifndef TRUE
-   #define TRUE ( 1 == 1 )
-   #define FALSE ( !TRUE )
+   #define TRUE true
+   #define FALSE false
 #endif
 
 enum STANDARD_ERRORS

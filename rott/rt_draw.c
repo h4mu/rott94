@@ -894,14 +894,18 @@ void DrawMaskedWalls (void)
 #define SGN(x)          ((x>0) ? (1) : ((x==0) ? (0) : (-1)))
 
 /*--------------------------------------------------------------------------*/
-int CompareHeights(s1p,s2p) visobj_t **s1p,**s2p;
+int CompareHeights(const void *p1, const void *p2)
 {
+   visobj_t **s1p = (visobj_t **)p1;
+   visobj_t **s2p = (visobj_t **)p2;
    whereami=3;
    return SGN((*s1p)->viewheight-(*s2p)->viewheight);
 }
 
-void SwitchPointers(s1p,s2p) visobj_t **s1p,**s2p;
+void SwitchPointers(void *p1, void *p2)
 {
+   visobj_t **s1p = (visobj_t **)p1;
+   visobj_t **s2p = (visobj_t **)p2;
    visobj_t * temp;
 
    whereami=4;
@@ -1931,7 +1935,7 @@ bottomcheck:
 
 void   DrawWalls (void)
 {
-   char * buf;
+   byte * buf;
    int plane;
    wallcast_t * post;
 

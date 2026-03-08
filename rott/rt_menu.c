@@ -3906,8 +3906,8 @@ void DefineKey
 
          buttonscan[ (unsigned int)order[ handlewhich ] ] = key;
 
-         strcpy( &NormalKeyNames[ handlewhich ][ KEYNAMEINDEX ],
-            IN_GetScanName( key ) );
+         strcpy( (char *)&NormalKeyNames[ handlewhich ][ KEYNAMEINDEX ],
+            (const char *)IN_GetScanName( key ) );
 
          picked = true;
 
@@ -4996,9 +4996,9 @@ void ReadAnyControl (ControlInfo *ci)
 //
 //******************************************************************************
 
-byte * IN_GetScanName (ScanCode scan)
+const char * IN_GetScanName (ScanCode scan)
 {
-   byte     **p;
+   const char **p;
    ScanCode *s;
 
    for (s = ExtScanCodes, p = ExtScanNames; *s; p++, s++)
@@ -5110,8 +5110,8 @@ void DrawCustomKeyboard (void)
 
    for( i = 0; i < NormalKeyItems.amount; i++ )
       {
-      strcpy( &NormalKeyNames[ i ][ KEYNAMEINDEX ],
-         IN_GetScanName( buttonscan[ (unsigned int)order[ i ] ] ) );
+      strcpy( (char *)&NormalKeyNames[ i ][ KEYNAMEINDEX ],
+         (const char *)IN_GetScanName( buttonscan[ (unsigned int)order[ i ] ] ) );
       }
 
    MN_GetCursorLocation( &NormalKeyItems, &NormalKeyMenu[ 0 ] );

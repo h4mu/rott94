@@ -49,7 +49,7 @@ extern boolean iG_aimCross;
 extern boolean sdl_fullscreen;
 extern int iG_X_center;
 extern int iG_Y_center;
-char 	   *iG_buf_center;
+byte 	   *iG_buf_center;
   
 int    linewidth;
 //int    ylookup[MAXSCREENHEIGHT];
@@ -61,8 +61,8 @@ int    screensize;
 byte  *bufferofs;
 byte  *displayofs;
 boolean graphicsmode=false;
-char        *bufofsTopLimit;
-char        *bufofsBottomLimit;
+byte        *bufofsTopLimit;
+byte        *bufofsBottomLimit;
 
 void DrawCenterAim ();
 

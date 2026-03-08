@@ -393,7 +393,7 @@ void Error (char *error, ...)
          sptr = script_p;
       }
 
-      UL_printf (token);
+      UL_printf ((byte *)token);
       px++;                //SPACE
       GetToken (true);
    }
@@ -1404,7 +1404,7 @@ void GetPalette(char * palette)
 
 void SetPalette ( char * pal )
 {
-   VL_SetPalette (pal);
+   VL_SetPalette ((byte *)pal);
 }
 
 
@@ -1785,15 +1785,15 @@ int SideOfLine(int x1, int y1, int x2, int y2, int x3, int y3)
 //
 //******************************************************************************
 
-typedef int (*PFI)();           /* pointer to a function returning int  */
-typedef void (*PFV)();           /* pointer to a function returning int  */
+typedef int (*PFI)(const void *, const void *);           /* pointer to a function returning int  */
+typedef void (*PFV)(void *, void *);           /* pointer to a function returning void  */
 static PFI Comp;                        /* pointer to comparison routine                */
-static PFV Switch;                        /* pointer to comparison routine                */
+static PFV Switch;                        /* pointer to switching routine                */
 static int Width;                       /* width of an object in bytes                  */
 static char *Base;                      /* pointer to element [-1] of array             */
 
 
-static void newsift_down(L,U) int L,U;
+static void newsift_down(int L, int U)
 {  int c;
 
    while(1)
@@ -1806,7 +1806,7 @@ static void newsift_down(L,U) int L,U;
       }
 }
 
-void hsort(char * base, int nel, int width, int (*compare)(), void (*switcher)())
+void hsort(void * base, int nel, int width, int (*compare)(const void *, const void *), void (*switcher)(void *, void *))
 {
 static int i,n,stop;
         /*      Perform a heap sort on an array starting at base.  The array is
@@ -1821,10 +1821,10 @@ static int i,n,stop;
                 argv-like array of pointers to strings), is used.                                       */
 
    Width=width;
-   Comp= compare;
-   Switch= switcher;
+   Comp= (PFI)compare;
+   Switch= (PFV)switcher;
    n=nel*Width;
-   Base=base-Width;
+   Base=(char *)base-Width;
    for (i=(n/Width/2)*Width; i>=Width; i-=Width) newsift_down(i,n);
    stop=Width+Width;
    for (i=n; i>=stop; )

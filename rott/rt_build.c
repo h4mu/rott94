@@ -235,7 +235,7 @@ void InterpolatePlane (visobj_t * plane)
 void   DrawPlanePosts (void)
 {
    int height;
-   char * buf;
+   byte * buf;
    byte * shape = NULL;
    int lastwall=-2;
    int plane;

@@ -506,7 +506,7 @@ void DrawRottTitle ( void )
          px=(80-strlen(title))>>1;
          py=0;
 
-         UL_printf(title);
+         UL_printf((byte *)title);
 
          memset (title,0,sizeof(title));
 
@@ -530,7 +530,7 @@ void DrawRottTitle ( void )
          px=(80-strlen(title))>>1;
          py=1;
 
-         UL_printf(title);
+         UL_printf((byte *)title);
 #ifndef ANSIESC
 	 printf ("\n");
 #endif
@@ -549,7 +549,7 @@ void DrawRottTitle ( void )
          px=(80-strlen(title))>>1;
          py=0;
 
-         UL_printf(title);
+         UL_printf((byte *)title);
 
          UL_ColorBox (0, 0, 80, 1, 0x1e);
          }
@@ -1239,7 +1239,7 @@ void GameLoop (void)
                   byte *tempbuf;
                   MenuFadeOut();
                   ClearGraphicsScreen();
-                  SetPalette(&dimpal[0]);
+                  SetPalette((char *)&dimpal[0]);
                   PlayMovie ("shartitl", true);
                   if ( ( LastScan ) || ( IN_GetMouseButtons() ) )
                      {

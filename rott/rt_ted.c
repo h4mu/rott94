@@ -187,8 +187,10 @@ int GetLumpForTile(int tile);
 #define SGN(x)          ((x>0) ? (1) : ((x==0) ? (0) : (-1)))
 
 /*--------------------------------------------------------------------------*/
-int CompareTags(s1p,s2p) cachetype *s1p,*s2p;
+int CompareTags(const void *p1, const void *p2)
 {
+   const cachetype *s1p = (const cachetype *)p1;
+   const cachetype *s2p = (const cachetype *)p2;
 // Sort according to lump
    if (DoPanicMapping()==true)
       return SGN(s1p->cachelevel-s2p->cachelevel);
@@ -197,8 +199,10 @@ int CompareTags(s1p,s2p) cachetype *s1p,*s2p;
       return SGN(s1p->lump-s2p->lump);
 }
 
-void SwitchCacheEntries(s1p,s2p) cachetype *s1p,*s2p;
+void SwitchCacheEntries(void *p1, void *p2)
 {
+   cachetype *s1p = (cachetype *)p1;
+   cachetype *s2p = (cachetype *)p2;
    cachetype temp;
 
 	temp=*s1p;
@@ -1413,7 +1417,7 @@ void CheckRTLVersion
    // Check the version number
    //
    SafeRead( filehandle, &RTLVersion, sizeof( RTLVersion ) );
-   SwapIntelLong(&RTLVersion);
+   SwapIntelLong((int *)&RTLVersion);
    if ( RTLVersion > RTL_VERSION )
       {
       Error(
