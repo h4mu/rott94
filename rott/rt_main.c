@@ -90,40 +90,40 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 volatile int    oldtime;
 volatile int    gametime;
 
-boolean         tedlevel;
+bool         tedlevel;
 int             tedlevelnum;
 int             tedx=0;
 int             tedy=0;
-boolean         warp;
+bool         warp;
 int             warpx=0;
 int             warpy=0;
 int             warpa=0;
 int             NoSound;
 int             polltime;
 int             oldpolltime;
-boolean         fizzlein = false;
+bool         fizzlein = false;
 int             pheight;
 
-boolean SCREENSHOTS             = false;
-boolean MONOPRESENT             = false;
-boolean MAPSTATS                = false;
-boolean TILESTATS               = false;
-boolean HUD                     = false;
-boolean IS8250                  = false;
+bool SCREENSHOTS             = false;
+bool MONOPRESENT             = false;
+bool MAPSTATS                = false;
+bool TILESTATS               = false;
+bool HUD                     = false;
+bool IS8250                  = false;
 
-boolean dopefish;
+bool dopefish;
 
-boolean newlevel = false;
-boolean infopause;
+bool newlevel = false;
+bool infopause;
 #ifdef DOS
-boolean SOUNDSETUP=false;
+bool SOUNDSETUP=false;
 #endif
-boolean quiet = false;
+bool quiet = false;
 
 #if (DEVELOPMENT == 1)
-boolean DebugOk = true;
+bool DebugOk = true;
 #else
-boolean DebugOk = false;
+bool DebugOk = false;
 #endif
 
 #if (WHEREAMI==1)
@@ -135,20 +135,20 @@ static char savename[13] = "ROTT0000.LBM";
 static int totalbytes;
 static byte *bptr;
 #endif
-static boolean turbo;
+static bool turbo;
 
 static int NoWait;
 static int startlevel=0;
 static int demonumber=-1;
 
 char CWD[256];                          // curent working directory
-static boolean quitactive = false;
+static bool quitactive = false;
 
 int timelimit;
 int maxtimelimit;
-boolean timelimitenabled;
-boolean demoexit;
-boolean noecho;
+bool timelimitenabled;
+bool demoexit;
+bool noecho;
 
 void CheckCommandLineParameters( void );
 void PlayTurboGame( void );
@@ -165,8 +165,8 @@ extern int setup_homedir (void);
 //extern char G_argv[30][80];
 int G_weaponscale;
 extern int iDropDemo;
-extern boolean iG_aimCross;
-extern boolean sdl_fullscreen;
+extern bool iG_aimCross;
+extern bool sdl_fullscreen;
 extern byte     *updateptr;
 extern byte     update[UPDATESIZE];
 
@@ -506,7 +506,7 @@ void DrawRottTitle ( void )
          px=(80-strlen(title))>>1;
          py=0;
 
-         UL_printf(title);
+         UL_printf((byte *)title);
 
          memset (title,0,sizeof(title));
 
@@ -530,7 +530,7 @@ void DrawRottTitle ( void )
          px=(80-strlen(title))>>1;
          py=1;
 
-         UL_printf(title);
+         UL_printf((byte *)title);
 #ifndef ANSIESC
 	 printf ("\n");
 #endif
@@ -549,7 +549,7 @@ void DrawRottTitle ( void )
          px=(80-strlen(title))>>1;
          py=0;
 
-         UL_printf(title);
+         UL_printf((byte *)title);
 
          UL_ColorBox (0, 0, 80, 1, 0x1e);
          }
@@ -1160,8 +1160,8 @@ int NumberOfTeams
 
 void GameLoop (void)
 {
-   boolean done   = false;
-   boolean loadit = false;
+   bool done   = false;
+   bool loadit = false;
    int NextLevel;
 
    wami(1);
@@ -1239,7 +1239,7 @@ void GameLoop (void)
                   byte *tempbuf;
                   MenuFadeOut();
                   ClearGraphicsScreen();
-                  SetPalette(&dimpal[0]);
+                  SetPalette((char *)&dimpal[0]);
                   PlayMovie ("shartitl", true);
                   if ( ( LastScan ) || ( IN_GetMouseButtons() ) )
                      {
@@ -1658,7 +1658,7 @@ void GameLoop (void)
    waminot();
    }
 
-boolean CheckForQuickLoad  (void )
+bool CheckForQuickLoad  (void )
 
    {
 
@@ -2052,7 +2052,7 @@ void PlayLoop
    {
    volatile int atime;
 
-   boolean canquit = true;
+   bool canquit = true;
    int     quittime = 0;
 
    wami(3);
@@ -2174,7 +2174,7 @@ fromloadedgame:
 
       if ( ( !BATTLEMODE ) && ( CP_CheckQuick( LastScan ) ) )
 			{
-         boolean escaped=false;
+         bool escaped=false;
 
          if (LastScan == sc_Escape)
             {
@@ -3157,7 +3157,7 @@ void WriteLBMfile (char *filename, byte *data, int width, int height)
 //
 //****************************************************************************
 
-void GetFileName (boolean saveLBM)
+void GetFileName (bool saveLBM)
 {
 #ifdef DOS
    char num[4];
@@ -3221,17 +3221,17 @@ void GetFileName (boolean saveLBM)
 //
 //****************************************************************************
 
-boolean inhmenu;
+bool inhmenu;
 
 #if (BETA == 1)
 #define SSX (160-(46*2))
 #define SSY (17)
 #endif
-void SaveScreen (boolean saveLBM)
+void SaveScreen (bool saveLBM)
 {
    byte *buffer;
    byte * screen;
-   boolean oldHUD;
+   bool oldHUD;
    char filename[ 128 ];
 
 #if (BETA == 1)

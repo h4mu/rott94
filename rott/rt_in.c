@@ -71,16 +71,16 @@ int IgnoreMouse = 0;
 
 // configuration variables
 //
-boolean  SpaceBallPresent;
-boolean  CybermanPresent;
-boolean  AssassinPresent;
-boolean  MousePresent;
-boolean  JoysPresent[MaxJoys];
-boolean  JoyPadPresent     = 0;
+bool  SpaceBallPresent;
+bool  CybermanPresent;
+bool  AssassinPresent;
+bool  MousePresent;
+bool  JoysPresent[MaxJoys];
+bool  JoyPadPresent     = 0;
 
 //    Global variables
 //
-boolean  Paused;
+bool  Paused;
 char LastASCII;
 volatile int LastScan;
 
@@ -108,7 +108,7 @@ static word *sdl_stick_button_state = NULL;
 static word sdl_sticks_joybits = 0;
 static int sdl_mouse_grabbed = 0;
 static unsigned int scancodes[SDL_NUM_SCANCODES];
-extern boolean sdl_fullscreen;
+extern bool sdl_fullscreen;
 extern SDL_Window *sdl_window;
 #endif
 
@@ -166,7 +166,7 @@ static JoystickDef JoyDefs[MaxJoys];
 static ControlType Controls[MAXPLAYERS];
 
 
-static boolean  IN_Started;
+static bool  IN_Started;
 
 static   Direction   DirTable[] =      // Quick lookup for total direction
 {
@@ -454,9 +454,10 @@ static int sdl_joy_filter(const SDL_Event *event)
 #endif
     if (event->jbutton.state == SDL_PRESSED)
         sdl_sticks_joybits |= 1 << event->jbutton.button;
-    else
+    else {
         sdl_sticks_joybits &= ~(1 << event->jbutton.button);
-    return 0;
+    }
+	return 0;
 }
 
 static int root_sdl_event_filter(const SDL_Event *event)
@@ -654,7 +655,7 @@ void IN_GetJoyAbs (word joy, word *xp, word *yp)
 #else
    if (joy < sdl_total_sticks)
    {
-      if (SDL_IsGameController(sdl_joysticks[joy]))
+      if (sdl_controllers[joy])
       {
          Joy_x = SDL_GameControllerGetAxis (sdl_controllers[joy], 0);
 	 Joy_y = SDL_GameControllerGetAxis (sdl_controllers[joy], 1);
@@ -684,7 +685,7 @@ int GetAxis(word joy, SDL_GameControllerAxis axis)
 {
    const int16_t deadzone = 8000;
    int16_t val;
-   if (SDL_IsGameController(sdl_joysticks[joy]))
+   if (sdl_controllers[joy])
    {
 	   val = SDL_GameControllerGetAxis (sdl_controllers[joy], axis);
    }
@@ -839,10 +840,10 @@ word IN_GetJoyButtonsDB (word joy)
 //
 //******************************************************************************
 
-boolean INL_StartMouse (void)
+bool INL_StartMouse (void)
 {
 
-   boolean retval = false;
+   bool retval = false;
 
 #if USE_SDL
    /* no-op. */
@@ -925,7 +926,7 @@ void IN_SetupJoy (word joy, word minx, word maxx, word miny, word maxy)
 //******************************************************************************
 
 
-boolean INL_StartJoy (word joy)
+bool INL_StartJoy (word joy)
 {
 #if USE_SDL
    if (!SDL_WasInit(SDL_INIT_JOYSTICK))
@@ -1017,7 +1018,7 @@ void INL_ShutJoy (word joy)
 
 void IN_Startup (void)
 {
-   boolean checkjoys,
+   bool checkjoys,
            checkmouse,
            checkcyberman,
            checkspaceball,
@@ -1262,7 +1263,7 @@ sdl_mouse_grabbed = 1;
 //
 //******************************************************************************
 
-void IN_Default (boolean gotit, ControlType in)
+void IN_Default (bool gotit, ControlType in)
 {
    if
    (
@@ -1325,7 +1326,7 @@ void IN_ClearKeysDown (void)
 
 void IN_ReadControl (int player, ControlInfo *info)
 {
-   boolean     realdelta;
+   bool     realdelta;
    word        buttons;
    int         dx,dy;
    Motion      mx,my;
@@ -1437,7 +1438,7 @@ ScanCode IN_WaitForKey (void)
 //
 //******************************************************************************
 
-boolean  btnstate[8];
+bool  btnstate[8];
 
 void IN_StartAck (void)
 {
@@ -1476,7 +1477,7 @@ void IN_StartAck (void)
 //
 //******************************************************************************
 
-boolean IN_CheckAck (void)
+bool IN_CheckAck (void)
 {
    unsigned i,
             buttons = 0;
@@ -1532,7 +1533,7 @@ void IN_Ack (void)
 //
 //******************************************************************************
 
-boolean IN_UserInput (long delay)
+bool IN_UserInput (long delay)
 {
    long lasttime;
 
@@ -1646,7 +1647,7 @@ int IN_InputUpdateKeyboard (void)
 {
    int key;
    int returnval = 0;
-   boolean done = false;
+   bool done = false;
 
 //   _disable ();
 
@@ -1759,7 +1760,7 @@ void QueueLetterInput (void)
    int tail = Keytail;
    char c;
    int scancode;
-   boolean send = false;
+   bool send = false;
 
 #ifndef PLATFORM_DOS
    /* HACK HACK HACK */

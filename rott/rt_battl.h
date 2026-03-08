@@ -195,7 +195,7 @@ typedef struct
 
 #define bo_normal_respawn_time 30
 
-extern boolean  BATTLEMODE;
+extern bool  BATTLEMODE;
 extern short    WhoKilledWho[ MAXPLAYERS ][ MAXPLAYERS ];
 extern short    BATTLE_Points[ MAXPLAYERS ];
 extern short    BATTLE_PlayerOrder[ MAXPLAYERS ];
@@ -203,11 +203,11 @@ extern int      BATTLE_NumCollectorItems;
 extern int      PointGoal;
 extern int      DisplayPoints;
 extern int      BATTLE_It;
-extern boolean  BATTLE_ShowKillCount;
+extern bool  BATTLE_ShowKillCount;
 extern short    BATTLE_Team[ MAXPLAYERS ];
 extern short    BATTLE_TeamLeader[ MAXPLAYERS ];
 extern int      BATTLE_NumberOfTeams;
-extern boolean  UpdateKills;
+extern bool  UpdateKills;
 
 // Located in RT_MENU.C
 extern battle_type    BATTLE_Options[ battle_NumBattleModes ];

@@ -65,7 +65,7 @@ typedef struct
 } screensaver_t;
 
 void  DrawPlayerWeapon(void);
-boolean TransformPlane (int x1, int y1, int x2, int y2, visobj_t * plane);
+bool TransformPlane (int x1, int y1, int x2, int y2, visobj_t * plane);
 int   CalcRotate (objtype *ob);
 void  DrawScaleds (void);
 void  FixOfs (void);

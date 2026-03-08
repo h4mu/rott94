@@ -134,9 +134,9 @@ extern int spritestop;
 extern int fog;
 extern int lightsource;
 extern int SNAKELEVEL;
-extern boolean insetupgame;
+extern bool insetupgame;
 extern char LevelName[80];
-extern boolean ISRTL;
+extern bool ISRTL;
 
 void PreCacheGroup(int,int,int); // added type
 void AssignTeams(void);
@@ -177,8 +177,8 @@ void Illuminate();
 
 int GetSongForLevel ( void );
 void CheckHolidays(void);
-boolean IsChristmas(void);
+bool IsChristmas(void);
 
-boolean DoPanicMapping (void);
+bool DoPanicMapping (void);
 
 #endif

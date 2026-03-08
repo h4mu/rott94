@@ -65,7 +65,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 // Globals
 
-boolean DivisionError = false;
+bool DivisionError = false;
 
 // Statics
 
@@ -112,7 +112,7 @@ static char ReadWrite[2][6] =
    "Write\0"
 };
 
-static boolean ErrorHandlerStarted=false;
+static bool ErrorHandlerStarted=false;
 void (__interrupt __far *olddivisr) () = NULL;
 
 //******************************************************************************
@@ -175,7 +175,7 @@ void UL_UserMessage (int x, int y, char *str, ...) __attribute__((format(printf,
 
 int UL_GeneralError (int code)
 {
-   boolean done = false;
+   bool done = false;
    int retval = 0;
 
    UL_UserMessage (80, 50, "Device Error!\n%s.\n \n(A)bort  (R)etry\n",
@@ -240,7 +240,7 @@ int UL_GeneralError (int code)
 
 int UL_DriveError (int code, int location, int rwerror, int whichdrive)
 {
-   boolean done = false;
+   bool done = false;
    int retval   = 0;
 
    UL_UserMessage (80, 50,

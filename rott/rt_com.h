@@ -40,7 +40,7 @@ extern int controlsynctime;
 //#define consoleplayer (rottcom->consoleplayer)
 
 void InitROTTNET (void);
-boolean ReadPacket (void);
+bool ReadPacket (void);
 void WritePacket (void * buffer, int len, int destination);
 void ComSetTime (void);
 int GetTransitTime( int client );

@@ -89,7 +89,7 @@ int            pwallnum;
 
 byte	         areaconnect[NUMAREAS][NUMAREAS];
 
-boolean	      areabyplayer[NUMAREAS];
+bool	      areabyplayer[NUMAREAS];
 
 
 // Local Variables
@@ -283,7 +283,7 @@ void KillAnimatedMaskedWall ( animmaskedwallobj_t * temp )
 
 void DoAnimatedMaskedWalls ( void )
 {
-   boolean done;
+   bool done;
    animmaskedwallobj_t * temp;
 
    for(temp=FIRSTANIMMASKEDWALL;temp;)
@@ -666,8 +666,8 @@ void ClockLink (void (*saction)(long), void (*eaction)(long), long wobj,int whic
 }
 
 
-void DisplayMessageForAction(touchplatetype *temp, boolean *wallmessage,
-                             boolean *doormessage, boolean*columnmessage)
+void DisplayMessageForAction(touchplatetype *temp, bool *wallmessage,
+                             bool *doormessage, bool*columnmessage)
    {
 
    if ((temp->action == ActivatePushWall) ||
@@ -732,7 +732,7 @@ void TriggerStuff(void)
    int i,touchcomplete,j;
    int playeron;
    void (*tempact)(long);
-   boolean wallmessage,doormessage,columnmessage;
+   bool wallmessage,doormessage,columnmessage;
 
    for(i=0;i<lasttouch;i++)
       {
@@ -848,7 +848,7 @@ void TriggerStuff(void)
 
 //==================== Tile stuff ====================================
 
-boolean CheckTile(int x, int y)
+bool CheckTile(int x, int y)
 {
 
 	if ((x < 2) || (x > (MAPSIZE-1)) || (y < 2) || (y > (MAPSIZE - 1)))
@@ -1489,7 +1489,7 @@ void LockLinkedDoor (int door)
 =====================
 */
 
-boolean IsDoorLinked (int door)
+bool IsDoorLinked (int door)
 {
 	doorobj_t*dptr;
 
@@ -1580,7 +1580,7 @@ void OpenDoor (int door)
 =====================
 */
 
-boolean DoorUnBlocked (int door)
+bool DoorUnBlocked (int door)
 {
 	int	tilex,tiley;
 	objtype *check;
@@ -1631,7 +1631,7 @@ boolean DoorUnBlocked (int door)
 =====================
 */
 
-boolean DoorReadyToClose(int door)
+bool DoorReadyToClose(int door)
 {
 	doorobj_t*dptr;
 	int dx,dy;
@@ -1733,7 +1733,7 @@ void CloseDoor (int door)
 =====================
 */
 
-void OperateDoor (int keys, int door, boolean localplayer )
+void OperateDoor (int keys, int door, bool localplayer )
 {
 	int	lock;
 	doorobj_t*dptr;
@@ -2105,10 +2105,10 @@ void SpawnMaskedWall (int tilex, int tiley, int which, int flags)
  int area1, area2;
  int up,dn,lt,rt;
  int himask;
- boolean sidepic;
+ bool sidepic;
  int side, middle, above, bottom;
  maskedwallobj_t * lastmaskobj;
- boolean metal;
+ bool metal;
  int maskedstart;
  int abovemaskedwallstart;
  int swallstart;
@@ -2810,7 +2810,7 @@ void ExecuteElevatorStopActions(elevator_t *eptr, int teleport_location,
    }
 
 
-boolean PlayerInElevator(elevator_t *eptr)
+bool PlayerInElevator(elevator_t *eptr)
    {
    if (eptr->state == ev_mts)
       {
@@ -3352,7 +3352,7 @@ void SpawnPushWall (int tilex, int tiley, int lock, int texture, int dir, int ty
       lastpwallobj->flags=PW_DAMAGE;
 
 	lastpwallobj->texture = texture;
-   if (!texture&0x1000)
+   if (!(texture & 0x1000))
 	   PreCacheLump(texture,PU_CACHEWALLS,cache_pic_t);
    lastpwallobj->areanumber = GetAreaNumber(tilex,tiley,lastpwallobj->dir);
 
@@ -3402,7 +3402,7 @@ void SpawnPushWall (int tilex, int tiley, int lock, int texture, int dir, int ty
 =
 =====================
 */
-void OperatePushWall (int pwall, int dir, boolean localplayer )
+void OperatePushWall (int pwall, int dir, bool localplayer )
 {
    pwallobj_t * pw;
 

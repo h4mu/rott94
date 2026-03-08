@@ -177,7 +177,7 @@ void ScaleTransparentPost (byte * src, byte * buf, int level)
    byte * oldlevel;
    byte * seelevel;
 #if (DEVELOPMENT == 1)
-   boolean found=false;
+   bool found=false;
    int  i;
 #endif
 

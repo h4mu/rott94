@@ -497,7 +497,7 @@ typedef enum {
 extern int SD_Started;
 
 int SD_SetupFXCard ( int * numvoices, int * numbits, int * numchannels);
-int SD_Startup ( boolean bombonerror );
+int SD_Startup ( bool bombonerror );
 int SD_Play ( int sndnum );
 void SD_Shutdown (void);
 
@@ -509,7 +509,7 @@ void SD_SetPan ( int handle, int vol, int left, int right );
 int SD_Play3D ( int sndnum, int angle, int distance );
 int SD_PlayPitchedSound ( int sndnum, int volume, int pitch );
 void SD_SetSoundPitch ( int sndnum, int pitch );
-boolean SD_SoundOkay ( int sndnum );
+bool SD_SoundOkay ( int sndnum );
 
 //***************************************************************************
 //
@@ -564,7 +564,7 @@ typedef enum {
 
 
 void MU_Shutdown ( void );
-int MU_Startup ( boolean bombonerror );
+int MU_Startup ( bool bombonerror );
 void MU_PlaySong ( int num );
 void MU_StopSong ( void );
 
@@ -685,5 +685,5 @@ void MU_LoadMusic (byte * buf, int size);
 
 void MU_SaveMusic (byte ** buf, int * size);
 
-boolean MusicStarted( void );
+bool MusicStarted( void );
 #endif

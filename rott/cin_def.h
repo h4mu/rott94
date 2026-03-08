@@ -62,8 +62,8 @@ typedef struct actortype
 typedef struct
    {
    char name[10];
-   boolean loop;
-   boolean usefile;
+   bool loop;
+   bool usefile;
    } flicevent;
 
 typedef struct
