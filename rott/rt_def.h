@@ -312,12 +312,14 @@ typedef int fixed;
 
 //////////////////      GLOBAL ENUMERATED TYPES    ///////////////////////
 
-#ifdef __WATCOMC__
+#if defined(__WATCOMC__)
 typedef enum
  {false,
   true
  }
  bool;
+#else
+#include <stdbool.h>
 #endif
 
 
