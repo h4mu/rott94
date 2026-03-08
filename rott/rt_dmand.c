@@ -86,7 +86,7 @@ void SD_UpdatePlaybackSound ( char ** ptr, unsigned long * length )
       return;
       }
 
-   *ptr=&PlaybackBuffer[PlayingPointer];
+   *ptr=(char *)&PlaybackBuffer[PlayingPointer];
 
    PlayingPointer = (PlayingPointer + *length) &
                       (PLAYBACKBUFFERSIZE - 1);

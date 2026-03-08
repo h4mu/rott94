@@ -393,7 +393,7 @@ void Error (char *error, ...)
          sptr = script_p;
       }
 
-      UL_printf (token);
+      UL_printf ((byte *)token);
       px++;                //SPACE
       GetToken (true);
    }
@@ -1404,7 +1404,7 @@ void GetPalette(char * palette)
 
 void SetPalette ( char * pal )
 {
-   VL_SetPalette (pal);
+   VL_SetPalette ((byte *)pal);
 }
 
 

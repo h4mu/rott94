@@ -1931,7 +1931,7 @@ bottomcheck:
 
 void   DrawWalls (void)
 {
-   char * buf;
+   byte * buf;
    int plane;
    wallcast_t * post;
 
