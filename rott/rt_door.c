@@ -1238,7 +1238,7 @@ void SpawnDoor (int tilex, int tiley, int lock, int texture)
    else if (IsWall(tilex+1,tiley)) rt=1;
    else rt=0;
 
-	if ((up==1) && (dn==1))
+   if ((up==1) && (dn==1))
 		lastdoorobj->vertical = true;
 	else if ((lt==1) && (rt==1))
 		lastdoorobj->vertical = false;
@@ -2148,7 +2148,7 @@ void SpawnMaskedWall (int tilex, int tiley, int which, int flags)
    else if (IsWall(tilex+1,tiley)) rt=1;
    else rt=0;
 
-	if ((up==1) && (dn==1))
+   if ((up==1) && (dn==1))
 		lastmaskobj->vertical = true;
 	else if ((lt==1) && (rt==1))
 		lastmaskobj->vertical = false;

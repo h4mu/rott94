@@ -466,11 +466,11 @@ void GraphicsMode ( void )
     SDL_ShowCursor (0);
     if (sdl_fullscreen)
         flags = SDL_WINDOW_FULLSCREEN;
-	sdl_window = SDL_CreateWindow("Rise of the Triad",
-							  SDL_WINDOWPOS_UNDEFINED,
-							  SDL_WINDOWPOS_UNDEFINED,
-							  iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT,
-							  flags);
+    sdl_window = SDL_CreateWindow("Rise of the Triad",
+                              SDL_WINDOWPOS_UNDEFINED,
+                              SDL_WINDOWPOS_UNDEFINED,
+                              iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT,
+                              flags);
 	if (sdl_window == NULL)
 	{
 		Error ("Could not open window: %s\n", SDL_GetError());
