@@ -6,10 +6,6 @@
 ## About
 This is a source port of Apogee's DOS FPS game [Rise of the Triad](http://en.wikipedia.org/wiki/Rise_of_the_Triad), originally released in 1994 (Shareware) and 1995 (Full version).
 
-## Android Requirements
-- Android 2.3.3 or higher
-- OpenGL ES 2.0 compatible display
-- Enough free space on device
 
 ## Installing
 1. Enable unknown sources (and optionally debug connections for ADB support)

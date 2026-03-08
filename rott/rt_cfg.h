@@ -37,9 +37,9 @@ extern int     FXMode;
 extern int     MusicMode;
 extern int     MUvolume;
 extern int     FXvolume;
-extern boolean mouseenabled;
-extern boolean joystickenabled;
-extern boolean joypadenabled;
+extern bool mouseenabled;
+extern bool joystickenabled;
+extern bool joypadenabled;
 extern int     joystickport;
 extern int     mouseadjustment;
 extern int     threshold;
@@ -49,14 +49,14 @@ extern int     NumBits;
 #ifdef DOS
 extern int     MidiAddress;
 #endif
-extern boolean stereoreversed;
-extern boolean cybermanenabled;
-extern boolean assassinenabled;
-extern boolean spaceballenabled;
-extern boolean AutoDetailOn;
+extern bool stereoreversed;
+extern bool cybermanenabled;
+extern bool assassinenabled;
+extern bool spaceballenabled;
+extern bool AutoDetailOn;
 extern int     DoubleClickSpeed;
 extern int     fulllight;
-extern boolean BobbinOn;
+extern bool BobbinOn;
 extern int     Menuflipspeed;
 extern int     DetailLevel;
 extern int     fandc;
@@ -76,7 +76,7 @@ extern byte    passwordstring[20];
 typedef struct
 {
    char *path;
-   boolean avail;
+   bool avail;
    char *file;
 } AlternateInformation;
 
@@ -104,7 +104,7 @@ extern MacroList CommbatMacros[MAXMACROS];
 void WriteBattleConfig(void);
 void ReadScores (void);
 void ReadInt (const char * s1, int * val);
-void ReadBoolean (const char * s1, boolean * val);
+void ReadBoolean (const char * s1, bool * val);
 void ReadConfig (void);
 #if USE_SDL
 #include <SDL3/SDL.h>

@@ -504,20 +504,20 @@ void MV_ServiceVoc
             {
             if ( MV_ReverbTable != NULL )
                {
-               MV_8BitReverb( source, dest, (const VOLUME16 *)MV_ReverbTable, count );
+               MV_8BitReverb( (const signed char *)source, (signed char *)dest, (const VOLUME16 *)MV_ReverbTable, count );
                if ( ( MV_SoundCard == UltraSound ) && ( MV_Channels == 2 ) )
                   {
-                  MV_8BitReverb( source + MV_RightChannelOffset,
-                     dest + MV_RightChannelOffset, (const VOLUME16 *)MV_ReverbTable, count );
+                  MV_8BitReverb( (const signed char *)(source + MV_RightChannelOffset),
+                     (signed char *)(dest + MV_RightChannelOffset), (const VOLUME16 *)MV_ReverbTable, count );
                   }
                }
             else
                {
-               MV_8BitReverbFast( source, dest, count, MV_ReverbLevel );
+               MV_8BitReverbFast( (const signed char *)source, (signed char *)dest, count, MV_ReverbLevel );
                if ( ( MV_SoundCard == UltraSound ) && ( MV_Channels == 2 ) )
                   {
-                  MV_8BitReverbFast( source + MV_RightChannelOffset,
-                     dest + MV_RightChannelOffset, count, MV_ReverbLevel );
+                  MV_8BitReverbFast( (const signed char *)(source + MV_RightChannelOffset),
+                     (signed char *)(dest + MV_RightChannelOffset), count, MV_ReverbLevel );
                   }
                }
             }
@@ -756,7 +756,7 @@ playbackstatus MV_GetNextVOCBlock
             if ( voice->LoopEnd == NULL )
                {
                voice->LoopCount = get_le16(ptr);
-               voice->LoopStart = ptr + blocklength;
+               voice->LoopStart = (char *)(ptr + blocklength);
                }
             ptr += blocklength;
             break;
@@ -772,7 +772,7 @@ playbackstatus MV_GetNextVOCBlock
                {
                if ( ( voice->LoopCount > 0 ) && ( voice->LoopStart != NULL ) )
                   {
-                  ptr = voice->LoopStart;
+                  ptr = (unsigned char *)voice->LoopStart;
                   if ( voice->LoopCount < 0xffff )
                      {
                      voice->LoopCount--;
@@ -835,8 +835,8 @@ playbackstatus MV_GetNextVOCBlock
 
    if ( voice->Playing )
       {
-      voice->NextBlock    = ptr + blocklength;
-      voice->sound        = ptr;
+      voice->NextBlock    = (char *)(ptr + blocklength);
+      voice->sound        = (char *)ptr;
 
       voice->SamplingRate = samplespeed;
       voice->RateScale    = ( voice->SamplingRate * voice->PitchScale ) / MV_MixRate;
@@ -2551,7 +2551,7 @@ int MV_PlayLoopedWAV
       return( MV_Error );
       }
 
-   if ( strncmp( data->DATA, "data", 4 ) != 0 )
+   if ( strncmp( (const char *)data->DATA, "data", 4 ) != 0 )
       {
       MV_SetErrorCode( MV_InvalidWAVFile );
       return( MV_Error );
@@ -2726,7 +2726,7 @@ int MV_PlayLoopedVOC
       }
 
    // Make sure it's a valid VOC file.
-   status = strncmp( ptr, "Creative Voice File", 19 );
+   status = strncmp( (const char *)ptr, "Creative Voice File", 19 );
    if ( status != 0 )
       {
       MV_SetErrorCode( MV_InvalidVOCFile );

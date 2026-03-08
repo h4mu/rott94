@@ -65,9 +65,9 @@ FILE   *  errout;
 FILE   *  debugout;
 FILE   *  mapdebugout;
 
-static boolean SoftErrorStarted=false;
-static boolean DebugStarted=false;
-static boolean MapDebugStarted=false;
+static bool SoftErrorStarted=false;
+static bool DebugStarted=false;
+static bool MapDebugStarted=false;
 
 static unsigned char egargb[48]={ 0x00,0x00,0x00,
 									 0x00,0x00,0xab,
@@ -206,7 +206,7 @@ int atan2_appx(int dx, int dy)
 // StringsNotEqual
 //
 //******************************************************************************
-boolean StringsNotEqual (char * s1, char * s2, int length)
+bool StringsNotEqual (char * s1, char * s2, int length)
 {
    int i;
 
@@ -393,7 +393,7 @@ void Error (char *error, ...)
          sptr = script_p;
       }
 
-      UL_printf (token);
+      UL_printf ((byte *)token);
       px++;                //SPACE
       GetToken (true);
    }
@@ -1412,7 +1412,7 @@ void GetPalette(char * palette)
 
 void SetPalette ( char * pal )
 {
-   VL_SetPalette (pal);
+   VL_SetPalette ((byte *)pal);
 }
 
 
@@ -1801,8 +1801,8 @@ int SideOfLine(int x1, int y1, int x2, int y2, int x3, int y3)
 //
 //******************************************************************************
 
-typedef int (*PFI)();           /* pointer to a function returning int  */
-typedef void (*PFV)();           /* pointer to a function returning int  */
+typedef int (*PFI)(void *, void *);           /* pointer to a function returning int  */
+typedef void (*PFV)(void *, void *);           /* pointer to a function returning void */
 static PFI Comp;                        /* pointer to comparison routine                */
 static PFV Switch;                        /* pointer to comparison routine                */
 static int Width;                       /* width of an object in bytes                  */
@@ -1822,7 +1822,7 @@ static void newsift_down(L,U) int L,U;
       }
 }
 
-void hsort(char * base, int nel, int width, int (*compare)(), void (*switcher)())
+void hsort(char * base, int nel, int width, int (*compare)(void *, void *), void (*switcher)(void *, void *))
 {
 static int i,n,stop;
         /*      Perform a heap sort on an array starting at base.  The array is
@@ -1870,7 +1870,7 @@ static int i,n,stop;
 
 char * UL_GetPath (char * path, char *dir)
 {
-   boolean done      = 0;
+   bool done      = 0;
    char *dr          = dir;
    int cnt           = 0;
 
@@ -1913,7 +1913,7 @@ char * UL_GetPath (char * path, char *dir)
 //
 //******************************************************************************
 
-boolean UL_ChangeDirectory (char *path)
+bool UL_ChangeDirectory (char *path)
 {
 #ifdef DOS
    char *p;
@@ -1982,7 +1982,7 @@ boolean UL_ChangeDirectory (char *path)
 //
 //******************************************************************************
 
-boolean UL_ChangeDrive (char *drive)
+bool UL_ChangeDrive (char *drive)
 {
 #ifdef DOS
    unsigned d, total, tempd;

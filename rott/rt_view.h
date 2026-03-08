@@ -107,11 +107,11 @@ extern  int viewsize;
 extern  int focalwidth;
 extern  int yzangleconverter;
 extern  int lightninglevel;
-extern  boolean  lightning;
+extern  bool  lightning;
 extern  int    darknesslevel;
 
 void DrawCPUJape( void );
-void SetupScreen ( boolean flip );
+void SetupScreen ( bool flip );
 void ResetFocalWidth ( void );
 void ChangeFocalWidth ( int amount );
 void SetViewSize ( int size );

@@ -32,7 +32,7 @@ actortype * lastcinematicactor;
 
 // LOCALS
 
-boolean cinematicactorsystemstarted=false;
+bool cinematicactorsystemstarted=false;
 static int numcinematicactors;
 
 /*
@@ -230,12 +230,12 @@ void DrawCinematicActors ( void )
 {
    actortype * actor;
    actortype * nextactor;
-   boolean draw;
+   bool draw;
    enum_drawphases sequence;
 #if DUMP
    int numactors=0;
 #endif
-   boolean flippage=true;
+   bool flippage=true;
 
    for (sequence=screenfunctions;sequence<numdrawphases;sequence++)
       {

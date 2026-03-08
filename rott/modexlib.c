@@ -18,53 +18,53 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-#include <stdarg.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <string.h>
-#include <stdio.h>
 #include <ctype.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
 #ifdef DOS
-#include <malloc.h>
-#include <dos.h>
 #include <conio.h>
+#include <dos.h>
 #include <io.h>
+#include <malloc.h>
 #endif
 
+#include "modexlib.h"
 #include <stdlib.h>
 #include <sys/stat.h>
-#include "modexlib.h"
-//MED
+// MED
 #include "memcheck.h"
-#include "rt_util.h"
-#include "rt_net.h" // for GamePaused
 #include "myprint.h"
+#include "rt_net.h" // for GamePaused
+#include "rt_util.h"
 
-static void StretchMemPicture ();
+static void StretchMemPicture();
 // GLOBAL VARIABLES
 
-boolean StretchScreen=0;//bn�++
-extern boolean iG_aimCross;
-extern boolean sdl_fullscreen;
+bool StretchScreen = 0; // bn�++
+extern bool iG_aimCross;
+extern bool sdl_fullscreen;
 extern int iG_X_center;
 extern int iG_Y_center;
-char 	   *iG_buf_center;
-  
-int    linewidth;
-//int    ylookup[MAXSCREENHEIGHT];
-int    ylookup[600];//just set to max res
-byte  *page1start;
-byte  *page2start;
-byte  *page3start;
-int    screensize;
-byte  *bufferofs;
-byte  *displayofs;
-boolean graphicsmode=false;
-char        *bufofsTopLimit;
-char        *bufofsBottomLimit;
+byte *iG_buf_center;
 
-void DrawCenterAim ();
+int linewidth;
+// int    ylookup[MAXSCREENHEIGHT];
+int ylookup[600]; // just set to max res
+byte *page1start;
+byte *page2start;
+byte *page3start;
+int screensize;
+byte *bufferofs;
+byte *displayofs;
+bool graphicsmode = false;
+byte *bufofsTopLimit;
+byte *bufofsBottomLimit;
+
+void DrawCenterAim();
 
 #ifdef DOS
 
@@ -75,13 +75,12 @@ void DrawCenterAim ();
 =
 ====================
 */
-void GraphicsMode ( void )
-{
-union REGS regs;
+void GraphicsMode(void) {
+  union REGS regs;
 
-regs.w.ax = 0x13;
-int386(0x10,&regs,&regs);
-graphicsmode=true;
+  regs.w.ax = 0x13;
+  int386(0x10, &regs, &regs);
+  graphicsmode = true;
 }
 
 /*
@@ -91,15 +90,13 @@ graphicsmode=true;
 =
 ====================
 */
-void SetTextMode ( void )
-{
+void SetTextMode(void) {
 
-union REGS regs;
+  union REGS regs;
 
-regs.w.ax = 0x03;
-int386(0x10,&regs,&regs);
-graphicsmode=false;
-
+  regs.w.ax = 0x03;
+  int386(0x10, &regs, &regs);
+  graphicsmode = false;
 }
 
 /*
@@ -109,15 +106,13 @@ graphicsmode=false;
 =
 ====================
 */
-void TurnOffTextCursor ( void )
-{
+void TurnOffTextCursor(void) {
 
-union REGS regs;
+  union REGS regs;
 
-regs.w.ax = 0x0100;
-regs.w.cx = 0x2000;
-int386(0x10,&regs,&regs);
-
+  regs.w.ax = 0x0100;
+  regs.w.cx = 0x2000;
+  int386(0x10, &regs, &regs);
 }
 
 #if 0
@@ -146,17 +141,15 @@ int386(0x10,&regs,&regs);
 =
 ====================
 */
-void WaitVBL( void )
-{
-   unsigned char i;
+void WaitVBL(void) {
+  unsigned char i;
 
-   i=inp(0x03da);
-   while ((i&8)==0)
-      i=inp(0x03da);
-   while ((i&8)==1)
-      i=inp(0x03da);
+  i = inp(0x03da);
+  while ((i & 8) == 0)
+    i = inp(0x03da);
+  while ((i & 8) == 1)
+    i = inp(0x03da);
 }
-
 
 /*
 ====================
@@ -168,27 +161,25 @@ void WaitVBL( void )
 ====================
 */
 
-void VL_SetLineWidth (unsigned width)
-{
-   int i,offset;
+void VL_SetLineWidth(unsigned width) {
+  int i, offset;
 
-//
-// set wide virtual screen
-//
-   outpw (CRTC_INDEX,CRTC_OFFSET+width*256);
+  //
+  // set wide virtual screen
+  //
+  outpw(CRTC_INDEX, CRTC_OFFSET + width * 256);
 
-//
-// set up lookup tables
-//
-   linewidth = width*2;
+  //
+  // set up lookup tables
+  //
+  linewidth = width * 2;
 
-   offset = 0;
+  offset = 0;
 
-   for (i=0;i<iGLOBAL_SCREENHEIGHT;i++)
-      {
-      ylookup[i]=offset;
-      offset += linewidth;
-      }
+  for (i = 0; i < iGLOBAL_SCREENHEIGHT; i++) {
+    ylookup[i] = offset;
+    offset += linewidth;
+  }
 }
 
 /*
@@ -199,18 +190,17 @@ void VL_SetLineWidth (unsigned width)
 =======================
 */
 
-void VL_SetVGAPlaneMode ( void )
-{
-    GraphicsMode();
-    VL_DePlaneVGA ();
-    VL_SetLineWidth (48);
-    screensize=208*iGLOBAL_SCREENBWIDE*2;//bna++ *2
-    page1start=0xa0200;
-    page2start=0xa0200+screensize;
-    page3start=0xa0200+(2u*screensize);
-    displayofs = page1start;
-    bufferofs = page2start;
-    XFlipPage ();
+void VL_SetVGAPlaneMode(void) {
+  GraphicsMode();
+  VL_DePlaneVGA();
+  VL_SetLineWidth(48);
+  screensize = 208 * iGLOBAL_SCREENBWIDE * 2; // bna++ *2
+  page1start = 0xa0200;
+  page2start = 0xa0200 + screensize;
+  page3start = 0xa0200 + (2u * screensize);
+  displayofs = page1start;
+  bufferofs = page2start;
+  XFlipPage();
 }
 
 /*
@@ -220,16 +210,14 @@ void VL_SetVGAPlaneMode ( void )
 =
 =======================
 */
-void VL_CopyPlanarPage ( byte * src, byte * dest )
-{
-   int plane;
+void VL_CopyPlanarPage(byte *src, byte *dest) {
+  int plane;
 
-   for (plane=0;plane<4;plane++)
-      {
-      VGAREADMAP(plane);
-      VGAWRITEMAP(plane);
-      memcpy(dest,src,screensize);
-      }
+  for (plane = 0; plane < 4; plane++) {
+    VGAREADMAP(plane);
+    VGAWRITEMAP(plane);
+    memcpy(dest, src, screensize);
+  }
 }
 
 /*
@@ -239,19 +227,17 @@ void VL_CopyPlanarPage ( byte * src, byte * dest )
 =
 =======================
 */
-void VL_CopyPlanarPageToMemory ( byte * src, byte * dest )
-{
-   byte * ptr;
-   int plane,a,b;
+void VL_CopyPlanarPageToMemory(byte *src, byte *dest) {
+  byte *ptr;
+  int plane, a, b;
 
-   for (plane=0;plane<4;plane++)
-      {
-      ptr=dest+plane;
-      VGAREADMAP(plane);
-      for (a=0;a<200;a++)
-         for (b=0;b<80;b++,ptr+=4)
-            *(ptr)=*(src+(a*linewidth)+b);
-      }
+  for (plane = 0; plane < 4; plane++) {
+    ptr = dest + plane;
+    VGAREADMAP(plane);
+    for (a = 0; a < 200; a++)
+      for (b = 0; b < 80; b++, ptr += 4)
+        *(ptr) = *(src + (a * linewidth) + b);
+  }
 }
 
 /*
@@ -261,21 +247,19 @@ void VL_CopyPlanarPageToMemory ( byte * src, byte * dest )
 =
 =======================
 */
-void VL_CopyBufferToAll ( byte *buffer )
-{
-   int plane;
+void VL_CopyBufferToAll(byte *buffer) {
+  int plane;
 
-   for (plane=0;plane<4;plane++)
-      {
-      VGAREADMAP(plane);
-      VGAWRITEMAP(plane);
-      if (page1start!=buffer)
-         memcpy((byte *)page1start,(byte *)buffer,screensize);
-      if (page2start!=buffer)
-         memcpy((byte *)page2start,(byte *)buffer,screensize);
-      if (page3start!=buffer)
-         memcpy((byte *)page3start,(byte *)buffer,screensize);
-      }
+  for (plane = 0; plane < 4; plane++) {
+    VGAREADMAP(plane);
+    VGAWRITEMAP(plane);
+    if (page1start != buffer)
+      memcpy((byte *)page1start, (byte *)buffer, screensize);
+    if (page2start != buffer)
+      memcpy((byte *)page2start, (byte *)buffer, screensize);
+    if (page3start != buffer)
+      memcpy((byte *)page3start, (byte *)buffer, screensize);
+  }
 }
 
 /*
@@ -285,10 +269,7 @@ void VL_CopyBufferToAll ( byte *buffer )
 =
 =======================
 */
-void VL_CopyDisplayToHidden ( void )
-{
-   VL_CopyBufferToAll ( displayofs );
-}
+void VL_CopyDisplayToHidden(void) { VL_CopyBufferToAll(displayofs); }
 
 /*
 =================
@@ -300,10 +281,9 @@ void VL_CopyDisplayToHidden ( void )
 =================
 */
 
-void VL_ClearBuffer (unsigned buf, byte color)
-{
+void VL_ClearBuffer(unsigned buf, byte color) {
   VGAMAPMASK(15);
-  memset((byte *)buf,color,screensize);
+  memset((byte *)buf, color, screensize);
 }
 
 /*
@@ -316,10 +296,9 @@ void VL_ClearBuffer (unsigned buf, byte color)
 =================
 */
 
-void VL_ClearVideo (byte color)
-{
+void VL_ClearVideo(byte color) {
   VGAMAPMASK(15);
-  memset((byte *)(0xa000<<4),color,0x10000);
+  memset((byte *)(0xa000 << 4), color, 0x10000);
 }
 
 /*
@@ -330,48 +309,46 @@ void VL_ClearVideo (byte color)
 =================
 */
 
-void VL_DePlaneVGA (void)
-{
+void VL_DePlaneVGA(void) {
 
-//
-// change CPU addressing to non linear mode
-//
+  //
+  // change CPU addressing to non linear mode
+  //
 
-//
-// turn off chain 4 and odd/even
-//
-        outp (SC_INDEX,SC_MEMMODE);
-        outp (SC_DATA,(inp(SC_DATA)&~8)|4);
+  //
+  // turn off chain 4 and odd/even
+  //
+  outp(SC_INDEX, SC_MEMMODE);
+  outp(SC_DATA, (inp(SC_DATA) & ~8) | 4);
 
-        outp (SC_INDEX,SC_MAPMASK);         // leave this set throughout
+  outp(SC_INDEX, SC_MAPMASK); // leave this set throughout
 
-//
-// turn off odd/even and set write mode 0
-//
-        outp (GC_INDEX,GC_MODE);
-        outp (GC_DATA,inp(GC_DATA)&~0x13);
+  //
+  // turn off odd/even and set write mode 0
+  //
+  outp(GC_INDEX, GC_MODE);
+  outp(GC_DATA, inp(GC_DATA) & ~0x13);
 
-//
-// turn off chain
-//
-        outp (GC_INDEX,GC_MISCELLANEOUS);
-        outp (GC_DATA,inp(GC_DATA)&~2);
+  //
+  // turn off chain
+  //
+  outp(GC_INDEX, GC_MISCELLANEOUS);
+  outp(GC_DATA, inp(GC_DATA) & ~2);
 
-//
-// clear the entire buffer space, because int 10h only did 16 k / plane
-//
-        VL_ClearVideo (0);
+  //
+  // clear the entire buffer space, because int 10h only did 16 k / plane
+  //
+  VL_ClearVideo(0);
 
-//
-// change CRTC scanning from doubleword to byte mode, allowing >64k scans
-//
-        outp (CRTC_INDEX,CRTC_UNDERLINE);
-        outp (CRTC_DATA,inp(CRTC_DATA)&~0x40);
+  //
+  // change CRTC scanning from doubleword to byte mode, allowing >64k scans
+  //
+  outp(CRTC_INDEX, CRTC_UNDERLINE);
+  outp(CRTC_DATA, inp(CRTC_DATA) & ~0x40);
 
-        outp (CRTC_INDEX,CRTC_MODE);
-        outp (CRTC_DATA,inp(CRTC_DATA)|0x40);
+  outp(CRTC_INDEX, CRTC_MODE);
+  outp(CRTC_DATA, inp(CRTC_DATA) | 0x40);
 }
-
 
 /*
 =================
@@ -381,20 +358,19 @@ void VL_DePlaneVGA (void)
 =================
 */
 
-void XFlipPage ( void )
-{
-   displayofs=bufferofs;
+void XFlipPage(void) {
+  displayofs = bufferofs;
 
-//   _disable();
+  //   _disable();
 
-   outp(CRTC_INDEX,CRTC_STARTHIGH);
-   outp(CRTC_DATA,((displayofs&0x0000ffff)>>8));
+  outp(CRTC_INDEX, CRTC_STARTHIGH);
+  outp(CRTC_DATA, ((displayofs & 0x0000ffff) >> 8));
 
-//   _enable();
+  //   _enable();
 
-   bufferofs += screensize;
-   if (bufferofs > page3start)
-      bufferofs = page1start;
+  bufferofs += screensize;
+  if (bufferofs > page3start)
+    bufferofs = page1start;
 }
 
 #else
@@ -405,7 +381,9 @@ void XFlipPage ( void )
 
 /* rt_def.h isn't included, so I just put this here... */
 #if !defined(ANSIESC)
-#define STUB_FUNCTION fprintf(stderr,"STUB: %s at " __FILE__ ", line %d, thread %d\n",__FUNCTION__,__LINE__,getpid())
+#define STUB_FUNCTION                                                          \
+  fprintf(stderr, "STUB: %s at " __FILE__ ", line %d, thread %d\n",            \
+          __FUNCTION__, __LINE__, getpid())
 #else
 #define STUB_FUNCTION
 #endif
@@ -428,92 +406,86 @@ static SDL_Surface *unstretch_sdl_surface = NULL;
 static SDL_Texture *sdl_hint_texture = NULL;
 extern unsigned int lastInteraction;
 
-void BuildHintTexture()
-{
-	lastInteraction = (unsigned int)SDL_GetTicks();
-	SDL_IOStream *file = SDL_IOFromFile("buttons.bmp", "rb");
-	if (file)
-	{
-		SDL_Surface *image = SDL_LoadBMP_IO(file, true);
-		if (!image)
-		{
-			Error("Bitmap error: %s\n", SDL_GetError());
-		}
-		SDL_SetSurfaceColorKey(image, true, SDL_MapRGBA(SDL_GetPixelFormatDetails(image->format), SDL_GetSurfacePalette(image), 255, 255, 255, 0));
-		sdl_hint_texture = SDL_CreateTextureFromSurface(sdl_renderer, image);
-		if (!sdl_hint_texture)
-		{
-			Error("Texture error: %s\n", SDL_GetError());
-		}
-		SDL_DestroySurface(image);
-	}
+void BuildHintTexture() {
+  lastInteraction = (unsigned int)SDL_GetTicks();
+  SDL_IOStream *file = SDL_IOFromFile("buttons.bmp", "rb");
+  if (file) {
+    SDL_Surface *image = SDL_LoadBMP_IO(file, true);
+    if (!image) {
+      Error("Bitmap error: %s\n", SDL_GetError());
+    }
+    SDL_SetSurfaceColorKey(image, true,
+                           SDL_MapRGBA(SDL_GetPixelFormatDetails(image->format),
+                                       SDL_GetSurfacePalette(image), 255, 255,
+                                       255, 0));
+    sdl_hint_texture = SDL_CreateTextureFromSurface(sdl_renderer, image);
+    if (!sdl_hint_texture) {
+      Error("Texture error: %s\n", SDL_GetError());
+    }
+    SDL_DestroySurface(image);
+  }
 }
 
-void GraphicsMode ( void )
-{
-    SDL_WindowFlags flags = 0;
+void GraphicsMode(void) {
+  SDL_WindowFlags flags = 0;
 
-	if (!SDL_InitSubSystem (SDL_INIT_VIDEO | SDL_INIT_AUDIO))
-	{
-	    Error ("Could not initialize SDL: %s\n", SDL_GetError());
-	}
+  if (!SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
+    Error("Could not initialize SDL: %s\n", SDL_GetError());
+  }
 
-    #if defined(PLATFORM_MACOSX)
-        // FIXME: remove this.  --ryan.
-        flags = SDL_WINDOW_FULLSCREEN;
-        // SDL_WM_GrabInput(SDL_GRAB_ON); // Removed in SDL3
-    #endif
-    SDL_HideCursor ();
-    if (sdl_fullscreen)
-        flags |= SDL_WINDOW_FULLSCREEN;
-	sdl_window = SDL_CreateWindow("Rise of the Triad",
-							  iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT,
-							  flags);
-	if (sdl_window == NULL)
-	{
-		Error ("Could not open window: %s\n", SDL_GetError());
-	}
-	sdl_renderer = SDL_CreateRenderer(sdl_window, NULL);
-	if (sdl_renderer == NULL)
-	{
-		Error ("Could not create renderer: %s\n", SDL_GetError());
-	}
-	SDL_SetRenderLogicalPresentation(sdl_renderer, iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, SDL_LOGICAL_PRESENTATION_LETTERBOX);
-	sdl_texture = SDL_CreateTexture(sdl_renderer,
-			SDL_PIXELFORMAT_ARGB8888, //SDL_PIXELFORMAT_RGB565,
-			SDL_TEXTUREACCESS_STREAMING,
-			iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT);
-	if (sdl_texture == NULL)
-	{
-		Error ("Texture error: %s\n", SDL_GetError());
-	}
-	sdl_surface = SDL_CreateSurface(iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, SDL_PIXELFORMAT_INDEX8);
-	if (sdl_surface == NULL)
-	{
-		Error ("Could not create surface: %s\n", SDL_GetError());
-	}
-	sdl_surface32 = SDL_CreateSurface(iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, SDL_PIXELFORMAT_ARGB8888);
-	if (sdl_surface32 == NULL)
-	{
-		Error ("Could not create surface: %s\n", SDL_GetError());
-	}
-	BuildHintTexture();
+#if defined(PLATFORM_MACOSX)
+  // FIXME: remove this.  --ryan.
+  flags = SDL_WINDOW_FULLSCREEN;
+  // SDL_WM_GrabInput(SDL_GRAB_ON); // Removed in SDL3
+#endif
+  SDL_HideCursor();
+  if (sdl_fullscreen)
+    flags |= SDL_WINDOW_FULLSCREEN;
+  sdl_window = SDL_CreateWindow("Rise of the Triad", iGLOBAL_SCREENWIDTH,
+                                iGLOBAL_SCREENHEIGHT, flags);
+  if (sdl_window == NULL) {
+    Error("Could not open window: %s\n", SDL_GetError());
+  }
+  sdl_renderer = SDL_CreateRenderer(sdl_window, NULL);
+  if (sdl_renderer == NULL) {
+    Error("Could not create renderer: %s\n", SDL_GetError());
+  }
+  SDL_SetRenderLogicalPresentation(sdl_renderer, iGLOBAL_SCREENWIDTH,
+                                   iGLOBAL_SCREENHEIGHT,
+                                   SDL_LOGICAL_PRESENTATION_LETTERBOX);
+  sdl_texture = SDL_CreateTexture(
+      sdl_renderer,
+      SDL_PIXELFORMAT_ARGB8888, // SDL_PIXELFORMAT_RGB565,
+      SDL_TEXTUREACCESS_STREAMING, iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT);
+  if (sdl_texture == NULL) {
+    Error("Texture error: %s\n", SDL_GetError());
+  }
+  sdl_surface = SDL_CreateSurface(iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT,
+                                  SDL_PIXELFORMAT_INDEX8);
+  if (sdl_surface == NULL) {
+    Error("Could not create surface: %s\n", SDL_GetError());
+  }
+  sdl_surface32 = SDL_CreateSurface(iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT,
+                                    SDL_PIXELFORMAT_ARGB8888);
+  if (sdl_surface32 == NULL) {
+    Error("Could not create surface: %s\n", SDL_GetError());
+  }
+  BuildHintTexture();
 }
 
-void blitScreen32(uint32_t *dst)
-{
-    uint8_t *src = sdl_surface->pixels;
-    SDL_Palette* palette = SDL_GetSurfacePalette(sdl_surface);
-    int x, y;
+void blitScreen32(uint32_t *dst) {
+  uint8_t *src = sdl_surface->pixels;
+  SDL_Palette *palette = SDL_GetSurfacePalette(sdl_surface);
+  int x, y;
 
-    if (!palette) return;
+  if (!palette)
+    return;
 
-    for (y = iGLOBAL_SCREENHEIGHT; y > 0; y--)
-		for (x = iGLOBAL_SCREENWIDTH; x > 0; x--)
-		{
-			SDL_Color color = palette->colors[*src++];
-			*(dst++) = (color.a << 24) | (color.r << 16) | (color.g << 8) | color.b;
-		}
+  for (y = iGLOBAL_SCREENHEIGHT; y > 0; y--)
+    for (x = iGLOBAL_SCREENWIDTH; x > 0; x--) {
+      SDL_Color color = palette->colors[*src++];
+      *(dst++) = (color.a << 24) | (color.r << 16) | (color.g << 8) | color.b;
+    }
 }
 
 /*
@@ -523,20 +495,19 @@ void blitScreen32(uint32_t *dst)
 =
 ====================
 */
-void SetTextMode ( void )
-{
-	if (SDL_WasInit(SDL_INIT_VIDEO) == SDL_INIT_VIDEO) {
-		if (sdl_renderer != NULL) {
-			SDL_DestroyRenderer(sdl_renderer);
-			sdl_renderer = NULL;
-		}
-		if (sdl_window != NULL) {
-			SDL_DestroyWindow(sdl_window);
-			sdl_window = NULL;
-		}
-		
-		SDL_QuitSubSystem (SDL_INIT_VIDEO);
-	}
+void SetTextMode(void) {
+  if (SDL_WasInit(SDL_INIT_VIDEO) == SDL_INIT_VIDEO) {
+    if (sdl_renderer != NULL) {
+      SDL_DestroyRenderer(sdl_renderer);
+      sdl_renderer = NULL;
+    }
+    if (sdl_window != NULL) {
+      SDL_DestroyWindow(sdl_window);
+      sdl_window = NULL;
+    }
+
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+  }
 }
 
 /*
@@ -546,9 +517,7 @@ void SetTextMode ( void )
 =
 ====================
 */
-void TurnOffTextCursor ( void )
-{
-}
+void TurnOffTextCursor(void) {}
 
 /*
 ====================
@@ -557,10 +526,7 @@ void TurnOffTextCursor ( void )
 =
 ====================
 */
-void WaitVBL( void )
-{
-	SDL_Delay (16667/1000);
-}
+void WaitVBL(void) { SDL_Delay(16667 / 1000); }
 
 /*
 =======================
@@ -570,48 +536,46 @@ void WaitVBL( void )
 =======================
 */
 
-void VL_SetVGAPlaneMode ( void )
-{
-   int i,offset;
+void VL_SetVGAPlaneMode(void) {
+  int i, offset;
 
-    GraphicsMode();
+  GraphicsMode();
 
-//
-// set up lookup tables
-//
-//bna--   linewidth = 320;
-   linewidth = iGLOBAL_SCREENWIDTH;
+  //
+  // set up lookup tables
+  //
+  // bna--   linewidth = 320;
+  linewidth = iGLOBAL_SCREENWIDTH;
 
-   offset = 0;
+  offset = 0;
 
-   for (i=0;i<iGLOBAL_SCREENHEIGHT;i++)
-      {
-      ylookup[i]=offset;
-      offset += linewidth;
-      }
+  for (i = 0; i < iGLOBAL_SCREENHEIGHT; i++) {
+    ylookup[i] = offset;
+    offset += linewidth;
+  }
 
-//    screensize=MAXSCREENHEIGHT*MAXSCREENWIDTH;
-    screensize=iGLOBAL_SCREENHEIGHT*iGLOBAL_SCREENWIDTH;
+  //    screensize=MAXSCREENHEIGHT*MAXSCREENWIDTH;
+  screensize = iGLOBAL_SCREENHEIGHT * iGLOBAL_SCREENWIDTH;
 
+  page1start = sdl_surface->pixels;
+  page2start = sdl_surface->pixels;
+  page3start = sdl_surface->pixels;
+  displayofs = page1start;
+  bufferofs = page2start;
 
+  iG_X_center = iGLOBAL_SCREENWIDTH / 2;
+  iG_Y_center = (iGLOBAL_SCREENHEIGHT / 2) + 10; //+10 = move aim down a bit
 
-    page1start=sdl_surface->pixels;
-    page2start=sdl_surface->pixels;
-    page3start=sdl_surface->pixels;
-    displayofs = page1start;
-    bufferofs = page2start;
+  iG_buf_center =
+      bufferofs +
+      (screensize / 2); //(iG_Y_center*iGLOBAL_SCREENWIDTH);//+iG_X_center;
 
-	iG_X_center = iGLOBAL_SCREENWIDTH / 2;
-	iG_Y_center = (iGLOBAL_SCREENHEIGHT / 2)+10 ;//+10 = move aim down a bit
+  bufofsTopLimit = bufferofs + screensize - iGLOBAL_SCREENWIDTH;
+  bufofsBottomLimit = bufferofs + iGLOBAL_SCREENWIDTH;
 
-	iG_buf_center = bufferofs + (screensize/2);//(iG_Y_center*iGLOBAL_SCREENWIDTH);//+iG_X_center;
-
-	bufofsTopLimit =  bufferofs + screensize - iGLOBAL_SCREENWIDTH;
-	bufofsBottomLimit = bufferofs + iGLOBAL_SCREENWIDTH;
-
-    // start stretched
-    EnableScreenStretch();
-    XFlipPage ();
+  // start stretched
+  EnableScreenStretch();
+  XFlipPage();
 }
 
 /*
@@ -621,19 +585,17 @@ void VL_SetVGAPlaneMode ( void )
 =
 =======================
 */
-void VL_CopyPlanarPage ( byte * src, byte * dest )
-{
+void VL_CopyPlanarPage(byte *src, byte *dest) {
 #ifdef DOS
-   int plane;
+  int plane;
 
-   for (plane=0;plane<4;plane++)
-      {
-      VGAREADMAP(plane);
-      VGAWRITEMAP(plane);
-      memcpy(dest,src,screensize);
-      }
+  for (plane = 0; plane < 4; plane++) {
+    VGAREADMAP(plane);
+    VGAWRITEMAP(plane);
+    memcpy(dest, src, screensize);
+  }
 #else
-      memcpy(dest,src,screensize);
+  memcpy(dest, src, screensize);
 #endif
 }
 
@@ -644,22 +606,20 @@ void VL_CopyPlanarPage ( byte * src, byte * dest )
 =
 =======================
 */
-void VL_CopyPlanarPageToMemory ( byte * src, byte * dest )
-{
+void VL_CopyPlanarPageToMemory(byte *src, byte *dest) {
 #ifdef DOS
-   byte * ptr;
-   int plane,a,b;
+  byte *ptr;
+  int plane, a, b;
 
-   for (plane=0;plane<4;plane++)
-      {
-      ptr=dest+plane;
-      VGAREADMAP(plane);
-      for (a=0;a<200;a++)
-         for (b=0;b<80;b++,ptr+=4)
-            *(ptr)=*(src+(a*linewidth)+b);
-      }
+  for (plane = 0; plane < 4; plane++) {
+    ptr = dest + plane;
+    VGAREADMAP(plane);
+    for (a = 0; a < 200; a++)
+      for (b = 0; b < 80; b++, ptr += 4)
+        *(ptr) = *(src + (a * linewidth) + b);
+  }
 #else
-      memcpy(dest,src,screensize);
+  memcpy(dest, src, screensize);
 #endif
 }
 
@@ -670,22 +630,20 @@ void VL_CopyPlanarPageToMemory ( byte * src, byte * dest )
 =
 =======================
 */
-void VL_CopyBufferToAll ( byte *buffer )
-{
+void VL_CopyBufferToAll(byte *buffer) {
 #ifdef DOS
-   int plane;
+  int plane;
 
-   for (plane=0;plane<4;plane++)
-      {
-      VGAREADMAP(plane);
-      VGAWRITEMAP(plane);
-      if (page1start!=buffer)
-         memcpy((byte *)page1start,(byte *)buffer,screensize);
-      if (page2start!=buffer)
-         memcpy((byte *)page2start,(byte *)buffer,screensize);
-      if (page3start!=buffer)
-         memcpy((byte *)page3start,(byte *)buffer,screensize);
-      }
+  for (plane = 0; plane < 4; plane++) {
+    VGAREADMAP(plane);
+    VGAWRITEMAP(plane);
+    if (page1start != buffer)
+      memcpy((byte *)page1start, (byte *)buffer, screensize);
+    if (page2start != buffer)
+      memcpy((byte *)page2start, (byte *)buffer, screensize);
+    if (page3start != buffer)
+      memcpy((byte *)page3start, (byte *)buffer, screensize);
+  }
 #endif
 }
 
@@ -696,10 +654,7 @@ void VL_CopyBufferToAll ( byte *buffer )
 =
 =======================
 */
-void VL_CopyDisplayToHidden ( void )
-{
-   VL_CopyBufferToAll ( displayofs );
-}
+void VL_CopyDisplayToHidden(void) { VL_CopyBufferToAll(displayofs); }
 
 /*
 =================
@@ -711,13 +666,12 @@ void VL_CopyDisplayToHidden ( void )
 =================
 */
 
-void VL_ClearBuffer (byte *buf, byte color)
-{
+void VL_ClearBuffer(byte *buf, byte color) {
 #ifdef DOS
   VGAMAPMASK(15);
-  memset((byte *)buf,color,screensize);
+  memset((byte *)buf, color, screensize);
 #else
-  memset((byte *)buf,color,screensize);
+  memset((byte *)buf, color, screensize);
 #endif
 }
 
@@ -731,22 +685,23 @@ void VL_ClearBuffer (byte *buf, byte color)
 =================
 */
 
-void VL_ClearVideo (byte color)
-{
+void VL_ClearVideo(byte color) {
 #ifdef DOS
   VGAMAPMASK(15);
-  memset((byte *)(0xa000<<4),color,0x10000);
+  memset((byte *)(0xa000 << 4), color, 0x10000);
 #else
-//  SDL_Color renderColor = sdl_surface->format->palette->colors[color];
-//  if (!SDL_SetRenderDrawColor(sdl_renderer, renderColor.r, renderColor.g, renderColor.b, renderColor.a))
-//  {
-//	  Error(SDL_GetError());
-//  }
-//  if (!SDL_RenderClear(sdl_renderer))
-//  {
-//	  Error(SDL_GetError());
-//  }
-  memset (sdl_surface->pixels, color, iGLOBAL_SCREENWIDTH*iGLOBAL_SCREENHEIGHT);
+  //  SDL_Color renderColor = sdl_surface->format->palette->colors[color];
+  //  if (!SDL_SetRenderDrawColor(sdl_renderer, renderColor.r, renderColor.g,
+  //  renderColor.b, renderColor.a))
+  //  {
+  //	  Error(SDL_GetError());
+  //  }
+  //  if (!SDL_RenderClear(sdl_renderer))
+  //  {
+  //	  Error(SDL_GetError());
+  //  }
+  memset(sdl_surface->pixels, color,
+         iGLOBAL_SCREENWIDTH * iGLOBAL_SCREENHEIGHT);
 #endif
 }
 
@@ -758,53 +713,47 @@ void VL_ClearVideo (byte color)
 =================
 */
 
-void VL_DePlaneVGA (void)
-{
-}
+void VL_DePlaneVGA(void) {}
 
-static void RenderCopyHintTexture()
-{
-	if (sdl_hint_texture)
-	{
-		unsigned int deltaInteraction = (unsigned int)SDL_GetTicks() - lastInteraction;
-		const unsigned int minDelay = 10000;
-		if (deltaInteraction < minDelay + 4600)
-		{
-			if (deltaInteraction > minDelay + 4000)
-			{
-				unsigned int shade = (minDelay + 4600 - deltaInteraction) / 3;
-				SDL_SetTextureAlphaMod(sdl_hint_texture, (Uint8)(shade < 1 ? 0 : shade));
-				SDL_RenderTexture(sdl_renderer, sdl_hint_texture, NULL, NULL);
-			}
-			else if (deltaInteraction > minDelay)
-			{
-				unsigned int shade = (deltaInteraction - minDelay) / 3;
-				SDL_SetTextureAlphaMod(sdl_hint_texture, (Uint8)(shade > 200 ? 200 : shade));
-				SDL_RenderTexture(sdl_renderer, sdl_hint_texture, NULL, NULL);
-			}
-		}
-	}
+static void RenderCopyHintTexture() {
+  if (sdl_hint_texture) {
+    unsigned int deltaInteraction =
+        (unsigned int)SDL_GetTicks() - lastInteraction;
+    const unsigned int minDelay = 10000;
+    if (deltaInteraction < minDelay + 4600) {
+      if (deltaInteraction > minDelay + 4000) {
+        unsigned int shade = (minDelay + 4600 - deltaInteraction) / 3;
+        SDL_SetTextureAlphaMod(sdl_hint_texture,
+                               (Uint8)(shade < 1 ? 0 : shade));
+        SDL_RenderTexture(sdl_renderer, sdl_hint_texture, NULL, NULL);
+      } else if (deltaInteraction > minDelay) {
+        unsigned int shade = (deltaInteraction - minDelay) / 3;
+        SDL_SetTextureAlphaMod(sdl_hint_texture,
+                               (Uint8)(shade > 200 ? 200 : shade));
+        SDL_RenderTexture(sdl_renderer, sdl_hint_texture, NULL, NULL);
+      }
+    }
+  }
 }
 
 /* C version of rt_vh_a.asm */
 
-void VH_UpdateScreen (void)
-{ 	
+void VH_UpdateScreen(void) {
 
-	if (StretchScreen){//bna++
-		StretchMemPicture ();
-	}else{
-		DrawCenterAim ();
-	}
-//	SDL_UpdateRect (SDL_GetVideoSurface (), 0, 0, 0, 0);
-	blitScreen32(sdl_surface32->pixels);
-	SDL_UpdateTexture(sdl_texture, NULL, sdl_surface32->pixels, sdl_surface32->pitch);
-	SDL_RenderClear(sdl_renderer);
-	SDL_RenderTexture(sdl_renderer, sdl_texture, NULL, NULL);
-	RenderCopyHintTexture();
-	SDL_RenderPresent(sdl_renderer);
+  if (StretchScreen) { // bna++
+    StretchMemPicture();
+  } else {
+    DrawCenterAim();
+  }
+  //	SDL_UpdateRect (SDL_GetVideoSurface (), 0, 0, 0, 0);
+  blitScreen32(sdl_surface32->pixels);
+  SDL_UpdateTexture(sdl_texture, NULL, sdl_surface32->pixels,
+                    sdl_surface32->pitch);
+  SDL_RenderClear(sdl_renderer);
+  SDL_RenderTexture(sdl_renderer, sdl_texture, NULL, NULL);
+  RenderCopyHintTexture();
+  SDL_RenderPresent(sdl_renderer);
 }
-
 
 /*
 =================
@@ -814,78 +763,75 @@ void VH_UpdateScreen (void)
 =================
 */
 
-void XFlipPage ( void )
-{
+void XFlipPage(void) {
 #ifdef DOS
-   displayofs=bufferofs;
+  displayofs = bufferofs;
 
-//   _disable();
+  //   _disable();
 
-   outp(CRTC_INDEX,CRTC_STARTHIGH);
-   outp(CRTC_DATA,((displayofs&0x0000ffff)>>8));
+  outp(CRTC_INDEX, CRTC_STARTHIGH);
+  outp(CRTC_DATA, ((displayofs & 0x0000ffff) >> 8));
 
-//   _enable();
+  //   _enable();
 
-   bufferofs += screensize;
-   if (bufferofs > page3start)
-      bufferofs = page1start;
+  bufferofs += screensize;
+  if (bufferofs > page3start)
+    bufferofs = page1start;
 #else
- 	if (StretchScreen){//bna++
-		StretchMemPicture ();
-	}else{
-		DrawCenterAim ();
-	}
-//   SDL_UpdateRect (sdl_surface, 0, 0, 0, 0);
-	blitScreen32(sdl_surface32->pixels);
-	SDL_UpdateTexture(sdl_texture, NULL, sdl_surface32->pixels, sdl_surface32->pitch);
-	SDL_RenderClear(sdl_renderer);
-	SDL_RenderTexture(sdl_renderer, sdl_texture, NULL, NULL);
-	RenderCopyHintTexture();
-	SDL_RenderPresent(sdl_renderer);
- 
-#endif
-}
+  if (StretchScreen) { // bna++
+    StretchMemPicture();
+  } else {
+    DrawCenterAim();
+  }
+  //   SDL_UpdateRect (sdl_surface, 0, 0, 0, 0);
+  blitScreen32(sdl_surface32->pixels);
+  SDL_UpdateTexture(sdl_texture, NULL, sdl_surface32->pixels,
+                    sdl_surface32->pitch);
+  SDL_RenderClear(sdl_renderer);
+  SDL_RenderTexture(sdl_renderer, sdl_texture, NULL, NULL);
+  RenderCopyHintTexture();
+  SDL_RenderPresent(sdl_renderer);
 
 #endif
-
-
-void EnableScreenStretch(void)
-{
-   if (iGLOBAL_SCREENWIDTH <= 320 || StretchScreen) return;
-
-   if (unstretch_sdl_surface == NULL)
-   {
-      /* should really be just 320x200, but there is code all over the
-         places which crashes then */
-      unstretch_sdl_surface = SDL_CreateSurface(iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, SDL_PIXELFORMAT_INDEX8);
-   }
-
-   displayofs = (byte*)unstretch_sdl_surface->pixels +
-	(displayofs - (byte *)sdl_surface->pixels);
-   bufferofs  = unstretch_sdl_surface->pixels;
-   page1start = unstretch_sdl_surface->pixels;
-   page2start = unstretch_sdl_surface->pixels;
-   page3start = unstretch_sdl_surface->pixels;
-   StretchScreen = 1;
 }
 
-void DisableScreenStretch(void)
-{
-   if (iGLOBAL_SCREENWIDTH <= 320 || !StretchScreen) return;
+#endif
 
-   displayofs = (byte*)sdl_surface->pixels +
-	(displayofs - (byte *)unstretch_sdl_surface->pixels);
-   bufferofs  = sdl_surface->pixels;
-   page1start = sdl_surface->pixels;
-   page2start = sdl_surface->pixels;
-   page3start = sdl_surface->pixels;
-   StretchScreen = 0;
+void EnableScreenStretch(void) {
+  if (iGLOBAL_SCREENWIDTH <= 320 || StretchScreen)
+    return;
+
+  if (unstretch_sdl_surface == NULL) {
+    /* should really be just 320x200, but there is code all over the
+       places which crashes then */
+    unstretch_sdl_surface = SDL_CreateSurface(
+        iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, SDL_PIXELFORMAT_INDEX8);
+  }
+
+  displayofs = (byte *)unstretch_sdl_surface->pixels +
+               (displayofs - (byte *)sdl_surface->pixels);
+  bufferofs = unstretch_sdl_surface->pixels;
+  page1start = unstretch_sdl_surface->pixels;
+  page2start = unstretch_sdl_surface->pixels;
+  page3start = unstretch_sdl_surface->pixels;
+  StretchScreen = 1;
 }
 
+void DisableScreenStretch(void) {
+  if (iGLOBAL_SCREENWIDTH <= 320 || !StretchScreen)
+    return;
+
+  displayofs = (byte *)sdl_surface->pixels +
+               (displayofs - (byte *)unstretch_sdl_surface->pixels);
+  bufferofs = sdl_surface->pixels;
+  page1start = sdl_surface->pixels;
+  page2start = sdl_surface->pixels;
+  page3start = sdl_surface->pixels;
+  StretchScreen = 0;
+}
 
 // bna section -------------------------------------------
-static void StretchMemPicture ()
-{
+static void StretchMemPicture() {
   SDL_Rect src;
   SDL_Rect dest;
 
@@ -898,57 +844,66 @@ static void StretchMemPicture ()
   dest.y = 0;
   dest.w = iGLOBAL_SCREENWIDTH;
   dest.h = iGLOBAL_SCREENHEIGHT;
-  SDL_BlitSurfaceScaled(unstretch_sdl_surface, &src, sdl_surface, &dest, SDL_SCALEMODE_NEAREST);
+  SDL_BlitSurfaceScaled(unstretch_sdl_surface, &src, sdl_surface, &dest,
+                        SDL_SCALEMODE_NEAREST);
 }
 
 // bna function added start
-extern	boolean ingame;
-int		iG_playerTilt;
+extern bool ingame;
+int iG_playerTilt;
 
-void DrawCenterAim ()
-{
-	int x;
+void DrawCenterAim() {
+  int x;
 
-	int percenthealth = (locplayerstate->health * 10) / MaxHitpointsForCharacter(locplayerstate);
-	int color = percenthealth < 3 ? egacolor[RED] : percenthealth < 4 ? egacolor[YELLOW] : egacolor[GREEN];
+  int percenthealth =
+      (locplayerstate->health * 10) / MaxHitpointsForCharacter(locplayerstate);
+  int color = percenthealth < 3   ? egacolor[RED]
+              : percenthealth < 4 ? egacolor[YELLOW]
+                                  : egacolor[GREEN];
 
-	if (iG_aimCross && !GamePaused){
-		if (( ingame == true )&&(iGLOBAL_SCREENWIDTH>320)){
-			  if ((iG_playerTilt <0 )||(iG_playerTilt >iGLOBAL_SCREENHEIGHT/2)){
-					iG_playerTilt = -(2048 - iG_playerTilt);
-			  }
-			  if (iGLOBAL_SCREENWIDTH == 640){ x = iG_playerTilt;iG_playerTilt=x/2; }
-			  iG_buf_center = bufferofs + ((iG_Y_center-iG_playerTilt)*iGLOBAL_SCREENWIDTH);//+iG_X_center;
+  if (iG_aimCross && !GamePaused) {
+    if ((ingame == true) && (iGLOBAL_SCREENWIDTH > 320)) {
+      if ((iG_playerTilt < 0) || (iG_playerTilt > iGLOBAL_SCREENHEIGHT / 2)) {
+        iG_playerTilt = -(2048 - iG_playerTilt);
+      }
+      if (iGLOBAL_SCREENWIDTH == 640) {
+        x = iG_playerTilt;
+        iG_playerTilt = x / 2;
+      }
+      iG_buf_center = bufferofs + ((iG_Y_center - iG_playerTilt) *
+                                   iGLOBAL_SCREENWIDTH); //+iG_X_center;
 
-			  for (x=iG_X_center-10;x<=iG_X_center-4;x++){
-				  if ((iG_buf_center+x < bufofsTopLimit)&&(iG_buf_center+x > bufofsBottomLimit)){
-					 *(iG_buf_center+x) = color;
-				  }
-			  }
-			  for (x=iG_X_center+4;x<=iG_X_center+10;x++){
-				  if ((iG_buf_center+x < bufofsTopLimit)&&(iG_buf_center+x > bufofsBottomLimit)){
-					 *(iG_buf_center+x) = color;
-				  }
-			  }
-			  for (x=10;x>=4;x--){
-				  if (((iG_buf_center-(x*iGLOBAL_SCREENWIDTH)+iG_X_center) < bufofsTopLimit)&&((iG_buf_center-(x*iGLOBAL_SCREENWIDTH)+iG_X_center) > bufofsBottomLimit)){
-					 *(iG_buf_center-(x*iGLOBAL_SCREENWIDTH)+iG_X_center) = color;
-				  }
-			  }
-			  for (x=4;x<=10;x++){
-				  if (((iG_buf_center+(x*iGLOBAL_SCREENWIDTH)+iG_X_center) < bufofsTopLimit)&&((iG_buf_center+(x*iGLOBAL_SCREENWIDTH)+iG_X_center) > bufofsBottomLimit)){
-					 *(iG_buf_center+(x*iGLOBAL_SCREENWIDTH)+iG_X_center) = color;
-				  }
-			  }
-		}
-	}
+      for (x = iG_X_center - 10; x <= iG_X_center - 4; x++) {
+        if ((iG_buf_center + x < bufofsTopLimit) &&
+            (iG_buf_center + x > bufofsBottomLimit)) {
+          *(iG_buf_center + x) = color;
+        }
+      }
+      for (x = iG_X_center + 4; x <= iG_X_center + 10; x++) {
+        if ((iG_buf_center + x < bufofsTopLimit) &&
+            (iG_buf_center + x > bufofsBottomLimit)) {
+          *(iG_buf_center + x) = color;
+        }
+      }
+      for (x = 10; x >= 4; x--) {
+        if (((iG_buf_center - (x * iGLOBAL_SCREENWIDTH) + iG_X_center) <
+             bufofsTopLimit) &&
+            ((iG_buf_center - (x * iGLOBAL_SCREENWIDTH) + iG_X_center) >
+             bufofsBottomLimit)) {
+          *(iG_buf_center - (x * iGLOBAL_SCREENWIDTH) + iG_X_center) = color;
+        }
+      }
+      for (x = 4; x <= 10; x++) {
+        if (((iG_buf_center + (x * iGLOBAL_SCREENWIDTH) + iG_X_center) <
+             bufofsTopLimit) &&
+            ((iG_buf_center + (x * iGLOBAL_SCREENWIDTH) + iG_X_center) >
+             bufofsBottomLimit)) {
+          *(iG_buf_center + (x * iGLOBAL_SCREENWIDTH) + iG_X_center) = color;
+        }
+      }
+    }
+  }
 }
 // bna function added end
 
-
-
-
 // bna section -------------------------------------------
-
-
-

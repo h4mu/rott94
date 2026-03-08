@@ -194,7 +194,7 @@ enum {MOUSE, JOYSTICK, KEYBOARDBTNS, KEYBOARDMOVE, SPECIAL1, SPECIAL2};
 //
 //******************************************************************************
 
-static byte *ScanNames[] =    // Scan code names with single chars
+static const char *ScanNames[] =    // Scan code names with single chars
 {
    "?","?","1","2","3","4","5","6","7","8","9","0","-","+","?","?",
    "Q","W","E","R","T","Y","U","I","O","P","[","]","|","?","A","S",
@@ -215,7 +215,7 @@ static byte ExtScanCodes[] = // Scan codes with >1 char names
    0x50, 0x4b, 0x4d, 0x00
 };
 
-static byte *ExtScanNames[] = // Names corresponding to ExtScanCodes
+static const char *ExtScanNames[] = // Names corresponding to ExtScanCodes
 {
    "Esc","BkSp","Tab","Ctrl","Space","CapLk","F1","F2","F3","F4",
    "F5","F6","F7","F8","F9","F10","F11","F12","SclLk","Enter","Shift",
@@ -232,7 +232,7 @@ static byte *ExtScanNames[] = // Names corresponding to ExtScanCodes
 
 void MouseSensitivity (void);
 void DoThreshold (void);
-byte * IN_GetScanName (ScanCode scan);
+const char * IN_GetScanName (ScanCode scan);
 void DisplayInfo (int which);
 
 void PrintLSEntry (int w);
@@ -259,7 +259,7 @@ void DrawPlayerMenu (void);
 
 void DoMainMenu (void);
 
-boolean CP_DisplayMsg (char *s, int number);
+bool CP_DisplayMsg (char *s, int number);
 void CP_EndGame (void);
 int CP_SaveGame (void);
 void CP_Control (void);
@@ -291,7 +291,7 @@ void DefineJoyBtns2 (void);
 void DefineSpecialBtns1 (void);
 void DefineSpecialBtns2 (void);
 
-void DrawSTMenuBuf (int x, int y, int w, int h, boolean up);
+void DrawSTMenuBuf (int x, int y, int w, int h, bool up);
 
 void MusicVolume (void);
 void FXVolume (void);
@@ -317,7 +317,7 @@ void MCERROR (void);
 
 void DrawKeyboardMenu (void);
 void CP_KeyboardMenu (void);
-boolean SliderMenu( int *number, int upperbound, int lowerbound, int erasex,
+bool SliderMenu( int *number, int upperbound, int lowerbound, int erasex,
    int erasey, int erasew, int numadjust, char *blockname,
    void (*routine) (int w), char *title, char *left, char *right );
 
@@ -360,7 +360,7 @@ void DrawDangerMenu (void);
 void CP_DangerOptions (void);
 void DrawTimeLimitMenu (void);
 void CP_TimeLimitOptions (void);
-void PrintBattleOption( boolean inmenu, int x, int y, char *text );
+void PrintBattleOption( bool inmenu, int x, int y, char *text );
 
 void CP_OnePlayerWarningMessage( void );
 

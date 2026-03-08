@@ -91,9 +91,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //******************************************************************************
 
 extern int G_weaponscale;
-extern boolean iG_aimCross;
+extern bool iG_aimCross;
 
-boolean WriteSoundFile   = true;
+bool WriteSoundFile   = true;
 
 int     FXMode           = 0;
 int     MusicMode        = 0;
@@ -108,14 +108,14 @@ fx_blaster_config SBSettings =
    };
 #endif
 
-boolean mouseenabled     = 1;
-boolean usemouselook     = 0;
+bool mouseenabled     = 1;
+bool usemouselook     = 0;
 int     inverse_mouse    = 1; //set  to -1 to invert mouse
-boolean usejump          = 0;
-boolean sdl_fullscreen   = 1;
+bool usejump          = 0;
+bool sdl_fullscreen   = 1;
 
-boolean joystickenabled  = 0;
-boolean joypadenabled    = 0;
+bool joystickenabled  = 0;
+bool joypadenabled    = 0;
 int     joystickport     = 0;
 int     mouseadjustment  = 5;
 int     threshold        = 1;
@@ -125,18 +125,18 @@ int     NumBits          = 8;
 #ifdef DOS
 int     MidiAddress      = 0x330;
 #endif
-boolean cybermanenabled  = false;
-boolean assassinenabled  = false;
-boolean spaceballenabled = false;
-boolean AutoDetailOn     = true;
+bool cybermanenabled  = false;
+bool assassinenabled  = false;
+bool spaceballenabled = false;
+bool AutoDetailOn     = true;
 int     DoubleClickSpeed = 20;
-boolean BobbinOn         = true;
+bool BobbinOn         = true;
 int     Menuflipspeed    = 15;
 int     DetailLevel      = 2;         //HI DETAIL
 int     fandc            = 1;
 int     blanktime        = (2*60*VBLCOUNTER);
-boolean ConfigLoaded     = false;
-boolean stereoreversed   = false;
+bool ConfigLoaded     = false;
+bool stereoreversed   = false;
 
 int     DefaultDifficulty      = 2;
 int     DefaultPlayerCharacter = 0;
@@ -241,13 +241,13 @@ void ReadInt (const char * s1, int * val)
 //
 //******************************************************************************
 
-void ReadBoolean (const char * s1, boolean * val)
+void ReadBoolean (const char * s1, bool * val)
 {
    int temp;
 
    temp = (int)(*val);
    ReadInt (s1,&temp);
-   *val = (boolean) temp;
+   *val = (bool) temp;
 }
 
 //******************************************************************************
@@ -271,9 +271,9 @@ void ReadUnsigned (const char * s1, unsigned long * val)
 //
 //******************************************************************************
 
-boolean ParseSoundFile (void)
+bool ParseSoundFile (void)
 {
-   boolean retval = true;
+   bool retval = true;
    int version    = 0;
 
    ReadInt("Version",&version);
@@ -505,10 +505,10 @@ void ConvertPasswordToPasswordString ( void )
 //
 //******************************************************************************
 
-boolean ParseConfigFile (void)
+bool ParseConfigFile (void)
 {
 //   int temp;
-   boolean retval = true;
+   bool retval = true;
    int version    = 0;
 
    ReadInt("Version",&version);
@@ -718,9 +718,9 @@ boolean ParseConfigFile (void)
 // ParseBattleFile ()
 //
 //******************************************************************************
-boolean ParseBattleFile (void)
+bool ParseBattleFile (void)
 {
-   boolean retval = true;
+   bool retval = true;
    int version    = 0;
    int index;
    int temp;
@@ -1074,7 +1074,7 @@ void ReadConfig (void)
 
 void CheckVendor (void)
 {
-   boolean saveout=false;
+   bool saveout=false;
    int wadcrc;
    int filecrc;
    int size;

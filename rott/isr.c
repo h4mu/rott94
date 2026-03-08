@@ -56,7 +56,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 // Global Variables
 
-static volatile boolean ExtendedKeyFlag;
+static volatile bool ExtendedKeyFlag;
 
 volatile int Keyboard[MAXKEYBOARDSCAN];
 volatile int KeyboardQueue[KEYQMAX];
@@ -69,8 +69,8 @@ volatile int ticcount;
 volatile int fasttics;
 #endif
 
-volatile boolean PausePressed = false;
-volatile boolean PanicPressed = false;
+volatile bool PausePressed = false;
+volatile bool PanicPressed = false;
 int KeyboardStarted=false;
 
 const int ASCIINames[] =          // Unshifted ASCII for scan codes
@@ -530,7 +530,7 @@ void I_SendKeyboardData
 void I_SetKeyboardLEDs
    (
    int which,
-   boolean val
+   bool val
    )
 
    {
