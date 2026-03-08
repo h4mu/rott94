@@ -42,12 +42,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define SF_FAKING   0x80
 #define SF_DEAD     0x80
 
+struct objstruct;
+
 typedef struct  statestruct
 {
 		  byte            rotate;
 		  short           shapenum;  // a shapenum of -1 means get from ob->temp1
 		  short           tictime;
-		  void            (*think) ();
+		  void            (*think) (struct objstruct *);
 		  signed char     condition;
 		  struct  statestruct     *next;
 } statetype;

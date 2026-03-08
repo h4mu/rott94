@@ -1785,8 +1785,8 @@ int SideOfLine(int x1, int y1, int x2, int y2, int x3, int y3)
 //
 //******************************************************************************
 
-typedef int (*PFI)();           /* pointer to a function returning int  */
-typedef void (*PFV)();           /* pointer to a function returning int  */
+typedef int (*PFI)(void *, void *);           /* pointer to a function returning int  */
+typedef void (*PFV)(void *, void *);           /* pointer to a function returning void */
 static PFI Comp;                        /* pointer to comparison routine                */
 static PFV Switch;                        /* pointer to comparison routine                */
 static int Width;                       /* width of an object in bytes                  */
@@ -1806,7 +1806,7 @@ static void newsift_down(L,U) int L,U;
       }
 }
 
-void hsort(char * base, int nel, int width, int (*compare)(), void (*switcher)())
+void hsort(char * base, int nel, int width, int (*compare)(void *, void *), void (*switcher)(void *, void *))
 {
 static int i,n,stop;
         /*      Perform a heap sort on an array starting at base.  The array is

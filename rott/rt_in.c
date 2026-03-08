@@ -454,8 +454,9 @@ static int sdl_joy_filter(const SDL_Event *event)
 #endif
     if (event->jbutton.state == SDL_PRESSED)
         sdl_sticks_joybits |= 1 << event->jbutton.button;
-    else
+    else {
         sdl_sticks_joybits &= ~(1 << event->jbutton.button);
+    }
 	return 0;
 }
 
@@ -654,7 +655,7 @@ void IN_GetJoyAbs (word joy, word *xp, word *yp)
 #else
    if (joy < sdl_total_sticks)
    {
-      if (SDL_IsGameController(sdl_joysticks[joy]))
+      if (sdl_controllers[joy])
       {
          Joy_x = SDL_GameControllerGetAxis (sdl_controllers[joy], 0);
 	 Joy_y = SDL_GameControllerGetAxis (sdl_controllers[joy], 1);
@@ -684,7 +685,7 @@ int GetAxis(word joy, SDL_GameControllerAxis axis)
 {
    const int16_t deadzone = 8000;
    int16_t val;
-   if (SDL_IsGameController(sdl_joysticks[joy]))
+   if (sdl_controllers[joy])
    {
 	   val = SDL_GameControllerGetAxis (sdl_controllers[joy], axis);
    }
