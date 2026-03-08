@@ -456,7 +456,7 @@ static int sdl_joy_filter(const SDL_Event *event)
         sdl_sticks_joybits |= 1 << event->jbutton.button;
     else
         sdl_sticks_joybits &= ~(1 << event->jbutton.button);
-	return 0;
+    return 0;
 }
 
 static int root_sdl_event_filter(const SDL_Event *event)
