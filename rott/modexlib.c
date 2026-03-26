@@ -406,6 +406,8 @@ static SDL_Surface *unstretch_sdl_surface = NULL;
 static SDL_Texture *sdl_hint_texture = NULL;
 extern unsigned int lastInteraction;
 
+static void CopySurfacePalette(SDL_Surface *src, SDL_Surface *dst);
+
 void BuildHintTexture() {
   lastInteraction = (unsigned int)SDL_GetTicks();
   SDL_IOStream *file = SDL_IOFromFile("buttons.bmp", "rb");
@@ -424,6 +426,39 @@ void BuildHintTexture() {
     }
     SDL_DestroySurface(image);
   }
+}
+
+static void CopySurfacePalette(SDL_Surface *src, SDL_Surface *dst) {
+  SDL_Palette *src_pal;
+  SDL_Palette *dst_pal;
+  int ncolors;
+
+  if (!src || !dst)
+    return;
+
+  src_pal = SDL_GetSurfacePalette(src);
+  dst_pal = SDL_GetSurfacePalette(dst);
+  if (!src_pal || !dst_pal)
+    return;
+
+  ncolors =
+      src_pal->ncolors < dst_pal->ncolors ? src_pal->ncolors : dst_pal->ncolors;
+  if (ncolors > 0)
+    SDL_SetPaletteColors(dst_pal, src_pal->colors, 0, ncolors);
+}
+
+static void EnsureSurfacePalette(SDL_Surface *surface) {
+  if (SDL_GetSurfacePalette(surface) == NULL) {
+    SDL_Palette *pal = SDL_CreatePalette(256);
+    if (pal) {
+      SDL_SetSurfacePalette(surface, pal);
+      SDL_DestroyPalette(pal); // Surface keeps a reference
+    }
+  }
+}
+
+void VL_SyncSurfacePalettes(void) {
+  CopySurfacePalette(sdl_surface, unstretch_sdl_surface);
 }
 
 void GraphicsMode(void) {
@@ -465,6 +500,9 @@ void GraphicsMode(void) {
   if (sdl_surface == NULL) {
     Error("Could not create surface: %s\n", SDL_GetError());
   }
+
+  EnsureSurfacePalette(sdl_surface);
+
   sdl_surface32 = SDL_CreateSurface(iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT,
                                     SDL_PIXELFORMAT_ARGB8888);
   if (sdl_surface32 == NULL) {
@@ -795,8 +833,6 @@ void XFlipPage(void) {
 #endif
 }
 
-#endif
-
 void EnableScreenStretch(void) {
   if (iGLOBAL_SCREENWIDTH <= 320 || StretchScreen)
     return;
@@ -806,7 +842,13 @@ void EnableScreenStretch(void) {
        places which crashes then */
     unstretch_sdl_surface = SDL_CreateSurface(
         iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT, SDL_PIXELFORMAT_INDEX8);
+    if (!unstretch_sdl_surface)
+      Error("UNSTRETCH FAIL\n");
+
+    EnsureSurfacePalette(unstretch_sdl_surface);
   }
+
+  VL_SyncSurfacePalettes();
 
   displayofs = (byte *)unstretch_sdl_surface->pixels +
                (displayofs - (byte *)sdl_surface->pixels);
@@ -905,5 +947,4 @@ void DrawCenterAim() {
   }
 }
 // bna function added end
-
-// bna section -------------------------------------------
+#endif

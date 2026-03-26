@@ -88,6 +88,7 @@ static unsigned char egargb[48]={ 0x00,0x00,0x00,
 
 extern const byte * ROTT_ERR;
 extern SDL_Surface *sdl_surface;
+extern void VL_SyncSurfacePalettes(void);
 #if (DEVELOPMENT == 1)
 int TotalStaticMemory=0;
 #endif
@@ -1318,6 +1319,27 @@ void SwapIntelShortArray(short *s, int num)
 ============================================================================
 */
 
+#ifndef DOS
+static int GetSurfacePaletteCount(void) {
+    SDL_Palette *palette = SDL_GetSurfacePalette(sdl_surface);
+    if (palette) {
+        int count = palette->ncolors;
+        if (count > 256)
+            count = 256;
+        return count;
+    }
+    return 0;
+}
+
+static void UpdateSurfacePalette(SDL_Color *cmap, int count) {
+    SDL_Palette *palette = SDL_GetSurfacePalette(sdl_surface);
+    if (palette) {
+        SDL_SetPaletteColors(palette, cmap, 0, count);
+        VL_SyncSurfacePalettes();
+    }
+}
+#endif
+
 /*
 ==============
 =
@@ -1371,17 +1393,20 @@ void SetaPalette (byte *pal)
 	for (i=0 ; i<768 ; i++)
 		OUTP (PEL_DATA, pal[i]>>2);
 #else
-   SDL_Palette *palette = SDL_GetSurfacePalette(sdl_surface);
-   if (palette) {
-       SDL_Color* cmap = palette->colors;
+   int count = GetSurfacePaletteCount();
+   if (count > 0) {
+       SDL_Color cmap[256];
        int i;
 
-       for (i = 0; i < palette->ncolors; i++)
+       for (i = 0; i < count; i++)
        {
            cmap[i].r = pal[i*3+0];
            cmap[i].g = pal[i*3+1];
            cmap[i].b = pal[i*3+2];
+           cmap[i].a = 255;
        }
+
+       UpdateSurfacePalette(cmap, count);
    }
 #endif
 }
@@ -1489,17 +1514,20 @@ void VL_FillPalette (int red, int green, int blue)
       OUTP (PEL_DATA,blue);
    }
 #else
-   SDL_Palette *palette = SDL_GetSurfacePalette(sdl_surface);
-   if (palette) {
-       SDL_Color* cmap = palette->colors;
+   int count = GetSurfacePaletteCount();
+   if (count > 0) {
+       SDL_Color cmap[256];
        int i;
 
-       for (i = 0; i < palette->ncolors; i++)
+       for (i = 0; i < count; i++)
        {
                cmap[i].r = red << 2;
                cmap[i].g = green << 2;
                cmap[i].b = blue << 2;
+               cmap[i].a = 255;
        }
+
+       UpdateSurfacePalette(cmap, count);
    }
 #endif
 }
@@ -1590,18 +1618,20 @@ void VL_SetPalette (byte *palette)
       OUTP (PEL_DATA, gammatable[(gammaindex<<6)+(*palette++)]);
       }
 #else
-   SDL_Palette *pal = SDL_GetSurfacePalette(sdl_surface);
-   if (pal) {
-       SDL_Color* cmap = pal->colors;
+   int count = GetSurfacePaletteCount();
+   if (count > 0) {
+       SDL_Color cmap[256];
        int i;
 
-       for (i = 0; i < pal->ncolors; i++)
+       for (i = 0; i < count; i++)
        {
            cmap[i].r = gammatable[(gammaindex<<6)+(*palette++)] << 2;
            cmap[i].g = gammatable[(gammaindex<<6)+(*palette++)] << 2;
            cmap[i].b = gammatable[(gammaindex<<6)+(*palette++)] << 2;
+           cmap[i].a = 255;
        }
 
+       UpdateSurfacePalette(cmap, count);
        XFlipPage();
    }
 #endif
