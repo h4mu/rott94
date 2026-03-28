@@ -46,7 +46,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #if USE_SDL
-#	include "SDL.h"
+#	include <SDL3/SDL.h>
 #endif
 
 //===============
@@ -58,7 +58,7 @@ typedef struct
 {
         char            name[8];
 #if USE_SDL
-        SDL_RWops*		handle;
+        SDL_IOStream*	handle;
 #else
         int             handle;
 #endif

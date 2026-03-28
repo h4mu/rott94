@@ -132,11 +132,11 @@ public class rott94Activity extends SDLActivity
     protected String[] getLibraries() {
         return new String[] {
                 "hidapi",
-                "SDL2",
-                // "SDL2_image",
-                 "SDL2_mixer",
-                // "SDL2_net",
-                // "SDL2_ttf",
+                "SDL3",
+                // "SDL3_image",
+                "SDL3_mixer",
+                // "SDL3_net",
+                // "SDL3_ttf",
                 "main"
         };
     }
