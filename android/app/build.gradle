@@ -9,8 +9,8 @@ android {
         versionCode 1
         versionName "1.0"
         externalNativeBuild {
-            ndkBuild {
-                arguments "APP_PLATFORM=android-14", "NDK_PROJECT_PATH=app"
+            cmake {
+                arguments "-DANDROID_PLATFORM=android-14"
             }
         }
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -25,8 +25,8 @@ android {
         jniLibs.srcDir 'libs'
     }
     externalNativeBuild {
-        ndkBuild {
-            path 'jni/Android.mk'
+        cmake {
+            path 'jni/CMakeLists.txt'
         }
     }
     lintOptions {
@@ -37,22 +37,22 @@ android {
         shareware {
             dimension "version"
             applicationIdSuffix ".shareware"
-            externalNativeBuild.ndkBuild {
-                arguments  "SHAREWARE=1", "SUPERROTT=0", "SITELICENSE=0"
+            externalNativeBuild.cmake {
+                arguments  "-DROTT_SHAREWARE=ON", "-DROTT_SUPERROTT=OFF", "-DROTT_SITELICENSE=OFF"
             }
         }
         superrott {
             dimension "version"
             applicationIdSuffix ".superrott"
-            externalNativeBuild.ndkBuild {
-                arguments  "SHAREWARE=0", "SUPERROTT=1", "SITELICENSE=0"
+            externalNativeBuild.cmake {
+                arguments  "-DROTT_SHAREWARE=OFF", "-DROTT_SUPERROTT=ON", "-DROTT_SITELICENSE=OFF"
             }
         }
         sitelicense {
             dimension "version"
             applicationIdSuffix ".sitelicense"
-            externalNativeBuild.ndkBuild {
-                arguments  "SHAREWARE=0", "SUPERROTT=0", "SITELICENSE=1"
+            externalNativeBuild.cmake {
+                arguments  "-DROTT_SHAREWARE=OFF", "-DROTT_SUPERROTT=OFF", "-DROTT_SITELICENSE=ON"
             }
         }
     }
