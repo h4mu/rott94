@@ -368,6 +368,7 @@ int SD_PlayIt ( int sndnum, int angle, int distance, int pitch )
 {
    int voice;
    byte * snd;
+   int size;
 
 #if (DEVELOPMENT == 1)
 #if (SOUNDTEST == 1)
@@ -394,15 +395,16 @@ int SD_PlayIt ( int sndnum, int angle, int distance, int pitch )
    sounds[sndnum].count++;
 
    snd=W_CacheLumpNum(SoundNumber(sndnum),PU_STATIC, CvtNull, 1);
+   size = W_LumpLength(SoundNumber(sndnum));
 
    if ( *snd == 'C' )
       {
-      voice = FX_PlayVOC3D( (char *)snd, pitch, angle, distance,
+      voice = FX_PlayVOC3D_ROTT( (char *)snd, size, pitch, angle, distance,
          sounds[sndnum].priority, (unsigned long) sndnum );
       }
    else
       {
-      voice = FX_PlayWAV3D( (char *)snd, pitch, angle, distance,
+      voice = FX_PlayWAV3D_ROTT( (char *)snd, size, pitch, angle, distance,
          sounds[sndnum].priority, (unsigned long) sndnum );
       }
 
