@@ -20,8 +20,16 @@ target_include_directories(audiolib PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
+if(WIN32)
+  target_compile_definitions(audiolib PRIVATE PLATFORM_WIN32=1)
+else()
+  target_compile_definitions(audiolib PRIVATE PLATFORM_UNIX=1)
+endif()
+
 target_compile_definitions(audiolib PRIVATE
-  PLATFORM_UNIX=1
+  $<$<CONFIG:Release>:NDEBUG>
+  $<$<CONFIG:MinSizeRel>:NDEBUG>
+  $<$<CONFIG:RelWithDebInfo>:NDEBUG>
 )
 
 target_link_libraries(audiolib PRIVATE

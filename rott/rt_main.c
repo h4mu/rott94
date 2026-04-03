@@ -2142,7 +2142,7 @@ fromloadedgame:
 		drawtime = GetFastTics() - atime;
 
       // Don't allow player to quit if entering message
-      canquit = !MSG.messageon;
+      canquit = !ModemMsg.messageon;
 
       PollKeyboard();
 
@@ -2242,7 +2242,7 @@ fromloadedgame:
 
       if ( BATTLEMODE )
          {
-         if ( MSG.messageon == false )
+         if ( ModemMsg.messageon == false )
             {
             CheckRemoteRidicule( LastScan );
             }
@@ -2452,30 +2452,30 @@ void PollKeyboard
       }
 #endif
 
-   if ( ( MSG.messageon == false ) && ( !quitactive ) )
+   if ( ( ModemMsg.messageon == false ) && ( !quitactive ) )
       {
       if ( ( Keyboard[ buttonscan[ bt_message ] ] ) && ( BATTLEMODE ) )
          {
          // Send message to all
-         MSG.messageon = true;
-         MSG.directed  = false;
-         MSG.inmenu    = false;
-         MSG.remoteridicule = -1;
-         MSG.towho     = MSG_DIRECTED_TO_ALL;
-         MSG.textnum   = AddMessage( "_", MSG_MODEM );
-         MSG.length    = 1;
+         ModemMsg.messageon = true;
+         ModemMsg.directed  = false;
+         ModemMsg.inmenu    = false;
+         ModemMsg.remoteridicule = -1;
+         ModemMsg.towho     = MSG_DIRECTED_TO_ALL;
+         ModemMsg.textnum   = AddMessage( "_", MSG_MODEM );
+         ModemMsg.length    = 1;
          DeletePriorityMessage( MSG_MACRO );
          }
       else if ( ( Keyboard[ buttonscan[ bt_directmsg ] ] ) && ( BATTLEMODE ) )
          {
          // Send directed message
-         MSG.messageon = true;
-         MSG.directed  = true;
-         MSG.inmenu    = false;
-         MSG.remoteridicule = -1;
-         MSG.towho     = 0;
-         MSG.textnum   = AddMessage( "_", MSG_MODEM );
-         MSG.length    = 1;
+         ModemMsg.messageon = true;
+         ModemMsg.directed  = true;
+         ModemMsg.inmenu    = false;
+         ModemMsg.remoteridicule = -1;
+         ModemMsg.towho     = 0;
+         ModemMsg.textnum   = AddMessage( "_", MSG_MODEM );
+         ModemMsg.length    = 1;
          DeletePriorityMessage( MSG_MACRO );
          }
       if ( buttonpoll[ bt_map ] )

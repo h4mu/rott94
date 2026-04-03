@@ -130,7 +130,18 @@ target_include_directories(rott PRIVATE
 
 target_compile_definitions(rott PRIVATE
   USE_SDL=1
-  PLATFORM_UNIX=1
+)
+
+if(WIN32)
+  target_compile_definitions(rott PRIVATE PLATFORM_WIN32=1)
+else()
+  target_compile_definitions(rott PRIVATE PLATFORM_UNIX=1)
+endif()
+
+target_compile_definitions(rott PRIVATE
+  $<$<CONFIG:Release>:NDEBUG>
+  $<$<CONFIG:MinSizeRel>:NDEBUG>
+  $<$<CONFIG:RelWithDebInfo>:NDEBUG>
 )
 
 set(_rott_shareware 0)

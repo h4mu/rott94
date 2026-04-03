@@ -293,7 +293,6 @@ char *FX_ErrorString( int ErrorNumber )
             return("Unknown error.");
     } // switch
 
-    assert(0);    // shouldn't hit this point.
     return(NULL);
 } // FX_ErrorString
 
@@ -1096,7 +1095,6 @@ char *MUSIC_ErrorString(int ErrorNumber)
             return("Unknown error.");
     } // switch
 
-    assert(0);    // shouldn't hit this point.
     return(NULL);
 } // MUSIC_ErrorString
 
