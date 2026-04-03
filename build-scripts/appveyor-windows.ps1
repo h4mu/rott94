@@ -109,6 +109,79 @@ function Initialize-VisualStudioEnvironment {
     }
 }
 
+function Get-BuildVariants {
+    param(
+        [string]$RequestedBuildType
+    )
+
+    switch ($RequestedBuildType) {
+        'Shareware' {
+            return @(
+                [PSCustomObject]@{
+                    Name = 'shareware'
+                    Label = 'Shareware'
+                    Shareware = 'ON'
+                    SuperROTT = 'OFF'
+                    SiteLicense = 'OFF'
+                    DefaultSuffix = '-huntbgin'
+                }
+            )
+        }
+        'SuperROTT' {
+            return @(
+                [PSCustomObject]@{
+                    Name = 'superrott'
+                    Label = 'SuperROTT'
+                    Shareware = 'OFF'
+                    SuperROTT = 'ON'
+                    SiteLicense = 'OFF'
+                    DefaultSuffix = '-rottcd'
+                }
+            )
+        }
+        'SiteLicense' {
+            return @(
+                [PSCustomObject]@{
+                    Name = 'sitelicense'
+                    Label = 'SiteLicense'
+                    Shareware = 'OFF'
+                    SuperROTT = 'OFF'
+                    SiteLicense = 'ON'
+                    DefaultSuffix = '-sitelicense'
+                }
+            )
+        }
+        'Full' {
+            return @(
+                [PSCustomObject]@{
+                    Name = 'shareware'
+                    Label = 'Shareware'
+                    Shareware = 'ON'
+                    SuperROTT = 'OFF'
+                    SiteLicense = 'OFF'
+                    DefaultSuffix = '-huntbgin'
+                }
+                [PSCustomObject]@{
+                    Name = 'superrott'
+                    Label = 'SuperROTT'
+                    Shareware = 'OFF'
+                    SuperROTT = 'ON'
+                    SiteLicense = 'OFF'
+                    DefaultSuffix = '-rottcd'
+                }
+                [PSCustomObject]@{
+                    Name = 'sitelicense'
+                    Label = 'SiteLicense'
+                    Shareware = 'OFF'
+                    SuperROTT = 'OFF'
+                    SiteLicense = 'ON'
+                    DefaultSuffix = '-sitelicense'
+                }
+            )
+        }
+    }
+}
+
 $SourceDirResolved = Resolve-PathRelativeTo -Path $SourceDir -BasePath $ProjectRoot
 $BuildDirResolved  = Resolve-PathRelativeTo -Path $BuildDir  -BasePath $SourceDirResolved
 $OutputDirResolved = Resolve-PathRelativeTo -Path $OutputDir -BasePath $ProjectRoot
@@ -156,99 +229,72 @@ if ($CleanBuild) {
 New-Item -ItemType Directory -Force -Path $BuildDirResolved | Out-Null
 New-Item -ItemType Directory -Force -Path $OutputDirResolved | Out-Null
 
-# Configure
-Write-Host "Running CMake configure..." -ForegroundColor Green
+# Configure, build, and collect each requested variant.
+$buildVariants = Get-BuildVariants -RequestedBuildType $BuildType
 
-$configureArgs = @(
-    "-A", $Platform,
-    "-DCMAKE_BUILD_TYPE=$Configuration"
-)
-
-switch ($BuildType) {
-    'Shareware' {
-        $configureArgs += @("-DROTT_SHAREWARE=ON", "-DROTT_SUPERROTT=OFF", "-DROTT_SITELICENSE=OFF")
-        if (-not $Suffix) { $Suffix = "-huntbgin" }
-    }
-    'SuperROTT' {
-        $configureArgs += @("-DROTT_SHAREWARE=OFF", "-DROTT_SUPERROTT=ON", "-DROTT_SITELICENSE=OFF")
-        if (-not $Suffix) { $Suffix = "-rottcd" }
-    }
-    'SiteLicense' {
-        $configureArgs += @("-DROTT_SHAREWARE=OFF", "-DROTT_SUPERROTT=OFF", "-DROTT_SITELICENSE=ON")
-        if (-not $Suffix) { $Suffix = "-sitelicense" }
-    }
-    'Full' {
-        $configureArgs += @("-DROTT_SHAREWARE=OFF", "-DROTT_SUPERROTT=OFF", "-DROTT_SITELICENSE=OFF")
-        if (-not $Suffix) { $Suffix = "-darkwar" }
-    }
-}
-
-if ($Suffix) {
-    $configureArgs += "-DROTT_SUFFIX=$Suffix"
-}
-
-if ($CMakeVersion -lt [version]'3.13.0') {
+foreach ($variant in $buildVariants) {
+    $variantSuffix = if ($buildVariants.Count -gt 1) { $variant.DefaultSuffix } elseif ($Suffix) { $Suffix } else { $variant.DefaultSuffix }
     $configureArgs = @(
-        "-G", "NMake Makefiles",
-        "-DCMAKE_BUILD_TYPE=$Configuration"
+        "-DCMAKE_BUILD_TYPE=$Configuration",
+        "-DROTT_SHAREWARE=$($variant.Shareware)",
+        "-DROTT_SUPERROTT=$($variant.SuperROTT)",
+        "-DROTT_SITELICENSE=$($variant.SiteLicense)"
     )
-
-    switch ($BuildType) {
-        'Shareware' {
-            $configureArgs += @("-DROTT_SHAREWARE=ON", "-DROTT_SUPERROTT=OFF", "-DROTT_SITELICENSE=OFF")
-        }
-        'SuperROTT' {
-            $configureArgs += @("-DROTT_SHAREWARE=OFF", "-DROTT_SUPERROTT=ON", "-DROTT_SITELICENSE=OFF")
-        }
-        'SiteLicense' {
-            $configureArgs += @("-DROTT_SHAREWARE=OFF", "-DROTT_SUPERROTT=OFF", "-DROTT_SITELICENSE=ON")
-        }
-        'Full' {
-            $configureArgs += @("-DROTT_SHAREWARE=OFF", "-DROTT_SUPERROTT=OFF", "-DROTT_SITELICENSE=OFF")
-        }
+    if ($variantSuffix) {
+        $configureArgs += "-DROTT_SUFFIX=$variantSuffix"
     }
 
-    if ($Suffix) {
-        $configureArgs += "-DROTT_SUFFIX=$Suffix"
-    }
+    if ($CMakeVersion -lt [version]'3.13.0') {
+        $configureArgs = @(
+            "-G", "NMake Makefiles",
+            "-DCMAKE_BUILD_TYPE=$Configuration",
+            "-DROTT_SHAREWARE=$($variant.Shareware)",
+            "-DROTT_SUPERROTT=$($variant.SuperROTT)",
+            "-DROTT_SITELICENSE=$($variant.SiteLicense)"
+        )
+        if ($variantSuffix) {
+            $configureArgs += "-DROTT_SUFFIX=$variantSuffix"
+        }
 
-    Write-Host "cmake $SourceDirResolved -G NMake Makefiles $($configureArgs -join ' ')" -ForegroundColor Gray
-    Push-Location $BuildDirResolved
-    try {
-        & cmake $SourceDirResolved @configureArgs
+        Write-Host "Configuring $($variant.Label) variant..." -ForegroundColor Green
+        Write-Host "cmake $SourceDirResolved -G NMake Makefiles $($configureArgs -join ' ')" -ForegroundColor Gray
+        Push-Location $BuildDirResolved
+        try {
+            & cmake $SourceDirResolved @configureArgs
+            if ($LASTEXITCODE -ne 0) {
+                throw "CMake configuration failed with exit code $LASTEXITCODE"
+            }
+        } finally {
+            Pop-Location
+        }
+    } else {
+        $modernConfigureArgs = @(
+            "-S", $SourceDirResolved,
+            "-B", $BuildDirResolved,
+            "-G", "Visual Studio 15 2017",
+            "-A", $Platform
+        ) + $configureArgs
+
+        Write-Host "Configuring $($variant.Label) variant..." -ForegroundColor Green
+        Write-Host "cmake $($modernConfigureArgs -join ' ')" -ForegroundColor Gray
+
+        & cmake @modernConfigureArgs
+
         if ($LASTEXITCODE -ne 0) {
             throw "CMake configuration failed with exit code $LASTEXITCODE"
         }
-    } finally {
-        Pop-Location
     }
-} else {
-    $modernConfigureArgs = @(
-        "-S", $SourceDirResolved,
-        "-B", $BuildDirResolved,
-        "-G", "Visual Studio 15 2017"
-    ) + $configureArgs
 
-    Write-Host "cmake $($modernConfigureArgs -join ' ')" -ForegroundColor Gray
-
-    & cmake @modernConfigureArgs
+    Write-Host "Building $($variant.Label) variant..." -ForegroundColor Green
+    & cmake --build $BuildDirResolved --config $Configuration --target rott
 
     if ($LASTEXITCODE -ne 0) {
-        throw "CMake configuration failed with exit code $LASTEXITCODE"
+        throw "CMake build failed with exit code $LASTEXITCODE"
     }
+
+    Write-Host "Copying $($variant.Label) binaries..." -ForegroundColor Green
+    Get-ChildItem $BuildDirResolved -Recurse -Filter 'rott*.exe' | Copy-Item -Destination $OutputDirResolved -Force
+    Get-ChildItem $BuildDirResolved -Recurse -Filter 'SDL3*.dll' | Copy-Item -Destination $OutputDirResolved -Force
 }
-
-# Build
-Write-Host "Building project..." -ForegroundColor Green
-& cmake --build $BuildDirResolved --config $Configuration --target rott
-
-if ($LASTEXITCODE -ne 0) {
-    throw "CMake build failed with exit code $LASTEXITCODE"
-}
-
-# Copy output
-Write-Host "Copying binaries..." -ForegroundColor Green
-Get-ChildItem $BuildDirResolved -Recurse -Filter 'rott*.exe' | Copy-Item -Destination $OutputDirResolved -Force
-Get-ChildItem $BuildDirResolved -Recurse -Filter 'SDL3*.dll' | Copy-Item -Destination $OutputDirResolved -Force
 
 Write-Host "Build completed successfully!" -ForegroundColor Green
