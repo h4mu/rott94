@@ -193,7 +193,7 @@ char CodeName[MAXCODENAMELENGTH];
 void ReadScores (void)
 {
 #if USE_SDL
-   SDL_RWops* file;
+   SDL_IOStream* file;
 #else
    int file;
 #endif
@@ -205,7 +205,7 @@ void ReadScores (void)
       file = SafeOpenRead (filename);
       SafeRead (file, &Scores, sizeof (Scores));
 #if USE_SDL
-      SDL_RWclose(file);
+      SDL_CloseIO(file);
 #else
       close(file);
 #endif
@@ -1114,7 +1114,7 @@ void CheckVendor (void)
 //******************************************************************************
 
 #if USE_SDL
-void WriteParameter (SDL_RWops* file, const char * s1, int val)
+void WriteParameter (SDL_IOStream* file, const char * s1, int val)
 #else
 void WriteParameter (int file, const char * s1, int val)
 #endif
@@ -1144,7 +1144,7 @@ void WriteParameter (int file, const char * s1, int val)
 //
 //******************************************************************************
 #if USE_SDL
-void WriteParameterHex (SDL_RWops* file, const char * s1, int val)
+void WriteParameterHex (SDL_IOStream* file, const char * s1, int val)
 #else
 void WriteParameterHex (int file, const char * s1, int val)
 #endif
@@ -1180,7 +1180,7 @@ void WriteParameterHex (int file, const char * s1, int val)
 void WriteScores (void)
 {
 #if USE_SDL
-   SDL_RWops* file;
+   SDL_IOStream* file;
 #else
    int file;
 #endif
@@ -1190,7 +1190,7 @@ void WriteScores (void)
    file=SafeOpenWrite( filename );
    SafeWrite (file, &Scores, sizeof (Scores));
 #if USE_SDL
-   SDL_RWclose(file);
+   SDL_CloseIO(file);
 #else
    close(file);
 #endif
@@ -1210,7 +1210,7 @@ void WriteBattleConfig
 
    {
 #if USE_SDL
-   SDL_RWops* file;
+   SDL_IOStream* file;
 #else
    int  file;
 #endif
@@ -1221,7 +1221,7 @@ void WriteBattleConfig
    // Write Battle File
    GetPathFromEnvironment( filename, ApogeePath, BattleName );
 #if USE_SDL
-   file = SDL_RWFromFile(filename, "w+");
+   file = SDL_IOFromFile(filename, "w+");
 
    if ( file == NULL )
       {
@@ -1563,7 +1563,7 @@ void WriteBattleConfig
       }
 
 #if USE_SDL
-   SDL_RWclose(file);
+   SDL_CloseIO(file);
 #else
    close( file );
 #endif
@@ -1584,7 +1584,7 @@ void WriteSoundConfig
 
    {
 #if USE_SDL
-   SDL_RWops* file;
+   SDL_IOStream* file;
 #else
    int file;
 #endif
@@ -1597,7 +1597,7 @@ void WriteSoundConfig
 
    GetPathFromEnvironment( filename, ApogeePath, SoundName );
 #if USE_SDL
-   file = SDL_RWFromFile ( filename, "w+");
+   file = SDL_IOFromFile ( filename, "w+");
 
    if (file == NULL)
       Error ("Error opening %s: %s", filename, SDL_GetError());
@@ -1737,7 +1737,7 @@ void WriteSoundConfig
 #endif
 
 #if USE_SDL
-   SDL_RWclose(file);
+   SDL_CloseIO(file);
 #else
    close (file);
 #endif
@@ -1753,7 +1753,7 @@ void WriteSoundConfig
 void WriteConfig (void)
 {
 #if USE_SDL
-   SDL_RWops* file;
+   SDL_IOStream* file;
 #else
    int file;
 #endif
@@ -1781,7 +1781,7 @@ void WriteConfig (void)
 
    GetPathFromEnvironment( filename, ApogeePath, ConfigName );
 #if USE_SDL
-   file = SDL_RWFromFile( filename,"w+");
+   file = SDL_IOFromFile( filename,"w+");
 
    if (file == NULL)
       Error ("Error opening %s: %s",filename,SDL_GetError());
@@ -2104,7 +2104,7 @@ void WriteConfig (void)
    SafeWriteString(file,"\n");
 
 #if USE_SDL
-   SDL_RWclose(file);
+   SDL_CloseIO(file);
 #else
    close (file);
 #endif
