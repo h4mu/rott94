@@ -1373,6 +1373,7 @@ static int music_initialized = 0;
 static int music_context = 0;
 static int music_loopflag = MUSIC_PlayOnce;
 static char *music_songdata = NULL;
+static int music_songsize = 0;
 static MIX_Audio *music_audio = NULL;
 
 int MUSIC_Init(int SoundCard, int Address)
@@ -1474,8 +1475,8 @@ void MUSIC_Continue(void)
 
     if (MIX_TrackPaused(music_track))
         MIX_ResumeTrack(music_track);
-    else if (music_songdata)
-        MUSIC_PlaySong(music_songdata, MUSIC_PlayOnce);
+    else if (music_songdata && (music_songsize > 0))
+        MUSIC_PlaySongROTT((unsigned char *)music_songdata, music_songsize, music_loopflag);
 } // MUSIC_Continue
 
 
@@ -1502,6 +1503,7 @@ int MUSIC_StopSong(void)
         MIX_DestroyAudio(music_audio);
 
     music_songdata = NULL;
+    music_songsize = 0;
     music_audio = NULL;
     return(MUSIC_Ok);
 } // MUSIC_StopSong
@@ -1535,23 +1537,89 @@ int MUSIC_PlaySong(unsigned char *song, int loopflag)
 // ROTT Special - SBF
 int MUSIC_PlaySongROTT(unsigned char *song, int size, int loopflag)
 {
+    SDL_IOStream *io = NULL;
+    SDL_PropertiesID loadprops = 0;
+    const char *soundfont = NULL;
+    const char *timidity_cfg = NULL;
+    const bool have_default_timidity_cfg = (access("timidity.cfg", 0) == 0) || (access("C:\\TIMIDITY\\TIMIDITY.CFG", 0) == 0);
+
+    musdebug("MUSIC_PlaySongROTT: size=%d loop=%d", size, loopflag);
     MUSIC_StopSong();
 
     if ((sdl_mixer == NULL) || (music_track == NULL))
     {
         setErrorMessage("Music system is unavailable.");
         music_songdata = NULL;
+        music_songsize = 0;
         return MUSIC_Error;
     }
 
     music_songdata = (char *)song;
+    music_songsize = size;
+    music_loopflag = loopflag;
 
-    // finally, we can load it with SDL_mixer
-    music_audio = MIX_LoadAudioNoCopy(sdl_mixer, song, size, false);
-    if (music_audio == NULL) {
+    soundfont = SDL_getenv("ROTT_SOUNDFONT");
+    if ((soundfont == NULL) || (*soundfont == '\0'))
+        soundfont = SDL_getenv("SDL_SOUNDFONTS");
+    timidity_cfg = SDL_getenv("TIMIDITY_CFG");
+
+    if (((soundfont == NULL) || (*soundfont == '\0')) &&
+        (((timidity_cfg == NULL) || (*timidity_cfg == '\0')) && !have_default_timidity_cfg))
+    {
+        setErrorMessage("No MIDI synth data found. Set TIMIDITY_CFG or ROTT_SOUNDFONT.");
         music_songdata = NULL;
+        music_songsize = 0;
         return MUSIC_Error;
     }
+
+    io = SDL_IOFromConstMem(song, (size_t)size);
+    if (io == NULL)
+    {
+        setErrorMessage(SDL_GetError());
+        music_songdata = NULL;
+        music_songsize = 0;
+        return MUSIC_Error;
+    }
+
+    // MIDI/music data needs to be decoded as a file format, not treated as raw audio.
+    // Predecode it up front so playback uses plain PCM instead of invoking the MIDI
+    // decoder on the mixer thread.
+    musdebug("MUSIC_PlaySongROTT: loading MIDI through MIX_LoadAudioWithProperties");
+    loadprops = SDL_CreateProperties();
+    if (loadprops == 0)
+    {
+        setErrorMessage(SDL_GetError());
+        SDL_CloseIO(io);
+        music_songdata = NULL;
+        music_songsize = 0;
+        return MUSIC_Error;
+    }
+    SDL_SetPointerProperty(loadprops, MIX_PROP_AUDIO_LOAD_PREFERRED_MIXER_POINTER, sdl_mixer);
+    SDL_SetPointerProperty(loadprops, MIX_PROP_AUDIO_LOAD_IOSTREAM_POINTER, io);
+    SDL_SetBooleanProperty(loadprops, MIX_PROP_AUDIO_LOAD_PREDECODE_BOOLEAN, true);
+    SDL_SetBooleanProperty(loadprops, MIX_PROP_AUDIO_LOAD_CLOSEIO_BOOLEAN, true);
+
+    if ((soundfont != NULL) && (*soundfont != '\0'))
+    {
+        musdebug("MUSIC_PlaySongROTT: requesting FLUIDSYNTH with soundfont [%s]", soundfont);
+        SDL_SetStringProperty(loadprops, MIX_PROP_AUDIO_DECODER_STRING, "FLUIDSYNTH");
+        SDL_SetStringProperty(loadprops, "SDL_mixer.decoder.fluidsynth.soundfont_path", soundfont);
+    }
+    else
+    {
+        musdebug("MUSIC_PlaySongROTT: requesting TIMIDITY decoder");
+        SDL_SetStringProperty(loadprops, MIX_PROP_AUDIO_DECODER_STRING, "TIMIDITY");
+    }
+
+    music_audio = MIX_LoadAudioWithProperties(loadprops);
+    SDL_DestroyProperties(loadprops);
+    if (music_audio == NULL) {
+        setErrorMessage(SDL_GetError());
+        music_songdata = NULL;
+        music_songsize = 0;
+        return MUSIC_Error;
+    }
+    musdebug("MUSIC_PlaySongROTT: audio loaded");
     
     SDL_PropertiesID props = SDL_CreateProperties();
     if (props == 0)
@@ -1560,6 +1628,7 @@ int MUSIC_PlaySongROTT(unsigned char *song, int size, int loopflag)
         MIX_DestroyAudio(music_audio);
         music_audio = NULL;
         music_songdata = NULL;
+        music_songsize = 0;
         return MUSIC_Error;
     }
     SDL_SetNumberProperty(props, MIX_PROP_PLAY_LOOPS_NUMBER, (loopflag == MUSIC_PlayOnce) ? 0 : -1);
@@ -1570,8 +1639,10 @@ int MUSIC_PlaySongROTT(unsigned char *song, int size, int loopflag)
         MIX_DestroyAudio(music_audio);
         music_audio = NULL;
         music_songdata = NULL;
+        music_songsize = 0;
         return MUSIC_Error;
     }
+    musdebug("MUSIC_PlaySongROTT: playback started");
     SDL_DestroyProperties(props);
 
     return(MUSIC_Ok);
