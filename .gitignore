@@ -204,3 +204,4 @@ android/libs
 **/captures
 .externalNativeBuild
 /Windows/.vs/
+/out
