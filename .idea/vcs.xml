@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/android/app/jni/SDL" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/android/app/jni/SDL_mixer" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/android/app/jni/SDL_mixer/external/flac" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/android/app/jni/SDL_mixer/external/libgme" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/android/app/jni/SDL_mixer/external/libxmp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/android/app/jni/SDL_mixer/external/mpg123" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/android/app/jni/SDL_mixer/external/ogg" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/android/app/jni/SDL_mixer/external/opus" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/android/app/jni/SDL_mixer/external/opusfile" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/android/app/jni/SDL_mixer/external/tremor" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/android/app/jni/SDL_mixer/external/vorbis" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/android/app/jni/SDL_mixer/external/wavpack" vcs="Git" />
+  </component>
+</project>
