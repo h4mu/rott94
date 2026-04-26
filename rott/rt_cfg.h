@@ -20,6 +20,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef _rt_cfg_public
 #define _rt_cfg_public
 
+#include "rt_def.h"
+
+//****************************************************************************
+
 //****************************************************************************
 //
 // Public header for RT_CFG.C
@@ -107,8 +111,8 @@ void ReadInt (const char * s1, int * val);
 void ReadBoolean (const char * s1, bool * val);
 void ReadConfig (void);
 #if USE_SDL
-#include "SDL.h"
-void WriteParameter (SDL_RWops* file, const char * s1, int val);
+#include <SDL3/SDL.h>
+void WriteParameter (SDL_IOStream* file, const char * s1, int val);
 #else
 void WriteParameter (int file, const char * s1, int val);
 #endif

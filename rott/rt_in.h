@@ -166,7 +166,7 @@ extern word Joy_x,
 
 extern int LastLetter;
 extern char LetterQueue[MAXLETTERS];
-extern ModemMessage MSG;
+extern ModemMessage ModemMsg;
 
 extern const char ScanChars[128];
 
