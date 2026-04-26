@@ -180,3 +180,34 @@ endif()
 set_target_properties(rott PROPERTIES
   OUTPUT_NAME "rott${ROTT_SUFFIX}"
 )
+
+if(UNIX AND NOT APPLE)
+  set_target_properties(rott PROPERTIES
+    INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}"
+    INSTALL_RPATH_USE_LINK_PATH TRUE
+  )
+endif()
+
+install(TARGETS rott
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+if(UNIX AND NOT APPLE)
+  install(CODE "
+    set(_rott_exe \"\${CMAKE_INSTALL_PREFIX}/\${CMAKE_INSTALL_BINDIR}/rott${ROTT_SUFFIX}\")
+    file(GET_RUNTIME_DEPENDENCIES
+      EXECUTABLES \"\${_rott_exe}\"
+      RESOLVED_DEPENDENCIES_VAR _rott_deps
+      UNRESOLVED_DEPENDENCIES_VAR _rott_unresolved
+    )
+    foreach(_dep IN LISTS _rott_deps)
+      if(_dep MATCHES \"libSDL3.*\" OR _dep MATCHES \"libSDL3_mixer.*\")
+        file(INSTALL
+          DESTINATION \"\${CMAKE_INSTALL_PREFIX}/\${CMAKE_INSTALL_LIBDIR}\"
+          TYPE SHARED_LIBRARY
+          FILES \"\${_dep}\"
+        )
+      endif()
+    endforeach()
+  ")
+endif()
