@@ -64,8 +64,7 @@ add_subdirectory("${SDL3_MIXER_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/_deps/S
 
 add_subdirectory(audiolib)
 
-add_executable(rott)
-target_sources(rott PRIVATE
+set(ROTT_CORE_SOURCES
   byteordr.c
   cin_actr.c
   cin_efct.c
@@ -74,6 +73,7 @@ target_sources(rott PRIVATE
   cin_main.c
   cin_util.c
   dosutil.c
+  dukemusc.c
   engine.c
   fx_man.c
   isr.c
@@ -112,36 +112,15 @@ target_sources(rott PRIVATE
   rt_vid.c
   rt_view.c
   scriplib.c
+  w_wad.c
   watcom.c
   winrott.c
-  w_wad.c
   z_zone.c
 )
 
-target_compile_features(rott PRIVATE c_std_99)
-if(NOT MSVC)
-  target_compile_options(rott PRIVATE -Wall)
-endif()
-
-target_include_directories(rott PRIVATE
-  "${CMAKE_CURRENT_SOURCE_DIR}"
-  "${CMAKE_CURRENT_SOURCE_DIR}/audiolib"
-)
-
-target_compile_definitions(rott PRIVATE
-  USE_SDL=1
-)
-
-if(WIN32)
-  target_compile_definitions(rott PRIVATE PLATFORM_WIN32=1)
-else()
-  target_compile_definitions(rott PRIVATE PLATFORM_UNIX=1)
-endif()
-
-target_compile_definitions(rott PRIVATE
-  $<$<CONFIG:Release>:NDEBUG>
-  $<$<CONFIG:MinSizeRel>:NDEBUG>
-  $<$<CONFIG:RelWithDebInfo>:NDEBUG>
+set(_rott_android_bridge_sources
+  "${CMAKE_CURRENT_SOURCE_DIR}/../android/app/jni/src/io_github_h4mu_rott94_ContentPrepareActivity.c"
+  "${SDL3_SOURCE_DIR}/src/main/android/SDL_android_main.c"
 )
 
 set(_rott_shareware 0)
@@ -155,59 +134,132 @@ elseif(ROTT_SITELICENSE)
   set(_rott_sitelicense 1)
 endif()
 
-target_compile_definitions(rott PRIVATE
-  SHAREWARE=${_rott_shareware}
-  SUPERROTT=${_rott_superrott}
-  SITELICENSE=${_rott_sitelicense}
-)
+function(rott_apply_common_settings target_name)
+  target_compile_features("${target_name}" PRIVATE c_std_99)
 
-if(ROTT_DATADIR)
-  file(TO_CMAKE_PATH "${ROTT_DATADIR}" _rott_datadir)
-  string(REGEX REPLACE "/+$" "" _rott_datadir "${_rott_datadir}")
-  target_compile_definitions(rott PRIVATE DATADIR=\"${_rott_datadir}/\")
-endif()
+  if(NOT MSVC)
+    target_compile_options("${target_name}" PRIVATE -Wall)
+  endif()
 
-target_link_libraries(rott PRIVATE
+  target_compile_definitions("${target_name}" PRIVATE
+    USE_SDL=1
+    SHAREWARE=${_rott_shareware}
+    SUPERROTT=${_rott_superrott}
+    SITELICENSE=${_rott_sitelicense}
+    $<$<CONFIG:Release>:NDEBUG>
+    $<$<CONFIG:MinSizeRel>:NDEBUG>
+    $<$<CONFIG:RelWithDebInfo>:NDEBUG>
+  )
+
+  if(WIN32)
+    target_compile_definitions("${target_name}" PRIVATE PLATFORM_WIN32=1)
+  else()
+    target_compile_definitions("${target_name}" PRIVATE PLATFORM_UNIX=1)
+  endif()
+
+  if(ANDROID)
+    target_compile_definitions("${target_name}" PRIVATE
+      S_IREAD=S_IRUSR
+      S_IWRITE=S_IWUSR
+      S_IEXEC=S_IXUSR
+    )
+  endif()
+
+  target_include_directories("${target_name}" PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/audiolib"
+  )
+
+  if(ROTT_DATADIR)
+    file(TO_CMAKE_PATH "${ROTT_DATADIR}" _rott_datadir)
+    string(REGEX REPLACE "/+$" "" _rott_datadir "${_rott_datadir}")
+    target_compile_definitions("${target_name}" PRIVATE DATADIR=\"${_rott_datadir}/\")
+  endif()
+endfunction()
+
+add_library(rott_core STATIC)
+target_sources(rott_core PRIVATE ${ROTT_CORE_SOURCES})
+target_link_libraries(rott_core PRIVATE
   audiolib
   SDL3::SDL3
   SDL3_mixer::SDL3_mixer
 )
+rott_apply_common_settings(rott_core)
 
-if(NOT MSVC)
-  target_link_libraries(rott PRIVATE m)
-endif()
-
-set_target_properties(rott PROPERTIES
-  OUTPUT_NAME "rott${ROTT_SUFFIX}"
-)
-
-if(UNIX AND NOT APPLE)
-  set_target_properties(rott PROPERTIES
-    INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}"
-    INSTALL_RPATH_USE_LINK_PATH TRUE
+if(ANDROID)
+  add_library(main SHARED)
+  target_sources(main PRIVATE ${_rott_android_bridge_sources})
+  target_include_directories(main PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../android/app/jni/src"
   )
-endif()
+  target_link_libraries(main PRIVATE
+    rott_core
+    audiolib
+    SDL3::SDL3
+    SDL3_mixer::SDL3_mixer
+  )
 
-install(TARGETS rott
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+  if(TARGET hidapi)
+    target_link_libraries(main PRIVATE hidapi)
+  elseif(TARGET hidapi::hidapi)
+    target_link_libraries(main PRIVATE hidapi::hidapi)
+  endif()
 
-if(UNIX AND NOT APPLE)
-  install(CODE "
-    set(_rott_exe \"\${CMAKE_INSTALL_PREFIX}/\${CMAKE_INSTALL_BINDIR}/rott${ROTT_SUFFIX}\")
-    file(GET_RUNTIME_DEPENDENCIES
-      EXECUTABLES \"\${_rott_exe}\"
-      RESOLVED_DEPENDENCIES_VAR _rott_deps
-      UNRESOLVED_DEPENDENCIES_VAR _rott_unresolved
+  find_library(GLESV1_LIB GLESv1_CM)
+  find_library(GLESV2_LIB GLESv2)
+  find_library(LOG_LIB log)
+
+  target_link_libraries(main PRIVATE
+    ${GLESV1_LIB}
+    ${GLESV2_LIB}
+    ${LOG_LIB}
+  )
+  rott_apply_common_settings(main)
+else()
+  add_executable(rott)
+  target_link_libraries(rott PRIVATE
+    rott_core
+    audiolib
+    SDL3::SDL3
+    SDL3_mixer::SDL3_mixer
+  )
+
+  if(NOT MSVC)
+    target_link_libraries(rott PRIVATE m)
+  endif()
+
+  set_target_properties(rott PROPERTIES
+    OUTPUT_NAME "rott${ROTT_SUFFIX}"
+  )
+
+  if(UNIX AND NOT APPLE)
+    set_target_properties(rott PROPERTIES
+      INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}"
+      INSTALL_RPATH_USE_LINK_PATH TRUE
     )
-    foreach(_dep IN LISTS _rott_deps)
-      if(_dep MATCHES \"libSDL3.*\" OR _dep MATCHES \"libSDL3_mixer.*\")
-        file(INSTALL
-          DESTINATION \"\${CMAKE_INSTALL_PREFIX}/\${CMAKE_INSTALL_LIBDIR}\"
-          TYPE SHARED_LIBRARY
-          FILES \"\${_dep}\"
-        )
-      endif()
-    endforeach()
-  ")
+  endif()
+
+  install(TARGETS rott
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  )
+
+  if(UNIX AND NOT APPLE)
+    install(CODE "
+      set(_rott_exe \"\${CMAKE_INSTALL_PREFIX}/\${CMAKE_INSTALL_BINDIR}/rott${ROTT_SUFFIX}\")
+      file(GET_RUNTIME_DEPENDENCIES
+        EXECUTABLES \"\${_rott_exe}\"
+        RESOLVED_DEPENDENCIES_VAR _rott_deps
+        UNRESOLVED_DEPENDENCIES_VAR _rott_unresolved
+      )
+      foreach(_dep IN LISTS _rott_deps)
+        if(_dep MATCHES \"libSDL3.*\" OR _dep MATCHES \"libSDL3_mixer.*\")
+          file(INSTALL
+            DESTINATION \"\${CMAKE_INSTALL_PREFIX}/\${CMAKE_INSTALL_LIBDIR}\"
+            TYPE SHARED_LIBRARY
+            FILES \"\${_dep}\"
+          )
+        endif()
+      endforeach()
+    ")
+  endif()
 endif()
