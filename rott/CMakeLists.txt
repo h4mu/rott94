@@ -119,7 +119,7 @@ set(ROTT_CORE_SOURCES
 )
 
 set(_rott_android_bridge_sources
-  "${CMAKE_CURRENT_SOURCE_DIR}/../android/app/jni/src/io_github_h4mu_rott94_ContentPrepareActivity.c"
+  "${CMAKE_CURRENT_SOURCE_DIR}/android_main_stub.c"
 )
 
 set(_rott_shareware 0)
@@ -188,9 +188,6 @@ rott_apply_common_settings(rott_core)
 if(ANDROID)
   add_library(main SHARED)
   target_sources(main PRIVATE ${_rott_android_bridge_sources})
-  target_include_directories(main PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}/../android/app/jni/src"
-  )
   target_link_libraries(main PRIVATE
     rott_core
     audiolib
