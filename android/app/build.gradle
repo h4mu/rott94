@@ -42,6 +42,7 @@ android {
 
     sourceSets {
         main {
+            java.setSrcDirs([file('src/main/java'), file('jni/SDL/android-project/app/src/main/java')])
             jniLibs.srcDir 'libs'
         }
     }
