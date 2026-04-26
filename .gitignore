@@ -203,5 +203,6 @@ android/libs
 **/build
 **/captures
 .externalNativeBuild
+**/.cxx/
 /Windows/.vs/
 /out
