@@ -1,58 +1,76 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 29
+    namespace 'io.github.h4mu.rott94'
+    compileSdkVersion 35
+    ndkVersion "28.2.13676358"
+
     defaultConfig {
         applicationId "io.github.h4mu.rott94"
-        minSdkVersion 14
-        targetSdkVersion 29
+        minSdkVersion 21
+        targetSdkVersion 35
         versionCode 1
         versionName "1.0"
         externalNativeBuild {
             cmake {
-                arguments "-DANDROID_PLATFORM=android-14"
+                arguments "-DANDROID_PLATFORM=android-21"
+                abiFilters 'arm64-v8a'
             }
         }
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    sourceSets.main {
-        jniLibs.srcDir 'libs'
+
+    applicationVariants.all { variant ->
+        tasks["merge${variant.name.capitalize()}Assets"]
+            .dependsOn("externalNativeBuild${variant.name.capitalize()}")
     }
+
+    sourceSets {
+        main {
+            jniLibs.srcDir 'libs'
+        }
+    }
+
     externalNativeBuild {
         cmake {
             path '../../CMakeLists.txt'
         }
     }
-    lintOptions {
-        abortOnError false
+
+    lint {
+        abortOnError = false
     }
+
     flavorDimensions "version"
     productFlavors {
         shareware {
             dimension "version"
             applicationIdSuffix ".shareware"
+            buildConfigField "boolean", "SHAREWARE", "true"
             externalNativeBuild.cmake {
-                arguments  "-DROTT_SHAREWARE=ON", "-DROTT_SUPERROTT=OFF", "-DROTT_SITELICENSE=OFF"
+                arguments "-DROTT_SHAREWARE=ON", "-DROTT_SUPERROTT=OFF", "-DROTT_SITELICENSE=OFF"
             }
         }
         superrott {
             dimension "version"
             applicationIdSuffix ".superrott"
+            buildConfigField "boolean", "SHAREWARE", "false"
             externalNativeBuild.cmake {
-                arguments  "-DROTT_SHAREWARE=OFF", "-DROTT_SUPERROTT=ON", "-DROTT_SITELICENSE=OFF"
+                arguments "-DROTT_SHAREWARE=OFF", "-DROTT_SUPERROTT=ON", "-DROTT_SITELICENSE=OFF"
             }
         }
         sitelicense {
             dimension "version"
             applicationIdSuffix ".sitelicense"
+            buildConfigField "boolean", "SHAREWARE", "false"
             externalNativeBuild.cmake {
-                arguments  "-DROTT_SHAREWARE=OFF", "-DROTT_SUPERROTT=OFF", "-DROTT_SITELICENSE=ON"
+                arguments "-DROTT_SHAREWARE=OFF", "-DROTT_SUPERROTT=OFF", "-DROTT_SITELICENSE=ON"
             }
         }
     }
@@ -60,8 +78,5 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13.2'
 }

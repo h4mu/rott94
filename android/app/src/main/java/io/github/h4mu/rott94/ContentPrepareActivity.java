@@ -30,8 +30,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.Toast;
 
-import org.libsdl.app.SDL;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -51,10 +49,6 @@ import io.github.h4mu.rott94.util.SfxFilteredInputStream;
 public class ContentPrepareActivity extends Activity {
 	private static final String SHAREWARE_URL = "https://github.com/h4mu/rott94/releases/download/v0.8-alpha/1rott13.zip";
 	private static final int BUFFER_SIZE = 8192;
-
-	static {
-		SDL.loadLibrary("main");
-	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +56,7 @@ public class ContentPrepareActivity extends Activity {
 		if (isGameContentInstalled()) {
 			startActivity(new Intent(getIntent().getAction(), getIntent().getData(), this, rott94Activity.class));
 		} else {
-			if (isShareware()) {
+			if (BuildConfig.SHAREWARE) {
 				new AlertDialog
 				.Builder(this)
 				.setCancelable(true)
@@ -164,15 +158,13 @@ public class ContentPrepareActivity extends Activity {
 							new File(dir, filename).renameTo(new File(dir, upperCase));
 						}
 						return "REMOTE1.RTS".equals(upperCase)
-								|| (isShareware()
+								|| (BuildConfig.SHAREWARE
 										? "HUNTBGIN.RTL".equals(upperCase) || "HUNTBGIN.WAD".equals(upperCase)
 										: "DARKWAR.RTL".equals(upperCase) || "DARKWAR.WAD".equals(upperCase));
 					}
 
 				}).length >= 3;
 	}
-
-	private native boolean isShareware();
 
 	private File getContentFolder() {
 		File filesDir = getExternalFilesDir(null);
