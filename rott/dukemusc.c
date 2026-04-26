@@ -6,7 +6,6 @@
  * Written by Ryan C. Gordon. (icculus@clutteredmind.org)
  */
 
-#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -167,7 +166,7 @@ char *MUSIC_ErrorString(int ErrorNumber) {
     return ("Unknown error.");
   } // switch
 
-  assert(0); // shouldn't hit this point.
+  SDL_assert(0); // shouldn't hit this point.
   return (NULL);
 } // MUSIC_ErrorString
 

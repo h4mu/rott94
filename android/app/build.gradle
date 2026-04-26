@@ -26,6 +26,10 @@ android {
         }
     }
 
+    buildFeatures {
+        buildConfig true
+    }
+
     applicationVariants.all { variant ->
         tasks["merge${variant.name.capitalize()}Assets"]
             .dependsOn("externalNativeBuild${variant.name.capitalize()}")

@@ -41,6 +41,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #if USE_SDL
 /* Need to redefine main to SDL_main on some platforms... */
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+#include <SDL3/SDL_system.h>
 #endif
 
 #include "rt_actor.h"
@@ -851,10 +853,10 @@ void DataPath(char * path, char * filename)
 	wcstombs(tmp, GetDataBasePathWinRT(), sizeof(tmp));
 	const char * baseDir = tmp;
 #elif defined(__ANDROID__)
-	const char * baseDir = SDL_AndroidGetExternalStoragePath();
+	const char * baseDir = SDL_GetAndroidExternalStoragePath();
 	if (!baseDir)
 	{
-		baseDir =  SDL_AndroidGetInternalStoragePath();
+		baseDir =  SDL_GetAndroidInternalStoragePath();
 	}
 #else
 	const char * baseDir = "assets";

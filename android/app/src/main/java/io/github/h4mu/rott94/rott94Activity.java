@@ -22,7 +22,7 @@ package io.github.h4mu.rott94;
 import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.util.Log;
 
 import org.libsdl.app.SDLActivity;
@@ -30,24 +30,26 @@ import org.libsdl.app.SDLActivity;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 public class rott94Activity extends SDLActivity
 {
     private static final String TAG = "Rott94";
+    private static final int BUFFER_SIZE = 8192;
     private MediaPlayer mediaPlayer;
 
     @Override
     protected String[] getArguments() {
         List<String> arguments = new ArrayList<>();
-        File filesDir = getExternalFilesDir(null);
-        if (filesDir == null) {
-            filesDir = getFilesDir();
-        }
-        File cmdLine = new File(filesDir.getAbsolutePath() + File.separator + "arguments.txt");
+        File filesDir = getContentDirectory();
+        File cmdLine = new File(filesDir, "arguments.txt");
         if (cmdLine.canRead()) {
             try {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(cmdLine)));
@@ -59,39 +61,116 @@ public class rott94Activity extends SDLActivity
                 } finally {
                     reader.close();
                 }
-            } catch (java.io.IOException ignored) {
+            } catch (IOException ignored) {
             }
         }
+
         Uri data = getIntent().getData();
         if (data != null) {
-            String[] projection = { MediaStore.Images.Media.DATA };
-            Cursor cursor = getContentResolver().query(data, projection, null, null, null);
-            if (cursor != null) {
-                try {
-                    int column_index = cursor.getColumnIndex(projection[0]);
-                    if (column_index != -1 && cursor.moveToFirst()) {
-                        String path = cursor.getString(column_index);
-                        if (path != null && path.length() > 4) {
-                            if (path.endsWith(".WAD")) {
-                                arguments.add("FILE");
-                                arguments.add(path);
-                            }
-                            else if (path.endsWith(".RTL")) {
-                                arguments.add("FILERTL");
-                                arguments.add(path);
-                            }
-                            else if (path.endsWith(".RTC")) {
-                                arguments.add("FILERTC");
-                                arguments.add(path);
-                            }
-                        }
-                    }
-                } finally {
-                    cursor.close();
-                }
-            }
+            addIntentFileArgument(arguments, data);
         }
         return arguments.toArray(new String[0]);
+    }
+
+    private void addIntentFileArgument(List<String> arguments, Uri data) {
+        String displayName = getDisplayName(data);
+        if (displayName == null) {
+            displayName = data.getLastPathSegment();
+        }
+        if (displayName == null) {
+            return;
+        }
+
+        String upperCaseName = displayName.toUpperCase(Locale.ROOT);
+        String argumentName;
+        if (upperCaseName.endsWith(".WAD")) {
+            argumentName = "FILE";
+        } else if (upperCaseName.endsWith(".RTL")) {
+            argumentName = "FILERTL";
+        } else if (upperCaseName.endsWith(".RTC")) {
+            argumentName = "FILERTC";
+        } else {
+            return;
+        }
+
+        String path = resolveIntentFilePath(data, displayName);
+        if (path == null) {
+            return;
+        }
+
+        arguments.add(argumentName);
+        arguments.add(path);
+    }
+
+    private String resolveIntentFilePath(Uri data, String displayName) {
+        if ("file".equalsIgnoreCase(data.getScheme())) {
+            return data.getPath();
+        }
+
+        try {
+            return copyUriToImportCache(data, displayName).getAbsolutePath();
+        } catch (IOException exception) {
+            Log.w(TAG, "Could not import intent data", exception);
+            return null;
+        }
+    }
+
+    private File copyUriToImportCache(Uri data, String displayName) throws IOException {
+        File importDir = new File(getContentDirectory(), "imports");
+        if (!importDir.exists() && !importDir.mkdirs()) {
+            throw new IOException("Could not create import directory");
+        }
+
+        File outFile = new File(importDir, sanitizeFilename(displayName));
+        InputStream inputStream = getContentResolver().openInputStream(data);
+        if (inputStream == null) {
+            throw new IOException("Could not open URI stream");
+        }
+
+        try {
+            FileOutputStream outputStream = new FileOutputStream(outFile);
+            try {
+                byte[] buffer = new byte[BUFFER_SIZE];
+                for (int count; (count = inputStream.read(buffer)) != -1; ) {
+                    outputStream.write(buffer, 0, count);
+                }
+            } finally {
+                outputStream.close();
+            }
+        } finally {
+            inputStream.close();
+        }
+
+        return outFile;
+    }
+
+    private String getDisplayName(Uri data) {
+        Cursor cursor = getContentResolver().query(data, new String[] { OpenableColumns.DISPLAY_NAME }, null, null, null);
+        if (cursor == null) {
+            return null;
+        }
+
+        try {
+            int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+            if (nameIndex != -1 && cursor.moveToFirst()) {
+                return cursor.getString(nameIndex);
+            }
+        } finally {
+            cursor.close();
+        }
+        return null;
+    }
+
+    private String sanitizeFilename(String filename) {
+        return filename.replaceAll("[^A-Za-z0-9._-]", "_");
+    }
+
+    private File getContentDirectory() {
+        File filesDir = getExternalFilesDir(null);
+        if (filesDir == null) {
+            filesDir = getFilesDir();
+        }
+        return filesDir;
     }
 
     private void playMusic(String midiFilePath, boolean shouldLoop) {
@@ -133,10 +212,7 @@ public class rott94Activity extends SDLActivity
         return new String[] {
                 "hidapi",
                 "SDL3",
-                // "SDL3_image",
                 "SDL3_mixer",
-                // "SDL3_net",
-                // "SDL3_ttf",
                 "main"
         };
     }

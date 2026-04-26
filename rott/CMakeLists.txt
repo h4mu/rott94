@@ -120,7 +120,6 @@ set(ROTT_CORE_SOURCES
 
 set(_rott_android_bridge_sources
   "${CMAKE_CURRENT_SOURCE_DIR}/../android/app/jni/src/io_github_h4mu_rott94_ContentPrepareActivity.c"
-  "${SDL3_SOURCE_DIR}/src/main/android/SDL_android_main.c"
 )
 
 set(_rott_shareware 0)
