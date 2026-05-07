@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #include "modexlib.h"
+#include "hw_render/hw_main.h"
 #include <stdlib.h>
 #include <sys/stat.h>
 // MED
@@ -47,6 +48,7 @@ static void StretchMemPicture();
 bool StretchScreen = 0; // bn�++
 extern bool iG_aimCross;
 extern bool sdl_fullscreen;
+bool iG_RetroRenderer = false;
 extern int iG_X_center;
 extern int iG_Y_center;
 byte *iG_buf_center;
@@ -481,19 +483,38 @@ void GraphicsMode(void) {
   if (sdl_window == NULL) {
     Error("Could not open window: %s\n", SDL_GetError());
   }
-  sdl_renderer = SDL_CreateRenderer(sdl_window, NULL);
-  if (sdl_renderer == NULL) {
-    Error("Could not create renderer: %s\n", SDL_GetError());
-  }
-  SDL_SetRenderLogicalPresentation(sdl_renderer, iGLOBAL_SCREENWIDTH,
-                                   iGLOBAL_SCREENHEIGHT,
-                                   SDL_LOGICAL_PRESENTATION_LETTERBOX);
-  sdl_texture = SDL_CreateTexture(
-      sdl_renderer,
-      SDL_PIXELFORMAT_ARGB8888, // SDL_PIXELFORMAT_RGB565,
-      SDL_TEXTUREACCESS_STREAMING, iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT);
-  if (sdl_texture == NULL) {
-    Error("Texture error: %s\n", SDL_GetError());
+  if (iG_RetroRenderer) {
+    sdl_renderer = SDL_CreateRenderer(sdl_window, NULL);
+    if (sdl_renderer == NULL) {
+      Error("Could not create renderer: %s\n", SDL_GetError());
+    }
+    SDL_SetRenderLogicalPresentation(sdl_renderer, iGLOBAL_SCREENWIDTH,
+                                     iGLOBAL_SCREENHEIGHT,
+                                     SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    sdl_texture = SDL_CreateTexture(
+        sdl_renderer,
+        SDL_PIXELFORMAT_ARGB8888, // SDL_PIXELFORMAT_RGB565,
+        SDL_TEXTUREACCESS_STREAMING, iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT);
+    if (sdl_texture == NULL) {
+      Error("Texture error: %s\n", SDL_GetError());
+    }
+  } else if (!HW_InitDevice(sdl_window)) {
+    SDL_Log("Hardware renderer unavailable, falling back to retro renderer.");
+    iG_RetroRenderer = true;
+    sdl_renderer = SDL_CreateRenderer(sdl_window, NULL);
+    if (sdl_renderer == NULL) {
+      Error("Could not create renderer: %s\n", SDL_GetError());
+    }
+    SDL_SetRenderLogicalPresentation(sdl_renderer, iGLOBAL_SCREENWIDTH,
+                                     iGLOBAL_SCREENHEIGHT,
+                                     SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    sdl_texture = SDL_CreateTexture(
+        sdl_renderer,
+        SDL_PIXELFORMAT_ARGB8888, // SDL_PIXELFORMAT_RGB565,
+        SDL_TEXTUREACCESS_STREAMING, iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT);
+    if (sdl_texture == NULL) {
+      Error("Texture error: %s\n", SDL_GetError());
+    }
   }
   sdl_surface = SDL_CreateSurface(iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT,
                                   SDL_PIXELFORMAT_INDEX8);
@@ -508,7 +529,9 @@ void GraphicsMode(void) {
   if (sdl_surface32 == NULL) {
     Error("Could not create surface: %s\n", SDL_GetError());
   }
-  BuildHintTexture();
+  if (iG_RetroRenderer) {
+    BuildHintTexture();
+  }
 }
 
 void blitScreen32(uint32_t *dst) {
@@ -535,9 +558,13 @@ void blitScreen32(uint32_t *dst) {
 */
 void SetTextMode(void) {
   if (SDL_WasInit(SDL_INIT_VIDEO) == SDL_INIT_VIDEO) {
-    if (sdl_renderer != NULL) {
-      SDL_DestroyRenderer(sdl_renderer);
-      sdl_renderer = NULL;
+    if (iG_RetroRenderer) {
+      if (sdl_renderer != NULL) {
+        SDL_DestroyRenderer(sdl_renderer);
+        sdl_renderer = NULL;
+      }
+    } else {
+      HW_QuitDevice();
     }
     if (sdl_window != NULL) {
       SDL_DestroyWindow(sdl_window);
@@ -783,14 +810,17 @@ void VH_UpdateScreen(void) {
   } else {
     DrawCenterAim();
   }
-  //	SDL_UpdateRect (SDL_GetVideoSurface (), 0, 0, 0, 0);
   blitScreen32(sdl_surface32->pixels);
-  SDL_UpdateTexture(sdl_texture, NULL, sdl_surface32->pixels,
-                    sdl_surface32->pitch);
-  SDL_RenderClear(sdl_renderer);
-  SDL_RenderTexture(sdl_renderer, sdl_texture, NULL, NULL);
-  RenderCopyHintTexture();
-  SDL_RenderPresent(sdl_renderer);
+  if (iG_RetroRenderer) {
+    SDL_UpdateTexture(sdl_texture, NULL, sdl_surface32->pixels,
+                      sdl_surface32->pitch);
+    SDL_RenderClear(sdl_renderer);
+    SDL_RenderTexture(sdl_renderer, sdl_texture, NULL, NULL);
+    RenderCopyHintTexture();
+    SDL_RenderPresent(sdl_renderer);
+  } else {
+    HW_UpdateScreen(sdl_surface32);
+  }
 }
 
 /*
@@ -821,14 +851,17 @@ void XFlipPage(void) {
   } else {
     DrawCenterAim();
   }
-  //   SDL_UpdateRect (sdl_surface, 0, 0, 0, 0);
   blitScreen32(sdl_surface32->pixels);
-  SDL_UpdateTexture(sdl_texture, NULL, sdl_surface32->pixels,
-                    sdl_surface32->pitch);
-  SDL_RenderClear(sdl_renderer);
-  SDL_RenderTexture(sdl_renderer, sdl_texture, NULL, NULL);
-  RenderCopyHintTexture();
-  SDL_RenderPresent(sdl_renderer);
+  if (iG_RetroRenderer) {
+    SDL_UpdateTexture(sdl_texture, NULL, sdl_surface32->pixels,
+                      sdl_surface32->pitch);
+    SDL_RenderClear(sdl_renderer);
+    SDL_RenderTexture(sdl_renderer, sdl_texture, NULL, NULL);
+    RenderCopyHintTexture();
+    SDL_RenderPresent(sdl_renderer);
+  } else {
+    HW_UpdateScreen(sdl_surface32);
+  }
 
 #endif
 }

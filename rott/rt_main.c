@@ -80,6 +80,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "rt_build.h"
 #include "rt_error.h"
 #include "modexlib.h"
+#include "hw_render/hw_main.h"
 #include "rt_net.h"
 #include "cin_main.h"
 #include "rottnet.h"
@@ -567,10 +568,11 @@ void DrawRottTitle ( void )
 void CheckCommandLineParameters( void )
 {
    char *PStrings[] = {"TEDLEVEL","NOWAIT","NOSOUND","NOW",
-                       "TRANSPORT","DOPEFISH","SCREENSHOTS",
-                       "MONO","MAPSTATS","TILESTATS","VER","net",
-                       "PAUSE","SOUNDSETUP","WARP","IS8250","ENABLEVR",
-                       "TIMELIMIT","MAXTIMELIMIT","NOECHO","DEMOEXIT","QUIET",NULL};
+                        "TRANSPORT","DOPEFISH","SCREENSHOTS",
+                        "MONO","MAPSTATS","TILESTATS","VER","net",
+                        "PAUSE","SOUNDSETUP","WARP","IS8250","ENABLEVR",
+                        "TIMELIMIT","MAXTIMELIMIT","NOECHO","DEMOEXIT","QUIET",
+                        "RETRO",NULL};
    int i,n;
 
    infopause=false;
@@ -591,6 +593,8 @@ void CheckCommandLineParameters( void )
    IS8250 = false;
    vrenabled = false;
    demoexit = false;
+   iG_RetroRenderer = false;
+   iG_HardwareRenderer = true;
 
    modemgame=false;
    networkgame=false;
@@ -643,14 +647,15 @@ void CheckCommandLineParameters( void )
 #endif
       printf ("   ENABLEVR   - Enable VR helmet input devices\n");
       printf ("   NOECHO     - Turn off sound reverb\n");
-      printf ("   DEMOEXIT   - Exit program when demo is terminated\n");
-      printf ("   WARP       - Warp to specific ROTT level\n");
-      printf ("                next parameter is level to start on\n");
-      printf ("   TIMELIMIT  - Play ROTT in time limit mode\n");
-      printf ("                next parameter is time in seconds\n");
-      printf ("   MAXTIMELIMIT - Maximimum time to count down from\n");
-      printf ("                next parameter is time in seconds\n");
-      printf ("   DOPEFISH   - ?\n");
+       printf ("   DEMOEXIT   - Exit program when demo is terminated\n");
+       printf ("   WARP       - Warp to specific ROTT level\n");
+       printf ("                next parameter is level to start on\n");
+       printf ("   TIMELIMIT  - Play ROTT in time limit mode\n");
+       printf ("                next parameter is time in seconds\n");
+       printf ("   MAXTIMELIMIT - Maximimum time to count down from\n");
+       printf ("                next parameter is time in seconds\n");
+       printf ("   RETRO      - Use the classic SDL renderer\n");
+       printf ("   DOPEFISH   - ?\n");
       printf (" \n");
       printf ("CONTROLS\n");
       printf ("         Arrows           - Move\n");
@@ -839,11 +844,17 @@ void CheckCommandLineParameters( void )
        case 20:
           demoexit = true;
           break;
-       case 21:
+        case 21:
           quiet = true;
           break;
-      }
-   }
+        case 22:
+          iG_RetroRenderer = true;
+          iG_HardwareRenderer = false;
+          if (!quiet)
+             printf("Retro renderer enabled\n");
+          break;
+       }
+    }
 }
 
 void DataPath(char * path, char * filename)

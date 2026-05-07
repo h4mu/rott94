@@ -16,7 +16,7 @@ param(
 
     [string]$SourceDir = $null,
 
-    [string]$BuildDir = 'build',
+    [string]$BuildDir = 'build-windows',
 
     [string]$OutputDir = 'Windows\out',
 
@@ -271,7 +271,7 @@ foreach ($variant in $buildVariants) {
         $modernConfigureArgs = @(
             "-S", $SourceDirResolved,
             "-B", $BuildDirResolved,
-            "-G", "Visual Studio 15 2017",
+            "-G", "Visual Studio 16 2019",
             "-A", $Platform
         ) + $configureArgs
 

@@ -111,6 +111,7 @@ set(ROTT_CORE_SOURCES
   rt_util.c
   rt_vid.c
   rt_view.c
+  hw_render/hw_main.c
   scriplib.c
   w_wad.c
   watcom.c
@@ -120,6 +121,10 @@ set(ROTT_CORE_SOURCES
 
 set(_rott_android_bridge_sources
   "${CMAKE_CURRENT_SOURCE_DIR}/android_main_stub.c"
+)
+
+set(_rott_desktop_bridge_sources
+  "${CMAKE_CURRENT_SOURCE_DIR}/desktop_main_stub.c"
 )
 
 set(_rott_shareware 0)
@@ -212,7 +217,7 @@ if(ANDROID)
   )
   rott_apply_common_settings(main)
 else()
-  add_executable(rott)
+  add_executable(rott ${_rott_desktop_bridge_sources})
   target_link_libraries(rott PRIVATE
     rott_core
     audiolib
