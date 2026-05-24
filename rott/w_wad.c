@@ -79,7 +79,7 @@ static byte *lumpcheck;
 ====================
 */
 #if USE_SDL
-#	include "SDL.h"
+#	include <SDL3/SDL.h>
 #endif
 
 void W_AddFile (char *_filename)
@@ -115,8 +115,8 @@ void W_AddFile (char *_filename)
 		int handle;
         if ( (handle = open (filename,O_RDWR | O_BINARY)) == -1)
 #elif USE_SDL
-        SDL_RWops* handle;
-        if ( (handle = SDL_RWFromFile (filename,"rb")) == NULL)
+        SDL_IOStream* handle;
+        if ( (handle = SDL_IOFromFile (filename,"rb")) == NULL)
 #else
    		int handle;
         if ( (handle = open (filename,O_RDONLY | O_BINARY)) == -1)
@@ -134,7 +134,7 @@ void W_AddFile (char *_filename)
                 fileinfo = &singleinfo;
                 singleinfo.filepos = 0;
 #if USE_SDL
-                singleinfo.size = LONG(SDL_RWsize(handle));
+                singleinfo.size = LONG(SDL_GetIOSize(handle));
 #else
                 singleinfo.size = LONG(filelength(handle));
 #endif
@@ -147,7 +147,7 @@ void W_AddFile (char *_filename)
                 if (!quiet)
                    printf("    Adding %s.\n",filename);
 #if USE_SDL
-                SDL_RWread(handle, &header, sizeof(header), 1);
+                SDL_ReadIO(handle, &header, sizeof(header));
 #else
                 read (handle, &header, sizeof(header));
 #endif
@@ -160,8 +160,8 @@ void W_AddFile (char *_filename)
                 if (!fileinfo)
                    Error ("Wad file could not allocate header info on stack");
 #if USE_SDL
-                SDL_RWseek(handle, header.infotableofs, RW_SEEK_SET);
-                SDL_RWread(handle, fileinfo, length, 1);
+                SDL_SeekIO(handle, header.infotableofs, SDL_IO_SEEK_SET);
+                SDL_ReadIO(handle, fileinfo, length);
 #else
                 lseek (handle, header.infotableofs, SEEK_SET);
                 read (handle, fileinfo, length);
@@ -441,8 +441,8 @@ void W_ReadLump (int lump, void *dest)
         l = lumpinfo+lump;
 
 #if USE_SDL
-        SDL_RWseek(l->handle, l->position, RW_SEEK_SET);
-        c = SDL_RWread(l->handle, dest, 1, l->size);
+        SDL_SeekIO(l->handle, l->position, SDL_IO_SEEK_SET);
+        c = (int)SDL_ReadIO(l->handle, dest, l->size);
 #else
         lseek (l->handle, l->position, SEEK_SET);
         c = read (l->handle, dest, l->size);
@@ -474,8 +474,8 @@ void W_WriteLump (int lump, void *src)
    l = lumpinfo+lump;
 
 #if USE_SDL
-   SDL_RWseek(l->handle, l->position, RW_SEEK_SET);
-   c = SDL_RWwrite(l->handle, src, 1, l->size);
+   SDL_SeekIO(l->handle, l->position, SDL_IO_SEEK_SET);
+   c = (int)SDL_WriteIO(l->handle, src, l->size);
 #else
    lseek (l->handle, l->position, SEEK_SET);
    c = write (l->handle, src, l->size);

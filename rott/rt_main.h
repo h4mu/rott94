@@ -169,6 +169,7 @@ extern bool MONOPRESENT;
 extern bool MAPSTATS;
 extern bool TILESTATS;
 extern bool HUD;
+extern bool iG_RetroRenderer;
 #ifdef DOS
 extern bool SOUNDSETUP;
 #endif

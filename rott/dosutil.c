@@ -15,7 +15,8 @@
 #include "rt_def.h"
 
 #if defined(USE_SDL)
-#include "SDL.h"
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_system.h>
 #endif
               
 /* 
@@ -129,14 +130,14 @@ int setup_homedir (void)
 {
 #if PLATFORM_UNIX && !defined(__MINGW32__)
 	int err;
-	char * home = getenv ("HOME");
+	const char * home = getenv ("HOME");
 	if (home == NULL)
 	{
 #ifdef __ANDROID__
-		home = SDL_AndroidGetExternalStoragePath();
+		home = SDL_GetAndroidExternalStoragePath();
 		if (home == NULL)
 		{
-			home = SDL_AndroidGetInternalStoragePath();
+			home = SDL_GetAndroidInternalStoragePath();
 		}
 		if (home == NULL)
 		{

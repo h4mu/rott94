@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <io.h>
 #include <direct.h>
 #elif USE_SDL
-#include "SDL.h"
+#include <SDL3/SDL.h>
 #endif
 
 #include <stdarg.h>
@@ -88,6 +88,7 @@ static unsigned char egargb[48]={ 0x00,0x00,0x00,
 
 extern const byte * ROTT_ERR;
 extern SDL_Surface *sdl_surface;
+extern void VL_SyncSurfacePalettes(void);
 #if (DEVELOPMENT == 1)
 int TotalStaticMemory=0;
 #endif
@@ -629,102 +630,105 @@ int CheckParm (char *check)
 }
 
 #if USE_SDL
-SDL_RWops* SafeOpenAppend (char *_filename)
-#else
-int SafeOpenAppend (char *_filename)
-#endif
+SDL_IOStream* SafeOpenAppend (char *_filename)
 {
-#if USE_SDL
-	SDL_RWops* handle;
-#else
-	int	handle;
-#endif
+	SDL_IOStream* handle;
     char filename[MAX_PATH];
     strncpy(filename, _filename, sizeof (filename));
     filename[sizeof (filename) - 1] = '\0';
     FixFilePath(filename);
 
-#if USE_SDL
-	handle = SDL_RWFromFile(filename, "ab+");
+	handle = SDL_IOFromFile(filename, "ab+");
 
 	if (handle == NULL)
 		Error ("Error opening %s: %s",filename,SDL_GetError());
+	return handle;
+}
 #else
+int SafeOpenAppend (char *_filename)
+{
+	int	handle;
+    char filename[MAX_PATH];
+    strncpy(filename, _filename, sizeof (filename));
+    filename[sizeof (filename) - 1] = '\0';
+    FixFilePath(filename);
+
 	handle = open(filename,O_RDWR | O_BINARY | O_CREAT | O_APPEND
 	, S_IREAD | S_IWRITE);
 
 	if (handle == -1)
 		Error ("Error opening for append %s: %s",filename,strerror(errno));
-#endif
-
 	return handle;
 }
+#endif
 
 #if USE_SDL
-SDL_RWops* SafeOpenWrite (char *_filename)
-#else
-int SafeOpenWrite (char *_filename)
-#endif
+SDL_IOStream* SafeOpenWrite (char *_filename)
 {
-#if USE_SDL
-	SDL_RWops* handle;
-#else
-	int	handle;
-#endif
+	SDL_IOStream* handle;
     char filename[MAX_PATH];
     strncpy(filename, _filename, sizeof (filename));
     filename[sizeof (filename) - 1] = '\0';
     FixFilePath(filename);
 
-#if USE_SDL
-	handle = SDL_RWFromFile(filename, "wb+");
+	handle = SDL_IOFromFile(filename, "wb+");
 
 	if (handle == NULL)
 		Error ("Error opening %s: %s",filename,SDL_GetError());
+	return handle;
+}
 #else
+int SafeOpenWrite (char *_filename)
+{
+	int	handle;
+    char filename[MAX_PATH];
+    strncpy(filename, _filename, sizeof (filename));
+    filename[sizeof (filename) - 1] = '\0';
+    FixFilePath(filename);
+
 	handle = open(filename,O_RDWR | O_BINARY | O_CREAT | O_TRUNC
 	, S_IREAD | S_IWRITE);
 
 	if (handle == -1)
 		Error ("Error opening %s: %s",filename,strerror(errno));
-#endif
-
 	return handle;
 }
+#endif
 
 #if USE_SDL
-SDL_RWops* SafeOpenRead (char *_filename)
-#else
-int SafeOpenRead (char *_filename)
-#endif
+SDL_IOStream* SafeOpenRead (char *_filename)
 {
-#if USE_SDL
-	SDL_RWops* handle;
-#else
-	int	handle;
-#endif
+	SDL_IOStream* handle;
     char filename[MAX_PATH];
     strncpy(filename, _filename, sizeof (filename));
     filename[sizeof (filename) - 1] = '\0';
     FixFilePath(filename);
 
-#if USE_SDL
-	handle = SDL_RWFromFile(filename, "rb");
+	handle = SDL_IOFromFile(filename, "rb");
 
 	if (handle == NULL)
 		Error ("Error opening %s: %s",filename,SDL_GetError());
+	return handle;
+}
 #else
+int SafeOpenRead (char *_filename)
+{
+	int	handle;
+    char filename[MAX_PATH];
+    strncpy(filename, _filename, sizeof (filename));
+    filename[sizeof (filename) - 1] = '\0';
+    FixFilePath(filename);
+
 	handle = open(filename,O_RDONLY | O_BINARY);
 
 	if (handle == -1)
 		Error ("Error opening %s: %s",filename,strerror(errno));
-#endif
-
 	return handle;
 }
+#endif
 
 #if USE_SDL
-void SafeRead (SDL_RWops* handle, void *buffer, long count)
+void SafeRead (SDL_IOStream* handle, void *buffer, long count)
 #else
 void SafeRead (int handle, void *buffer, long count)
 #endif
@@ -735,8 +739,8 @@ void SafeRead (int handle, void *buffer, long count)
 	{
 		iocount = count > 0x8000 ? 0x8000 : count;
 #if USE_SDL
-		int cnt = SDL_RWread (handle,buffer,1,iocount);
-		if (cnt != (int)iocount)
+		size_t cnt = SDL_ReadIO (handle,buffer,iocount);
+		if (cnt != (size_t)iocount)
 #else
 		if (read (handle,buffer,iocount) != (int)iocount)
 #endif
@@ -747,7 +751,7 @@ void SafeRead (int handle, void *buffer, long count)
 }
 
 #if USE_SDL
-void SafeWrite (SDL_RWops* handle, void *buffer, long count)
+void SafeWrite (SDL_IOStream* handle, void *buffer, long count)
 #else
 void SafeWrite (int handle, void *buffer, long count)
 #endif
@@ -758,7 +762,7 @@ void SafeWrite (int handle, void *buffer, long count)
 	{
 		iocount = count > 0x8000 ? 0x8000 : count;
 #if USE_SDL
-		if (SDL_RWwrite (handle,buffer,1,iocount) != (int)iocount)
+		if (SDL_WriteIO (handle,buffer,iocount) != (size_t)iocount)
 #else
 		if (write (handle,buffer,iocount) != (int)iocount)
 #endif
@@ -769,7 +773,7 @@ void SafeWrite (int handle, void *buffer, long count)
 }
 
 #if USE_SDL
-void SafeWriteString (SDL_RWops* handle, char * buffer)
+void SafeWriteString (SDL_IOStream* handle, char * buffer)
 #else
 void SafeWriteString (int handle, char * buffer)
 #endif
@@ -778,7 +782,7 @@ void SafeWriteString (int handle, char * buffer)
 
    iocount=strlen(buffer);
 #if USE_SDL
-	if (SDL_RWwrite (handle,buffer,1,iocount) != (int)iocount)
+	if (SDL_WriteIO (handle,buffer,iocount) != iocount)
 #else
 	if (write (handle,buffer,iocount) != (int)iocount)
 #endif
@@ -832,7 +836,7 @@ void SafeFree (void * ptr)
 long	LoadFile (char *filename, void **bufferptr)
 {
 #if USE_SDL
-	SDL_RWops* handle;
+	SDL_IOStream* handle;
 #else
 	int		handle;
 #endif
@@ -840,14 +844,14 @@ long	LoadFile (char *filename, void **bufferptr)
 
 	handle = SafeOpenRead (filename);
 #if USE_SDL
-	length = SDL_RWsize (handle);
+	length = (long)SDL_GetIOSize (handle);
 #else
 	length = filelength (handle);
 #endif
 	*bufferptr = SafeMalloc (length);
 	SafeRead (handle,*bufferptr, length);
 #if USE_SDL
-	SDL_RWclose(handle);
+	SDL_CloseIO(handle);
 #else
 	close (handle);
 #endif
@@ -866,7 +870,7 @@ long	LoadFile (char *filename, void **bufferptr)
 void	SaveFile (char *filename, void *buffer, long count)
 {
 #if USE_SDL
-	SDL_RWops* handle;
+	SDL_IOStream* handle;
 #else
 	int		handle;
 #endif
@@ -874,7 +878,7 @@ void	SaveFile (char *filename, void *buffer, long count)
 	handle = SafeOpenWrite (filename);
 	SafeWrite (handle, buffer, count);
 #if USE_SDL
-	SDL_RWclose(handle);
+	SDL_CloseIO(handle);
 #else
 	close (handle);
 #endif
@@ -1315,6 +1319,27 @@ void SwapIntelShortArray(short *s, int num)
 ============================================================================
 */
 
+#ifndef DOS
+static int GetSurfacePaletteCount(void) {
+    SDL_Palette *palette = SDL_GetSurfacePalette(sdl_surface);
+    if (palette) {
+        int count = palette->ncolors;
+        if (count > 256)
+            count = 256;
+        return count;
+    }
+    return 0;
+}
+
+static void UpdateSurfacePalette(SDL_Color *cmap, int count) {
+    SDL_Palette *palette = SDL_GetSurfacePalette(sdl_surface);
+    if (palette) {
+        SDL_SetPaletteColors(palette, cmap, 0, count);
+        VL_SyncSurfacePalettes();
+    }
+}
+#endif
+
 /*
 ==============
 =
@@ -1335,15 +1360,17 @@ void GetaPalette (byte *palette)
 		palette[i] = inp (PEL_DATA)<<2;
 #else
 	int i;
-	SDL_Palette *pal = sdl_surface->format->palette;
+	SDL_Palette *pal = SDL_GetSurfacePalette(sdl_surface);
 	
-	for (i = 0; i < sdl_surface->format->palette->ncolors; i++) {
-		palette[0] = pal->colors[i].r;
-		palette[1] = pal->colors[i].g;
-		palette[2] = pal->colors[i].b;
-		
-		palette += 3;
-	}
+    if (pal) {
+        for (i = 0; i < pal->ncolors; i++) {
+            palette[0] = pal->colors[i].r;
+            palette[1] = pal->colors[i].g;
+            palette[2] = pal->colors[i].b;
+
+            palette += 3;
+        }
+    }
 #endif
 }
 
@@ -1366,17 +1393,21 @@ void SetaPalette (byte *pal)
 	for (i=0 ; i<768 ; i++)
 		OUTP (PEL_DATA, pal[i]>>2);
 #else
-   SDL_Color* cmap = sdl_surface->format->palette->colors;
-   int i;
+   int count = GetSurfacePaletteCount();
+   if (count > 0) {
+       SDL_Color cmap[256];
+       int i;
 
-   for (i = 0; i < sdl_surface->format->palette->ncolors; i++)
-   {
-	   cmap[i].r = pal[i*3+0];
-	   cmap[i].g = pal[i*3+1];
-	   cmap[i].b = pal[i*3+2];
+       for (i = 0; i < count; i++)
+       {
+           cmap[i].r = pal[i*3+0];
+           cmap[i].g = pal[i*3+1];
+           cmap[i].b = pal[i*3+2];
+           cmap[i].a = 255;
+       }
+
+       UpdateSurfacePalette(cmap, count);
    }
-
-//   SDL_SetColors (sdl_surface, cmap, 0, 256);
 #endif
 }
 
@@ -1390,15 +1421,17 @@ void GetPalette(char * palette)
      *(palette+(unsigned char)i)=inp(0x3c9)<<2;
 #else
 	int i;
-	SDL_Palette *pal = sdl_surface->format->palette;
+	SDL_Palette *pal = SDL_GetSurfacePalette(sdl_surface);
 	
-	for (i = 0; i < pal->ncolors; i++) {
-		palette[0] = pal->colors[i].r;
-		palette[1] = pal->colors[i].g;
-		palette[2] = pal->colors[i].b;
-		
-		palette += 3;
-	}
+    if (pal) {
+        for (i = 0; i < pal->ncolors; i++) {
+            palette[0] = pal->colors[i].r;
+            palette[1] = pal->colors[i].g;
+            palette[2] = pal->colors[i].b;
+
+            palette += 3;
+        }
+    }
 #endif
 }
 
@@ -1481,14 +1514,20 @@ void VL_FillPalette (int red, int green, int blue)
       OUTP (PEL_DATA,blue);
    }
 #else
-   SDL_Color* cmap = sdl_surface->format->palette->colors;
-   int i;
+   int count = GetSurfacePaletteCount();
+   if (count > 0) {
+       SDL_Color cmap[256];
+       int i;
 
-   for (i = 0; i < sdl_surface->format->palette->ncolors; i++)
-   {
-           cmap[i].r = red << 2;
-           cmap[i].g = green << 2;
-           cmap[i].b = blue << 2;
+       for (i = 0; i < count; i++)
+       {
+               cmap[i].r = red << 2;
+               cmap[i].g = green << 2;
+               cmap[i].b = blue << 2;
+               cmap[i].a = 255;
+       }
+
+       UpdateSurfacePalette(cmap, count);
    }
 #endif
 }
@@ -1579,17 +1618,22 @@ void VL_SetPalette (byte *palette)
       OUTP (PEL_DATA, gammatable[(gammaindex<<6)+(*palette++)]);
       }
 #else
-   SDL_Color* cmap = sdl_surface->format->palette->colors;
-   int i;
+   int count = GetSurfacePaletteCount();
+   if (count > 0) {
+       SDL_Color cmap[256];
+       int i;
 
-   for (i = 0; i < sdl_surface->format->palette->ncolors; i++)
-   {
-	   cmap[i].r = gammatable[(gammaindex<<6)+(*palette++)] << 2;
-	   cmap[i].g = gammatable[(gammaindex<<6)+(*palette++)] << 2;
-	   cmap[i].b = gammatable[(gammaindex<<6)+(*palette++)] << 2;
+       for (i = 0; i < count; i++)
+       {
+           cmap[i].r = gammatable[(gammaindex<<6)+(*palette++)] << 2;
+           cmap[i].g = gammatable[(gammaindex<<6)+(*palette++)] << 2;
+           cmap[i].b = gammatable[(gammaindex<<6)+(*palette++)] << 2;
+           cmap[i].a = 255;
+       }
+
+       UpdateSurfacePalette(cmap, count);
+       XFlipPage();
    }
-
-   XFlipPage();
 #endif
 }
 
@@ -1618,15 +1662,17 @@ void VL_GetPalette (byte *palette)
       *palette++ = inp (PEL_DATA);
 #else
 	int i;
-	SDL_Palette *pal = sdl_surface->format->palette;
+	SDL_Palette *pal = SDL_GetSurfacePalette(sdl_surface);
 	
-	for (i = 0; i < pal->ncolors; i++) {
-		palette[0] = pal->colors[i].r >> 2;
-		palette[1] = pal->colors[i].g >> 2;
-		palette[2] = pal->colors[i].b >> 2;
-		
-		palette += 3;
-	}
+    if (pal) {
+        for (i = 0; i < pal->ncolors; i++) {
+            palette[0] = pal->colors[i].r >> 2;
+            palette[1] = pal->colors[i].g >> 2;
+            palette[2] = pal->colors[i].b >> 2;
+
+            palette += 3;
+        }
+    }
 #endif
 }
 

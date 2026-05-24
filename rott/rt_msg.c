@@ -135,7 +135,7 @@ void InitializeMessages
          }
       }
 
-   MSG.messageon = false;
+   ModemMsg.messageon = false;
 
    LastMessageTime = 0;
    UpdateMessageBackground = 0;
@@ -654,9 +654,9 @@ void UpdateModemMessage
    {
    int i;
 
-   Messages[ num ].text[ MSG.length - 1 ] = ( byte )c;
-   Messages[ num ].text[ MSG.length ]     = ( byte )'_';
-   MSG.length++;
+   Messages[ num ].text[ ModemMsg.length - 1 ] = ( byte )c;
+   Messages[ num ].text[ ModemMsg.length ]     = ( byte )'_';
+   ModemMsg.length++;
 
    for( i = 0; i < TotalMessages; i++ )
       {
@@ -686,9 +686,9 @@ void ModemMessageDeleteChar
    {
    int i;
 
-   MSG.length--;
-   Messages[ num ].text[ MSG.length ]     = ( byte )0;
-   Messages[ num ].text[ MSG.length - 1 ] = ( byte )'_';
+   ModemMsg.length--;
+   Messages[ num ].text[ ModemMsg.length ]     = ( byte )0;
+   Messages[ num ].text[ ModemMsg.length - 1 ] = ( byte )'_';
 
    for( i = 0; i < TotalMessages; i++ )
       {
@@ -774,36 +774,36 @@ void FinishModemMessage
    bool send
    )
    {
-   if ( ( !MSG.inmenu ) && ( MSG.length > 0 ) )
+   if ( ( !ModemMsg.inmenu ) && ( ModemMsg.length > 0 ) )
       {
-      Messages[ num ].text[ MSG.length - 1 ] = ( byte )0;
-      MSG.length--;
+      Messages[ num ].text[ ModemMsg.length - 1 ] = ( byte )0;
+      ModemMsg.length--;
       }
 
-   if ( ( send == true ) && ( ( MSG.length > 0 ) ||
-      ( MSG.remoteridicule != -1 ) ) )
+   if ( ( send == true ) && ( ( ModemMsg.length > 0 ) ||
+      ( ModemMsg.remoteridicule != -1 ) ) )
       {
-      if ( ( MSG.directed ) && ( !MSG.inmenu ) )
+      if ( ( ModemMsg.directed ) && ( !ModemMsg.inmenu ) )
          {
          DrawPlayerSelectionMenu();
-         MSG.messageon = true;
-         MSG.inmenu = true;
+         ModemMsg.messageon = true;
+         ModemMsg.inmenu = true;
          return;
          }
 
-      MSG.messageon = false;
-      if ( MSG.remoteridicule != -1 )
+      ModemMsg.messageon = false;
+      if ( ModemMsg.remoteridicule != -1 )
          {
-         AddRemoteRidiculeCommand( consoleplayer, MSG.towho,
-            MSG.remoteridicule );
+         AddRemoteRidiculeCommand( consoleplayer, ModemMsg.towho,
+            ModemMsg.remoteridicule );
          }
-      if ( MSG.length > 0 )
+      if ( ModemMsg.length > 0 )
          {
-         AddTextMessage( Messages[ num ].text, MSG.length, MSG.towho );
+         AddTextMessage( Messages[ num ].text, ModemMsg.length, ModemMsg.towho );
          }
       }
 
-   if ( MSG.inmenu )
+   if ( ModemMsg.inmenu )
       {
       DeletePriorityMessage( MSG_NAMEMENU );
       }

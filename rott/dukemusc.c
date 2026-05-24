@@ -6,17 +6,16 @@
  * Written by Ryan C. Gordon. (icculus@clutteredmind.org)
  */
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
-#include <assert.h>
 
 #define ROTT
 
 #ifdef DUKE3D
-#include "duke3d.h"
 #include "buildengine/cache1d.h"
+#include "duke3d.h"
 #endif
 
 #if PLATFORM_DOS
@@ -33,30 +32,26 @@
 #define cdecl
 #endif
 
-#include "SDL.h"
-#ifdef __EMSCRIPTEN__
-#	include <SDL/SDL_mixer.h>
-#else
-#	include "SDL_mixer.h"
-#endif
+#include <SDL3/SDL.h>
+#include <SDL3_mixer/SDL_mixer.h>
 #ifdef ROTT
-#include "rt_def.h"      // ROTT music hack
-#include "rt_cfg.h"      // ROTT music hack
-#include "rt_util.h"     // ROTT music hack
+#include "rt_cfg.h"  // ROTT music hack
+#include "rt_def.h"  // ROTT music hack
+#include "rt_util.h" // ROTT music hack
 #endif
 #include "music.h"
 
-#define __FX_TRUE  (1 == 1)
+#define __FX_TRUE (1 == 1)
 #define __FX_FALSE (!__FX_TRUE)
 
-#define DUKESND_DEBUG       "DUKESND_DEBUG"
+#define DUKESND_DEBUG "DUKESND_DEBUG"
 
 #ifndef min
-#define min(a, b)  (((a) < (b)) ? (a) : (b))
+#define min(a, b) (((a) < (b)) ? (a) : (b))
 #endif
 
 #ifndef max
-#define max(a, b)  (((a) > (b)) ? (a) : (b))
+#define max(a, b) (((a) > (b)) ? (a) : (b))
 #endif
 
 int MUSIC_ErrorCode = MUSIC_Ok;
@@ -64,7 +59,7 @@ int MUSIC_ErrorCode = MUSIC_Ok;
 static char warningMessage[80];
 static char errorMessage[80];
 static int fx_initialized = 0;
-static int numChannels = MIX_CHANNELS;
+static int numChannels = 8;
 static void (*callback)(unsigned long);
 static int reverseStereo = 0;
 static int reverbDelay = 256;
@@ -79,488 +74,400 @@ static int mixerIsStereo = 1;
 //  go to the file that is specified in that variable. Otherwise, they
 //  are ignored for the expense of the function call. If DUKESND_DEBUG is
 //  set to "-" (without the quotes), then the output goes to stdout.
-static void musdebug(const char *fmt, ...)
-{
-    va_list ap;
+static void musdebug(const char *fmt, ...) {
+  va_list ap;
 
-    if (debug_file)
-    {
-        fprintf(debug_file, "DUKEMUS: ");
-        va_start(ap, fmt);
-        vfprintf(debug_file, fmt, ap);
-        va_end(ap);
-        fprintf(debug_file, "\n");
-        fflush(debug_file);
-    } // if
+  if (debug_file) {
+    fprintf(debug_file, "DUKEMUS: ");
+    va_start(ap, fmt);
+    vfprintf(debug_file, fmt, ap);
+    va_end(ap);
+    fprintf(debug_file, "\n");
+    fflush(debug_file);
+  } // if
 } // musdebug
 
-static void init_debugging(void)
-{
-    const char *envr;
+static void init_debugging(void) {
+  const char *envr;
 
-    if (initialized_debugging)
-        return;
+  if (initialized_debugging)
+    return;
 
 #ifndef __WINRT__
-	envr = getenv(DUKESND_DEBUG);
-    if (envr != NULL)
-    {
-        if (strcmp(envr, "-") == 0)
-            debug_file = stdout;
-        else
-            debug_file = fopen(envr, "w");
+  envr = getenv(DUKESND_DEBUG);
+  if (envr != NULL) {
+    if (strcmp(envr, "-") == 0)
+      debug_file = stdout;
+    else
+      debug_file = fopen(envr, "w");
 
-        if (debug_file == NULL)
-            fprintf(stderr, "DUKESND: -WARNING- Could not open debug file!\n");
-        else
-            setbuf(debug_file, NULL);
-    } // if
+    if (debug_file == NULL)
+      fprintf(stderr, "DUKESND: -WARNING- Could not open debug file!\n");
+    else
+      setbuf(debug_file, NULL);
+  } // if
 #endif
 
-    initialized_debugging = 1;
+  initialized_debugging = 1;
 } // init_debugging
 
-static void setWarningMessage(const char *msg)
-{
-    strncpy(warningMessage, msg, sizeof (warningMessage));
-    // strncpy() doesn't add the null char if there isn't room...
-    warningMessage[sizeof (warningMessage) - 1] = '\0';
-    musdebug("Warning message set to [%s].", warningMessage);
+static void setWarningMessage(const char *msg) {
+  strncpy(warningMessage, msg, sizeof(warningMessage));
+  // strncpy() doesn't add the null char if there isn't room...
+  warningMessage[sizeof(warningMessage) - 1] = '\0';
+  musdebug("Warning message set to [%s].", warningMessage);
 } // setErrorMessage
 
-
-static void setErrorMessage(const char *msg)
-{
-    strncpy(errorMessage, msg, sizeof (errorMessage));
-    // strncpy() doesn't add the null char if there isn't room...
-    errorMessage[sizeof (errorMessage) - 1] = '\0';
-    musdebug("Error message set to [%s].", errorMessage);
+static void setErrorMessage(const char *msg) {
+  strncpy(errorMessage, msg, sizeof(errorMessage));
+  // strncpy() doesn't add the null char if there isn't room...
+  errorMessage[sizeof(errorMessage) - 1] = '\0';
+  musdebug("Error message set to [%s].", errorMessage);
 } // setErrorMessage
 
 // The music functions...
 
-char *MUSIC_ErrorString(int ErrorNumber)
-{
-    switch (ErrorNumber)
-    {
-        case MUSIC_Warning:
-            return(warningMessage);
+char *MUSIC_ErrorString(int ErrorNumber) {
+  switch (ErrorNumber) {
+  case MUSIC_Warning:
+    return (warningMessage);
 
-        case MUSIC_Error:
-            return(errorMessage);
+  case MUSIC_Error:
+    return (errorMessage);
 
-        case MUSIC_Ok:
-            return("OK; no error.");
+  case MUSIC_Ok:
+    return ("OK; no error.");
 
-        case MUSIC_ASSVersion:
-            return("Incorrect sound library version.");
+  case MUSIC_ASSVersion:
+    return ("Incorrect sound library version.");
 
-        case MUSIC_SoundCardError:
-            return("General sound card error.");
+  case MUSIC_SoundCardError:
+    return ("General sound card error.");
 
-        case MUSIC_InvalidCard:
-            return("Invalid sound card.");
+  case MUSIC_InvalidCard:
+    return ("Invalid sound card.");
 
-        case MUSIC_MidiError:
-            return("MIDI error.");
+  case MUSIC_MidiError:
+    return ("MIDI error.");
 
-        case MUSIC_MPU401Error:
-            return("MPU401 error.");
+  case MUSIC_MPU401Error:
+    return ("MPU401 error.");
 
-        case MUSIC_TaskManError:
-            return("Task Manager error.");
+  case MUSIC_TaskManError:
+    return ("Task Manager error.");
 
-        case MUSIC_FMNotDetected:
-            return("FM not detected error.");
+  case MUSIC_FMNotDetected:
+    return ("FM not detected error.");
 
-        case MUSIC_DPMI_Error:
-            return("DPMI error.");
+  case MUSIC_DPMI_Error:
+    return ("DPMI error.");
 
-        default:
-            return("Unknown error.");
-    } // switch
+  default:
+    return ("Unknown error.");
+  } // switch
 
-    assert(0);    // shouldn't hit this point.
-    return(NULL);
+  SDL_assert(0); // shouldn't hit this point.
+  return (NULL);
 } // MUSIC_ErrorString
-
 
 static int music_initialized = 0;
 static int music_context = 0;
 static int music_loopflag = MUSIC_PlayOnce;
 static char *music_songdata = NULL;
-static Mix_Music *music_musicchunk = NULL;
+static MIX_Audio *music_audio = NULL;
 
-int MUSIC_Init(int SoundCard, int Address)
-{
-    init_debugging();
+int MUSIC_Init(int SoundCard, int Address) {
+  init_debugging();
 
-    musdebug("INIT! card=>%d, address=>%d...", SoundCard, Address);
+  musdebug("INIT! card=>%d, address=>%d...", SoundCard, Address);
 
-    if (music_initialized)
-    {
-        setErrorMessage("Music system is already initialized.");
-        return(MUSIC_Error);
-    } // if
-    
-    if (SoundCard != SoundScape) // We pretend there's a SoundScape installed.
-    {
-        setErrorMessage("Card not found.");
-        musdebug("We pretend to be an Ensoniq SoundScape only.");
-        return(MUSIC_Error);
-    } // if
+  if (music_initialized) {
+    setErrorMessage("Music system is already initialized.");
+    return (MUSIC_Error);
+  } // if
 
-    music_initialized = 1;
-    return(MUSIC_Ok);
+  if (SoundCard != SoundScape) // We pretend there's a SoundScape installed.
+  {
+    setErrorMessage("Card not found.");
+    musdebug("We pretend to be an Ensoniq SoundScape only.");
+    return (MUSIC_Error);
+  } // if
+
+  music_initialized = 1;
+  return (MUSIC_Ok);
 } // MUSIC_Init
 
+int MUSIC_Shutdown(void) {
+  musdebug("shutting down sound subsystem.");
 
-int MUSIC_Shutdown(void)
-{
-    musdebug("shutting down sound subsystem.");
+  if (!music_initialized) {
+    setErrorMessage("Music system is not currently initialized.");
+    return (MUSIC_Error);
+  } // if
 
-    if (!music_initialized)
-    {
-        setErrorMessage("Music system is not currently initialized.");
-        return(MUSIC_Error);
-    } // if
+  MUSIC_StopSong();
+  music_context = 0;
+  music_initialized = 0;
+  music_loopflag = MUSIC_PlayOnce;
 
-    MUSIC_StopSong();
-    music_context = 0;
-    music_initialized = 0;
-    music_loopflag = MUSIC_PlayOnce;
-
-    return(MUSIC_Ok);
+  return (MUSIC_Ok);
 } // MUSIC_Shutdown
 
-
-void MUSIC_SetMaxFMMidiChannel(int channel)
-{
-    musdebug("STUB ... MUSIC_SetMaxFMMidiChannel(%d).\n", channel);
+void MUSIC_SetMaxFMMidiChannel(int channel) {
+  musdebug("STUB ... MUSIC_SetMaxFMMidiChannel(%d).\n", channel);
 } // MUSIC_SetMaxFMMidiChannel
 
-
-void MUSIC_SetVolume(int volume)
-{
-    Mix_VolumeMusic(volume >> 1);  // convert 0-255 to 0-128.
+void MUSIC_SetVolume(int volume) {
+  extern MIX_Track *music_track;
+  if (music_track) {
+    MIX_SetTrackGain(music_track, (float)volume / 255.0f);
+  }
 } // MUSIC_SetVolume
 
-
-void MUSIC_SetMidiChannelVolume(int channel, int volume)
-{
-    musdebug("STUB ... MUSIC_SetMidiChannelVolume(%d, %d).\n", channel, volume);
+void MUSIC_SetMidiChannelVolume(int channel, int volume) {
+  musdebug("STUB ... MUSIC_SetMidiChannelVolume(%d, %d).\n", channel, volume);
 } // MUSIC_SetMidiChannelVolume
 
-
-void MUSIC_ResetMidiChannelVolumes(void)
-{
-    musdebug("STUB ... MUSIC_ResetMidiChannelVolumes().\n");
+void MUSIC_ResetMidiChannelVolumes(void) {
+  musdebug("STUB ... MUSIC_ResetMidiChannelVolumes().\n");
 } // MUSIC_ResetMidiChannelVolumes
 
-
-int MUSIC_GetVolume(void)
-{
-    return(Mix_VolumeMusic(-1) << 1);  // convert 0-128 to 0-255.
+int MUSIC_GetVolume(void) {
+  extern MIX_Track *music_track;
+  if (music_track) {
+    return (int)(MIX_GetTrackGain(music_track) * 255.0f);
+  }
+  return 0;
 } // MUSIC_GetVolume
 
-
-void MUSIC_SetLoopFlag(int loopflag)
-{
-    music_loopflag = loopflag;
+void MUSIC_SetLoopFlag(int loopflag) {
+  music_loopflag = loopflag;
 } // MUSIC_SetLoopFlag
 
-
-int MUSIC_SongPlaying(void)
-{
-    return((Mix_PlayingMusic()) ? __FX_TRUE : __FX_FALSE);
+int MUSIC_SongPlaying(void) {
+  extern MIX_Track *music_track;
+  return ((music_track && MIX_TrackPlaying(music_track)) ? __FX_TRUE
+                                                         : __FX_FALSE);
 } // MUSIC_SongPlaying
 
-
-void MUSIC_Continue(void)
-{
-    if (Mix_PausedMusic())
-        Mix_ResumeMusic();
-    else if (music_songdata)
-        MUSIC_PlaySong((unsigned char *)music_songdata, MUSIC_PlayOnce);
+void MUSIC_Continue(void) {
+  extern MIX_Track *music_track;
+  if (music_track && MIX_TrackPaused(music_track))
+    MIX_ResumeTrack(music_track);
+  else if (music_songdata)
+    MUSIC_PlaySong((unsigned char *)music_songdata, MUSIC_PlayOnce);
 } // MUSIC_Continue
 
-
-void MUSIC_Pause(void)
-{
-    Mix_PauseMusic();
+void MUSIC_Pause(void) {
+  extern MIX_Track *music_track;
+  if (music_track) {
+    MIX_PauseTrack(music_track);
+  }
 } // MUSIC_Pause
 
-
-int MUSIC_StopSong(void)
-{
-    //if (!fx_initialized)
-    if (!Mix_QuerySpec(NULL, NULL, NULL))
-    {
-        setErrorMessage("Need FX system initialized, too. Sorry.");
-        return(MUSIC_Error);
-    } // if
-
-    if ( (Mix_PlayingMusic()) || (Mix_PausedMusic()) )
-        Mix_HaltMusic();
-
-    if (music_musicchunk)
-        Mix_FreeMusic(music_musicchunk);
-
-    music_songdata = NULL;
-    music_musicchunk = NULL;
-    return(MUSIC_Ok);
+int MUSIC_StopSong(void) {
+  extern MIX_Track *music_track;
+  if (music_track &&
+      (MIX_TrackPlaying(music_track) || MIX_TrackPaused(music_track))) {
+    MIX_StopTrack(music_track, 0);
+  }
+  if (music_audio) {
+    MIX_DestroyAudio(music_audio);
+    music_audio = NULL;
+  }
+  music_songdata = NULL;
+  return (MUSIC_Ok);
 } // MUSIC_StopSong
 
+int MUSIC_PlaySong(unsigned char *song, int loopflag) {
+  // SDL_RWops *rw;
 
-int MUSIC_PlaySong(unsigned char *song, int loopflag)
-{
-    //SDL_RWops *rw;
+  MUSIC_StopSong();
 
-    MUSIC_StopSong();
+  music_songdata = (char *)song;
 
-    music_songdata = (char *)song;
+  // !!! FIXME: This could be a problem...SDL/SDL_mixer wants a RWops, which
+  // !!! FIXME:  is an i/o abstraction. Since we already have the MIDI data
+  // !!! FIXME:  in memory, we fake it with a memory-based RWops. None of
+  // !!! FIXME:  this is a problem, except the RWops wants to know how big
+  // !!! FIXME:  its memory block is (so it can do things like seek on an
+  // !!! FIXME:  offset from the end of the block), and since we don't have
+  // !!! FIXME:  this information, we have to give it SOMETHING.
 
-    // !!! FIXME: This could be a problem...SDL/SDL_mixer wants a RWops, which
-    // !!! FIXME:  is an i/o abstraction. Since we already have the MIDI data
-    // !!! FIXME:  in memory, we fake it with a memory-based RWops. None of
-    // !!! FIXME:  this is a problem, except the RWops wants to know how big
-    // !!! FIXME:  its memory block is (so it can do things like seek on an
-    // !!! FIXME:  offset from the end of the block), and since we don't have
-    // !!! FIXME:  this information, we have to give it SOMETHING.
+  /* !!! ARGH! There's no LoadMUS_RW  ?!
+  rw = SDL_RWFromMem((void *) song, (10 * 1024) * 1024);  // yikes.
+  music_musicchunk = Mix_LoadMUS_RW(rw);
+  Mix_PlayMusic(music_musicchunk, (loopflag == MUSIC_PlayOnce) ? 0 : -1);
+  */
 
-    /* !!! ARGH! There's no LoadMUS_RW  ?!
-    rw = SDL_RWFromMem((void *) song, (10 * 1024) * 1024);  // yikes.
-    music_musicchunk = Mix_LoadMUS_RW(rw);
-    Mix_PlayMusic(music_musicchunk, (loopflag == MUSIC_PlayOnce) ? 0 : -1);
-    */
+  musdebug("Need to use PlaySongROTT.  :(");
 
-musdebug("Need to use PlaySongROTT.  :(");
-
-    return(MUSIC_Ok);
+  return (MUSIC_Ok);
 } // MUSIC_PlaySong
-
 
 extern char ApogeePath[256];
 
 #ifdef DUKE3D
 // Duke3D-specific.  --ryan.
-void PlayMusic(char *_filename)
-{
-    //char filename[MAX_PATH];
-    //strcpy(filename, _filename);
-    //FixFilePath(filename);
+void PlayMusic(char *_filename) {
+  // char filename[MAX_PATH];
+  // strcpy(filename, _filename);
+  // FixFilePath(filename);
 
-    char filename[MAX_PATH];
-    long handle;
-    long size;
-    void *song;
-    long rc;
+  char filename[MAX_PATH];
+  long handle;
+  long size;
+  void *song;
+  long rc;
 
-    MUSIC_StopSong();
+  MUSIC_StopSong();
 
-    // Read from a groupfile, write it to disk so SDL_mixer can read it.
-    //   Lame.  --ryan.
-    handle = kopen4load(_filename, 0);
-    if (handle == -1)
-        return;
+  // Read from a groupfile, write it to disk so SDL_mixer can read it.
+  //   Lame.  --ryan.
+  handle = kopen4load(_filename, 0);
+  if (handle == -1)
+    return;
 
-    size = kfilelength(handle);
-    if (size == -1)
-    {
-        kclose(handle);
-        return;
-    } // if
-
-    song = malloc(size);
-    if (song == NULL)
-    {
-        kclose(handle);
-        return;
-    } // if
-
-    rc = kread(handle, song, size);
+  size = kfilelength(handle);
+  if (size == -1) {
     kclose(handle);
-    if (rc != size)
-    {
-        free(song);
-        return;
-    } // if
+    return;
+  } // if
 
-    // save the file somewhere, so SDL_mixer can load it
-    GetPathFromEnvironment(filename, MAX_PATH, "tmpsong.mid");
+  song = malloc(size);
+  if (song == NULL) {
+    kclose(handle);
+    return;
+  } // if
+
+  rc = kread(handle, song, size);
+  kclose(handle);
+  if (rc != size) {
+    free(song);
+    return;
+  } // if
+
+  // save the file somewhere, so SDL_mixer can load it
+  GetPathFromEnvironment(filename, MAX_PATH, "tmpsong.mid");
 #if USE_SDL
-    {
+  {
     SDL_RWops *rw = SafeOpenWrite(filename);
     SafeWrite(rw, song, size);
     SDL_RWclose(rw);
-    }
+  }
 #else
-    handle = SafeOpenWrite(filename);
-    
-    SafeWrite(handle, song, size);
-    close(handle);
-#endif
-    free(song);
-    
-    //music_songdata = song;
+  handle = SafeOpenWrite(filename);
 
-    music_musicchunk = Mix_LoadMUS(filename);
-    if (music_musicchunk != NULL)
-    {
-        // !!! FIXME: I set the music to loop. Hope that's okay. --ryan.
-        Mix_PlayMusic(music_musicchunk, -1);
-    } // if
+  SafeWrite(handle, song, size);
+  close(handle);
+#endif
+  free(song);
+
+  // music_songdata = song;
+
+  music_musicchunk = Mix_LoadMUS(filename);
+  if (music_musicchunk != NULL) {
+    // !!! FIXME: I set the music to loop. Hope that's okay. --ryan.
+    Mix_PlayMusic(music_musicchunk, -1);
+  } // if
 }
 #endif
 
 #ifdef __ANDROID__
-#   include <jni.h>
+#include <jni.h>
 #endif
 
 #ifdef ROTT
 // ROTT Special - SBF
-int MUSIC_PlaySongROTT(unsigned char *song, int size, int loopflag)
-{
-    char filename[MAX_PATH];
+int MUSIC_PlaySongROTT(unsigned char *song, int size, int loopflag) {
+  // ROTT uses fx_man.c's MUSIC_PlaySongROTT implementation when compiled for
+  // ROTT. However, if we are in dukemusc.c, it might be a different build
+  // configuration. In the current project, both fx_man.c and dukemusc.c seem to
+  // be compiled. Looking at the Makefile, dukemusc.o is included in OBJS. Let's
+  // implement it here just in case.
 
-#ifndef __ANDROID__
-    MUSIC_StopSong();
-    // save the file somewhere, so SDL_mixer can load it
-    GetPathFromEnvironment(filename, ApogeePath, "tmpsong.mid");
-#else
-    strcpy(filename, ApogeePath);
-    strcat(filename, "/tmpsong.mid");
-#endif
+  extern MIX_Mixer *sdl_mixer;
+  extern MIX_Track *music_track;
 
-#if USE_SDL
-    {
-    SDL_RWops *rw = SafeOpenWrite(filename);
-    SafeWrite(rw, song, size);
-    SDL_RWclose(rw);
-    }
-#else
-    {
-    int handle = SafeOpenWrite(filename);
-    SafeWrite(handle, song, size);
-    close(handle);
-    }
-#endif
+  MUSIC_StopSong();
 
-    music_songdata = (char *)song;
-#ifdef __ANDROID__
-    JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
-    jobject activity = (jobject)SDL_AndroidGetActivity();
-    if (!activity)
-    {
-        return MUSIC_Error;
-    }
-    jclass clActivity = (*env)->GetObjectClass(env, activity);
-    if (!clActivity)
-    {
-        return MUSIC_Error;
-    }
-    jmethodID idPlayMusic = (*env)->GetMethodID(env, clActivity, "playMusic", "(Ljava/lang/String;Z)V");
-    if (!idPlayMusic)
-    {
-        return MUSIC_Error;
-    }
-    jstring midiFilePath = (*env)->NewStringUTF(env, filename);
-    if (!midiFilePath)
-    {
-        return MUSIC_Error;
+  music_songdata = (char *)song;
+
+  // finally, we can load it with SDL_mixer
+  if (sdl_mixer) {
+    music_audio = MIX_LoadAudioNoCopy(sdl_mixer, song, size, false);
+    if (music_audio == NULL) {
+      return MUSIC_Error;
     }
 
-    (*env)->CallVoidMethod(env, activity, idPlayMusic, midiFilePath, loopflag);
-
-    (*env)->DeleteLocalRef(env, midiFilePath);
-    (*env)->DeleteLocalRef(env, clActivity);
-    (*env)->DeleteLocalRef(env, activity);
-#else
-    // finally, we can load it with SDL_mixer
-    music_musicchunk = Mix_LoadMUS(filename);
-    if (music_musicchunk == NULL) {
-        return MUSIC_Error;
+    if (music_track) {
+      SDL_PropertiesID props = SDL_CreateProperties();
+      SDL_SetNumberProperty(props, MIX_PROP_PLAY_LOOPS_NUMBER,
+                            (loopflag == MUSIC_PlayOnce) ? 0 : -1);
+      MIX_SetTrackAudio(music_track, music_audio);
+      MIX_PlayTrack(music_track, props);
+      SDL_DestroyProperties(props);
     }
-    
-    Mix_PlayMusic(music_musicchunk, (loopflag == MUSIC_PlayOnce) ? 0 : -1);
-#endif
-    return(MUSIC_Ok);
+  }
+
+  return (MUSIC_Ok);
 } // MUSIC_PlaySongROTT
 #endif
 
-
-void MUSIC_SetContext(int context)
-{
-    musdebug("STUB ... MUSIC_SetContext().\n");
-    music_context = context;
+void MUSIC_SetContext(int context) {
+  musdebug("STUB ... MUSIC_SetContext().\n");
+  music_context = context;
 } // MUSIC_SetContext
 
+int MUSIC_GetContext(void) { return (music_context); } // MUSIC_GetContext
 
-int MUSIC_GetContext(void)
-{
-    return(music_context);
-} // MUSIC_GetContext
-
-
-void MUSIC_SetSongTick(unsigned long PositionInTicks)
-{
-    musdebug("STUB ... MUSIC_SetSongTick().\n");
+void MUSIC_SetSongTick(unsigned long PositionInTicks) {
+  musdebug("STUB ... MUSIC_SetSongTick().\n");
 } // MUSIC_SetSongTick
 
+void MUSIC_SetSongTime(unsigned long milliseconds) {
+  musdebug("STUB ... MUSIC_SetSongTime().\n");
+} // MUSIC_SetSongTime
 
-void MUSIC_SetSongTime(unsigned long milliseconds)
-{
-    musdebug("STUB ... MUSIC_SetSongTime().\n");
-}// MUSIC_SetSongTime
-
-
-void MUSIC_SetSongPosition(int measure, int beat, int tick)
-{
-    musdebug("STUB ... MUSIC_SetSongPosition().\n");
+void MUSIC_SetSongPosition(int measure, int beat, int tick) {
+  musdebug("STUB ... MUSIC_SetSongPosition().\n");
 } // MUSIC_SetSongPosition
 
-
-void MUSIC_GetSongPosition(songposition *pos)
-{
-    musdebug("STUB ... MUSIC_GetSongPosition().\n");
+void MUSIC_GetSongPosition(songposition *pos) {
+  musdebug("STUB ... MUSIC_GetSongPosition().\n");
 } // MUSIC_GetSongPosition
 
-
-void MUSIC_GetSongLength(songposition *pos)
-{
-    musdebug("STUB ... MUSIC_GetSongLength().\n");
+void MUSIC_GetSongLength(songposition *pos) {
+  musdebug("STUB ... MUSIC_GetSongLength().\n");
 } // MUSIC_GetSongLength
 
-
-int MUSIC_FadeVolume(int tovolume, int milliseconds)
-{
-    Mix_FadeOutMusic(milliseconds);
-    return(MUSIC_Ok);
+int MUSIC_FadeVolume(int tovolume, int milliseconds) {
+  extern MIX_Track *music_track;
+  if (music_track) {
+    MIX_StopTrack(music_track, MIX_TrackMSToFrames(music_track, milliseconds));
+  }
+  return (MUSIC_Ok);
 } // MUSIC_FadeVolume
 
-
-int MUSIC_FadeActive(void)
-{
-    return((Mix_FadingMusic() == MIX_FADING_OUT) ? __FX_TRUE : __FX_FALSE);
+int MUSIC_FadeActive(void) {
+  extern MIX_Track *music_track;
+  return ((music_track && MIX_GetTrackFadeFrames(music_track) < 0)
+              ? __FX_TRUE
+              : __FX_FALSE);
 } // MUSIC_FadeActive
 
-
-void MUSIC_StopFade(void)
-{
-    musdebug("STUB ... MUSIC_StopFade().\n");
+void MUSIC_StopFade(void) {
+  musdebug("STUB ... MUSIC_StopFade().\n");
 } // MUSIC_StopFade
 
-
-void MUSIC_RerouteMidiChannel(int channel, int cdecl (*function)( int event, int c1, int c2 ))
-{
-    musdebug("STUB ... MUSIC_RerouteMidiChannel().\n");
+void MUSIC_RerouteMidiChannel(int channel,
+                              int cdecl (*function)(int event, int c1,
+                                                    int c2)) {
+  musdebug("STUB ... MUSIC_RerouteMidiChannel().\n");
 } // MUSIC_RerouteMidiChannel
 
-
-void MUSIC_RegisterTimbreBank(unsigned char *timbres)
-{
-    musdebug("STUB ... MUSIC_RegisterTimbreBank().\n");
+void MUSIC_RegisterTimbreBank(unsigned char *timbres) {
+  musdebug("STUB ... MUSIC_RegisterTimbreBank().\n");
 } // MUSIC_RegisterTimbreBank
-
 
 // end of fx_man.c ...

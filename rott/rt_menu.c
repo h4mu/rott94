@@ -41,7 +41,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #ifdef USE_SDL
-#include "SDL.h"
+#include <SDL3/SDL.h>
 #endif
 
 #include <sys/types.h>

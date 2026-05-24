@@ -40,7 +40,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #if USE_SDL
 /* Need to redefine main to SDL_main on some platforms... */
-#include "SDL.h"
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+#include <SDL3/SDL_system.h>
 #endif
 
 #include "rt_actor.h"
@@ -78,6 +80,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "rt_build.h"
 #include "rt_error.h"
 #include "modexlib.h"
+#include "hw_render/hw_main.h"
 #include "rt_net.h"
 #include "cin_main.h"
 #include "rottnet.h"
@@ -565,10 +568,11 @@ void DrawRottTitle ( void )
 void CheckCommandLineParameters( void )
 {
    char *PStrings[] = {"TEDLEVEL","NOWAIT","NOSOUND","NOW",
-                       "TRANSPORT","DOPEFISH","SCREENSHOTS",
-                       "MONO","MAPSTATS","TILESTATS","VER","net",
-                       "PAUSE","SOUNDSETUP","WARP","IS8250","ENABLEVR",
-                       "TIMELIMIT","MAXTIMELIMIT","NOECHO","DEMOEXIT","QUIET",NULL};
+                        "TRANSPORT","DOPEFISH","SCREENSHOTS",
+                        "MONO","MAPSTATS","TILESTATS","VER","net",
+                        "PAUSE","SOUNDSETUP","WARP","IS8250","ENABLEVR",
+                        "TIMELIMIT","MAXTIMELIMIT","NOECHO","DEMOEXIT","QUIET",
+                        "RETRO",NULL};
    int i,n;
 
    infopause=false;
@@ -589,6 +593,8 @@ void CheckCommandLineParameters( void )
    IS8250 = false;
    vrenabled = false;
    demoexit = false;
+   iG_RetroRenderer = false;
+   iG_HardwareRenderer = true;
 
    modemgame=false;
    networkgame=false;
@@ -641,14 +647,15 @@ void CheckCommandLineParameters( void )
 #endif
       printf ("   ENABLEVR   - Enable VR helmet input devices\n");
       printf ("   NOECHO     - Turn off sound reverb\n");
-      printf ("   DEMOEXIT   - Exit program when demo is terminated\n");
-      printf ("   WARP       - Warp to specific ROTT level\n");
-      printf ("                next parameter is level to start on\n");
-      printf ("   TIMELIMIT  - Play ROTT in time limit mode\n");
-      printf ("                next parameter is time in seconds\n");
-      printf ("   MAXTIMELIMIT - Maximimum time to count down from\n");
-      printf ("                next parameter is time in seconds\n");
-      printf ("   DOPEFISH   - ?\n");
+       printf ("   DEMOEXIT   - Exit program when demo is terminated\n");
+       printf ("   WARP       - Warp to specific ROTT level\n");
+       printf ("                next parameter is level to start on\n");
+       printf ("   TIMELIMIT  - Play ROTT in time limit mode\n");
+       printf ("                next parameter is time in seconds\n");
+       printf ("   MAXTIMELIMIT - Maximimum time to count down from\n");
+       printf ("                next parameter is time in seconds\n");
+       printf ("   RETRO      - Use the classic SDL renderer\n");
+       printf ("   DOPEFISH   - ?\n");
       printf (" \n");
       printf ("CONTROLS\n");
       printf ("         Arrows           - Move\n");
@@ -837,11 +844,17 @@ void CheckCommandLineParameters( void )
        case 20:
           demoexit = true;
           break;
-       case 21:
+        case 21:
           quiet = true;
           break;
-      }
-   }
+        case 22:
+          iG_RetroRenderer = true;
+          iG_HardwareRenderer = false;
+          if (!quiet)
+             printf("Retro renderer enabled\n");
+          break;
+       }
+    }
 }
 
 void DataPath(char * path, char * filename)
@@ -851,10 +864,10 @@ void DataPath(char * path, char * filename)
 	wcstombs(tmp, GetDataBasePathWinRT(), sizeof(tmp));
 	const char * baseDir = tmp;
 #elif defined(__ANDROID__)
-	const char * baseDir = SDL_AndroidGetExternalStoragePath();
+	const char * baseDir = SDL_GetAndroidExternalStoragePath();
 	if (!baseDir)
 	{
-		baseDir =  SDL_AndroidGetInternalStoragePath();
+		baseDir =  SDL_GetAndroidInternalStoragePath();
 	}
 #else
 	const char * baseDir = "assets";
@@ -2142,7 +2155,7 @@ fromloadedgame:
 		drawtime = GetFastTics() - atime;
 
       // Don't allow player to quit if entering message
-      canquit = !MSG.messageon;
+      canquit = !ModemMsg.messageon;
 
       PollKeyboard();
 
@@ -2242,7 +2255,7 @@ fromloadedgame:
 
       if ( BATTLEMODE )
          {
-         if ( MSG.messageon == false )
+         if ( ModemMsg.messageon == false )
             {
             CheckRemoteRidicule( LastScan );
             }
@@ -2452,30 +2465,30 @@ void PollKeyboard
       }
 #endif
 
-   if ( ( MSG.messageon == false ) && ( !quitactive ) )
+   if ( ( ModemMsg.messageon == false ) && ( !quitactive ) )
       {
       if ( ( Keyboard[ buttonscan[ bt_message ] ] ) && ( BATTLEMODE ) )
          {
          // Send message to all
-         MSG.messageon = true;
-         MSG.directed  = false;
-         MSG.inmenu    = false;
-         MSG.remoteridicule = -1;
-         MSG.towho     = MSG_DIRECTED_TO_ALL;
-         MSG.textnum   = AddMessage( "_", MSG_MODEM );
-         MSG.length    = 1;
+         ModemMsg.messageon = true;
+         ModemMsg.directed  = false;
+         ModemMsg.inmenu    = false;
+         ModemMsg.remoteridicule = -1;
+         ModemMsg.towho     = MSG_DIRECTED_TO_ALL;
+         ModemMsg.textnum   = AddMessage( "_", MSG_MODEM );
+         ModemMsg.length    = 1;
          DeletePriorityMessage( MSG_MACRO );
          }
       else if ( ( Keyboard[ buttonscan[ bt_directmsg ] ] ) && ( BATTLEMODE ) )
          {
          // Send directed message
-         MSG.messageon = true;
-         MSG.directed  = true;
-         MSG.inmenu    = false;
-         MSG.remoteridicule = -1;
-         MSG.towho     = 0;
-         MSG.textnum   = AddMessage( "_", MSG_MODEM );
-         MSG.length    = 1;
+         ModemMsg.messageon = true;
+         ModemMsg.directed  = true;
+         ModemMsg.inmenu    = false;
+         ModemMsg.remoteridicule = -1;
+         ModemMsg.towho     = 0;
+         ModemMsg.textnum   = AddMessage( "_", MSG_MODEM );
+         ModemMsg.length    = 1;
          DeletePriorityMessage( MSG_MACRO );
          }
       if ( buttonpoll[ bt_map ] )
@@ -3034,7 +3047,7 @@ void WriteLBMfile (char *filename, byte *data, int width, int height)
    long    length;
    bmhd_t  basebmhd;
 #if USE_SDL
-   SDL_RWops* handle;
+   SDL_IOStream* handle;
 #else
    int     handle;
 #endif
@@ -3143,7 +3156,7 @@ void WriteLBMfile (char *filename, byte *data, int width, int height)
    SafeWrite (handle, lbm, lbmptr-lbm);
 
 #if USE_SDL
-   SDL_RWclose(handle);
+   SDL_CloseIO(handle);
 #else
    close (handle);
 #endif
@@ -3332,7 +3345,7 @@ void WritePCX (char * file, byte * source)
    byte *tempbuffer;
    byte pal[0x300];
 #if USE_SDL
-   SDL_RWops* pcxhandle;
+   SDL_IOStream* pcxhandle;
 #else
    int pcxhandle;
 #endif
@@ -3411,7 +3424,7 @@ void WritePCX (char * file, byte * source)
    SafeWrite (pcxhandle, &pal[0], 768);
 
 #if USE_SDL
-   SDL_RWclose(pcxhandle);
+   SDL_CloseIO(pcxhandle);
 #else
    close (pcxhandle);
 #endif

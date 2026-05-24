@@ -4769,7 +4769,7 @@ long DoCheckSum (byte *source, int size, long csum)
 long CalculateSaveGameCheckSum (char * filename)
 {
 #if USE_SDL
-   SDL_RWops* handle;
+   SDL_IOStream* handle;
 #else
    int handle;
 #endif
@@ -4786,7 +4786,7 @@ long CalculateSaveGameCheckSum (char * filename)
 
    handle = SafeOpenRead (filename);
 #if USE_SDL
-   lengthleft = SDL_RWsize(handle);
+   lengthleft = (int)SDL_GetIOSize(handle);
 #else
    lengthleft = filelength (handle);
 #endif
@@ -4806,7 +4806,7 @@ long CalculateSaveGameCheckSum (char * filename)
    SafeFree(altbuffer);
 
 #if USE_SDL
-   SDL_RWclose(handle);
+   SDL_CloseIO(handle);
 #else
    close (handle);
 #endif
@@ -4820,7 +4820,7 @@ long CalculateSaveGameCheckSum (char * filename)
 //
 //******************************************************************************
 #if USE_SDL
-void StoreBuffer (SDL_RWops* handle, byte * src, int size)
+void StoreBuffer (SDL_IOStream* handle, byte * src, int size)
 #else
 void StoreBuffer (int handle, byte * src, int size)
 #endif
@@ -4835,7 +4835,7 @@ void StoreBuffer (int handle, byte * src, int size)
 //
 //******************************************************************************
 #if USE_SDL
-void SaveTag (SDL_RWops* handle, char * tag, int size)
+void SaveTag (SDL_IOStream* handle, char * tag, int size)
 #else
 void SaveTag (int handle, char * tag, int size)
 #endif
@@ -4860,7 +4860,7 @@ bool SaveTheGame (int num, gamestorage_t * game)
 	int    size;
 	int    avail;
 #if USE_SDL
-	SDL_RWops* savehandle;
+	SDL_IOStream* savehandle;
 #else
    int    savehandle;
 #endif
@@ -5118,7 +5118,7 @@ bool SaveTheGame (int num, gamestorage_t * game)
    SafeWrite(savehandle,&poweradjust,size);
 
 #if USE_SDL
-   SDL_RWclose(savehandle);
+   SDL_CloseIO(savehandle);
 #else
    close (savehandle);
 #endif
@@ -5135,7 +5135,7 @@ bool SaveTheGame (int num, gamestorage_t * game)
    SafeWrite(savehandle,&crc,size);
 
 #if USE_SDL
-   SDL_RWclose(savehandle);
+   SDL_CloseIO(savehandle);
 #else
    close (savehandle);
 #endif

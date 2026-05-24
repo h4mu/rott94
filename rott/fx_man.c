@@ -20,13 +20,16 @@
 #define cdecl
 #endif
 
-#include "SDL.h"
-#include "SDL_mixer.h"
 #include "rt_def.h"      // ROTT music hack
+#include <SDL3/SDL.h>
+#include <SDL3_mixer/SDL_mixer.h>
+#include <math.h>
 #include "rt_cfg.h"      // ROTT music hack
 #include "rt_util.h"     // ROTT music hack
+#include "z_zone.h"
 #include "fx_man.h"
 #include "music.h"
+
 
 #define __FX_TRUE  (1 == 1)
 #define __FX_FALSE (!__FX_TRUE)
@@ -47,13 +50,14 @@ typedef struct __DUKECHANINFO
     int priority;               // priority, defined by application.
     Uint32 birthday;            // ticks when channel was grabbed.
     unsigned long callbackval;  // callback value from application.
+    MIX_Audio *audio;
 } duke_channel_info;
 
 
 static char warningMessage[80];
 static char errorMessage[80];
 static int fx_initialized = 0;
-static int numChannels = MIX_CHANNELS;
+static int numChannels = 0;
 static void (*callback)(unsigned long);
 static int reverseStereo = 0;
 static int reverbDelay = 256;
@@ -64,6 +68,13 @@ static int initialized_debugging = 0;
 static int maxReverbDelay = 256;
 static int mixerIsStereo = 1;
 static duke_channel_info *chaninfo = NULL;
+
+MIX_Mixer *sdl_mixer = NULL;
+MIX_Track **sdl_tracks = NULL;
+MIX_Track *music_track = NULL;
+
+static void setWarningMessage(const char *msg);
+static void setErrorMessage(const char *msg);
 
 #define HandleOffset       1
 
@@ -119,21 +130,73 @@ static void MV_CalcPanTable
    }
 /* end ASS copy-pastage */
 
-#ifdef __WATCOMC__
-#pragma aux (__cdecl) channelDoneCallback;
-#endif
-
-// This function is called whenever an SDL_mixer channel completes playback.
+// This function is called whenever an SDL_mixer track completes playback.
 //  We use this for state management and calling the application's callback.
-static void channelDoneCallback(int channel)
+static void SDLCALL trackDoneCallback(void *userdata, MIX_Track *track)
 {
-    Mix_FreeChunk(Mix_GetChunk(channel));
+    int channel = (int)(uintptr_t)userdata;
+    if ((channel < 0) || (channel >= numChannels) || (chaninfo == NULL))
+    {
+        return;
+    }
+    // MIX_Audio is reference counted, track will release its reference.
     if (callback)
     {
         callback(chaninfo[channel].callbackval);
         chaninfo[channel].in_use = 0;
     } // if
-} // channelDoneCallback
+} // trackDoneCallback
+
+static void SDLCALL reverse_stereo_callback(void *userdata, MIX_Mixer *mixer, const SDL_AudioSpec *spec, float *pcm, int samples)
+{
+    if (reverseStereo && spec->channels == 2) {
+        for (int i = 0; i < samples; i += 2) {
+            float tmp = pcm[i];
+            pcm[i] = pcm[i+1];
+            pcm[i+1] = tmp;
+        }
+    }
+}
+
+static void shutdown_mixer_state(void)
+{
+    if (sdl_mixer != NULL) {
+        MIX_DestroyMixer(sdl_mixer);
+        sdl_mixer = NULL;
+    }
+
+    MIX_Quit();
+
+    free(sdl_tracks);
+    sdl_tracks = NULL;
+    music_track = NULL;
+    numChannels = 0;
+}
+
+static bool track_is_ready(int chan)
+{
+    if ((chan < 0) || (chan >= numChannels) || (sdl_tracks == NULL) || (sdl_tracks[chan] == NULL))
+    {
+        setErrorMessage("Sound track is unavailable.");
+        return false;
+    }
+
+    return true;
+}
+
+static void release_channel_audio(int chan)
+{
+    if ((chan < 0) || (chan >= numChannels) || (chaninfo == NULL))
+    {
+        return;
+    }
+
+    if (chaninfo[chan].audio != NULL)
+    {
+        MIX_DestroyAudio(chaninfo[chan].audio);
+        chaninfo[chan].audio = NULL;
+    }
+}
 
 
 // This gets called all over the place for information and debugging messages.
@@ -202,7 +265,7 @@ static void init_debugging(void)
 } // init_debugging
 
 
-// find an available SDL_mixer channel, and reserve it.
+// find an available SDL_mixer track, and reserve it.
 //  This would be a race condition, but hey, it's for a DOS game.  :)
 static int grabMixerChannel(int priority)
 {
@@ -215,7 +278,7 @@ static int grabMixerChannel(int priority)
         {
             chaninfo[i].in_use = 1;
             chaninfo[i].priority = priority;
-            chaninfo[i].birthday = SDL_GetTicks();
+            chaninfo[i].birthday = (Uint32)SDL_GetTicks();
             return(i);
         } // if
 
@@ -230,12 +293,12 @@ static int grabMixerChannel(int priority)
         } // if
     } // for
 
-    // if you land here, all mixer channels are playing...
+    // if you land here, all mixer tracks are playing...
     if (replaceable != -1)  // nothing expendable right now.
     {
         chaninfo[replaceable].in_use = 1;
         chaninfo[replaceable].priority = priority;
-        chaninfo[replaceable].birthday = SDL_GetTicks();
+        chaninfo[replaceable].birthday = (Uint32)SDL_GetTicks();
     } // if
 
     return(replaceable);
@@ -278,7 +341,6 @@ char *FX_ErrorString( int ErrorNumber )
             return("Unknown error.");
     } // switch
 
-    assert(0);    // shouldn't hit this point.
     return(NULL);
 } // FX_ErrorString
 
@@ -331,8 +393,15 @@ int FX_SetupCard( int SoundCard, fx_device *device )
 } // FX_SetupCard
 
 
-static void output_versions(const char *libname, const SDL_version *compiled,
-							const SDL_version *linked)
+typedef struct
+{
+    int major;
+    int minor;
+    int patch;
+} SDL_version_legacy;
+
+static void output_versions(const char *libname, const SDL_version_legacy *compiled,
+							const SDL_version_legacy *linked)
 {
     snddebug("This program was compiled against %s %d.%d.%d,\n"
              " and is dynamically linked to %d.%d.%d.\n", libname,
@@ -343,25 +412,38 @@ static void output_versions(const char *libname, const SDL_version *compiled,
 
 static void output_version_info(void)
 {
-    SDL_version compiled;
-    const SDL_version *linked;
+    SDL_version_legacy compiled;
+    int linked_packed;
+    SDL_version_legacy linked;
 
     snddebug("Library check...");
 
-    SDL_VERSION(&compiled);
-    linked = SDL_Linked_Version();
-    output_versions("SDL", &compiled, linked);
+    // SDL_VERSION(&compiled);
+    compiled.major = SDL_MAJOR_VERSION;
+    compiled.minor = SDL_MINOR_VERSION;
+    compiled.patch = SDL_MICRO_VERSION;
+    linked_packed = SDL_GetVersion();
+    linked.major = SDL_VERSIONNUM_MAJOR(linked_packed);
+    linked.minor = SDL_VERSIONNUM_MINOR(linked_packed);
+    linked.patch = SDL_VERSIONNUM_MICRO(linked_packed);
+    output_versions("SDL", &compiled, &linked);
 
-    MIX_VERSION(&compiled);
-    linked = Mix_Linked_Version();
-    output_versions("SDL_mixer", &compiled, linked);
+    // MIX_VERSION(&compiled);
+    compiled.major = SDL_MIXER_MAJOR_VERSION;
+    compiled.minor = SDL_MIXER_MINOR_VERSION;
+    compiled.patch = SDL_MIXER_MICRO_VERSION;
+    linked_packed = MIX_Version();
+    linked.major = SDL_VERSIONNUM_MAJOR(linked_packed);
+    linked.minor = SDL_VERSIONNUM_MINOR(linked_packed);
+    linked.patch = SDL_VERSIONNUM_MICRO(linked_packed);
+    output_versions("SDL_mixer", &compiled, &linked);
 } // output_version_info
 
 
 int FX_Init(int SoundCard, int numvoices, int numchannels,
             int samplebits, unsigned mixrate)
 {
-    Uint16 audio_format = 0;
+    SDL_AudioSpec spec;
     int blocksize;
 
     init_debugging();
@@ -404,46 +486,84 @@ int FX_Init(int SoundCard, int numvoices, int numchannels,
     // build pan tables
     MV_CalcPanTable();
     
-    SDL_ClearError();
-    if (SDL_Init(SDL_INIT_AUDIO) < 0)
+    if (!SDL_Init(SDL_INIT_AUDIO))
     {
         setErrorMessage("SDL_Init(SDL_INIT_AUDIO) failed!");
         snddebug("SDL_GetError() reports: [%s].", SDL_GetError());
         return(FX_Error);
     } // if
 
-    audio_format = (samplebits == 8) ? AUDIO_U8 : AUDIO_S16SYS;
-    if (Mix_OpenAudio(mixrate, audio_format, numchannels, 256) < 0)
+    if (!MIX_Init())
     {
-        setErrorMessage(SDL_GetError());
+        setErrorMessage("MIX_Init() failed!");
+        snddebug("SDL_GetError() reports: [%s].", SDL_GetError());
         return(FX_Error);
     } // if
+
+    SDL_zero(spec);
+    spec.format = (samplebits == 8) ? SDL_AUDIO_U8 : SDL_AUDIO_S16;
+    spec.channels = numchannels;
+    spec.freq = mixrate;
+
+    sdl_mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
+    if (sdl_mixer == NULL)
+    {
+        setErrorMessage(SDL_GetError());
+        shutdown_mixer_state();
+        return(FX_Error);
+    } // if
+
+    MIX_SetPostMixCallback(sdl_mixer, reverse_stereo_callback, NULL);
 
     output_version_info();
 
-    numChannels = Mix_AllocateChannels(numvoices);
-    if (numChannels != numvoices)
+    numChannels = numvoices;
+    sdl_tracks = (MIX_Track **)malloc(sizeof(MIX_Track *) * numChannels);
+    if (sdl_tracks == NULL)
+    {
+        setErrorMessage("Out of memory");
+        shutdown_mixer_state();
+        return(FX_Error);
+    }
+    memset(sdl_tracks, 0, sizeof(MIX_Track *) * numChannels);
+    for (int i = 0; i < numChannels; i++) {
+        sdl_tracks[i] = MIX_CreateTrack(sdl_mixer);
+        if (sdl_tracks[i] == NULL)
+        {
+            setErrorMessage(SDL_GetError());
+            shutdown_mixer_state();
+            return(FX_Error);
+        }
+        if (!MIX_SetTrackStoppedCallback(sdl_tracks[i], trackDoneCallback, (void *)(uintptr_t)i))
+        {
+            setErrorMessage(SDL_GetError());
+            shutdown_mixer_state();
+            return(FX_Error);
+        }
+    }
+
+    music_track = MIX_CreateTrack(sdl_mixer);
+    if (music_track == NULL)
     {
         setErrorMessage(SDL_GetError());
-        Mix_CloseAudio();
+        shutdown_mixer_state();
         return(FX_Error);
-    } // if
+    }
 
     blocksize = sizeof (duke_channel_info) * numvoices;
-    chaninfo = malloc(blocksize);
+    chaninfo = (duke_channel_info *)malloc(blocksize);
     if (chaninfo == NULL)  // uhoh.
     {
         setErrorMessage("Out of memory");
-        Mix_CloseAudio();
+        shutdown_mixer_state();
         return(FX_Error);
     } // if
     memset(chaninfo, '\0', blocksize);
 
-    Mix_ChannelFinished(channelDoneCallback);
     maxReverbDelay = (int) (((float) mixrate) * 0.5);
 
-    Mix_QuerySpec(NULL, NULL, &mixerIsStereo);
-    mixerIsStereo = (mixerIsStereo == 2);
+    MIX_GetMixerFormat(sdl_mixer, &spec);
+    mixerIsStereo = (spec.channels == 2);
 
     fx_initialized = 1;
     return(FX_Ok);
@@ -460,7 +580,7 @@ int FX_Shutdown( void )
         return(FX_Error);
     } // if
 
-    Mix_CloseAudio();
+    shutdown_mixer_state();
     callback = NULL;
     free(chaninfo);
     chaninfo = NULL;
@@ -483,20 +603,24 @@ int FX_SetCallBack(void (*func)(unsigned long))
 void FX_SetVolume(int volume)
 {
     snddebug("setting master volume to %f.2 percent.", (volume / 255.0) * 100);
-    Mix_Volume(-1, volume >> 1);  // it's 0-128 in SDL_mixer, not 0-255.
+    if (sdl_mixer) {
+        MIX_SetMixerGain(sdl_mixer, (float)volume / 255.0f);
+    }
 } // FX_SetVolume
 
 
 int FX_GetVolume(void)
 {
-    return(Mix_Volume(-1, -1) << 1);
+    if (sdl_mixer) {
+        return (int)(MIX_GetMixerGain(sdl_mixer) * 255.0f);
+    }
+    return 0;
 } // FX_GetVolume
 
 
 void FX_SetReverseStereo(int setting)
 {
     snddebug("Reverse stereo set to %s.\n", setting ? "ON" : "OFF");
-    Mix_SetReverseStereo(MIX_CHANNEL_POST, setting);
     reverseStereo = setting;
 } // FX_SetReverseStereo
 
@@ -582,7 +706,9 @@ static int doSetPan(int handle, int vol, int left,
 
     if ((handle < 0) || (handle >= numChannels))
         setWarningMessage("Invalid handle in doSetPan().");
-    else if ((checkIfPlaying) && (!Mix_Playing(handle)))
+    else if ((sdl_tracks == NULL) || (sdl_tracks[handle] == NULL))
+        setWarningMessage("voice is no longer available in doSetPan().");
+    else if ((checkIfPlaying) && (!MIX_TrackPlaying(sdl_tracks[handle])))
         setWarningMessage("voice is no longer playing in doSetPan().");
     else
     {
@@ -597,7 +723,10 @@ static int doSetPan(int handle, int vol, int left,
 
             else
             {
-                Mix_SetPanning(handle, left, right);
+                MIX_StereoGains gains;
+                gains.left = (float)left / 255.0f;
+                gains.right = (float)right / 255.0f;
+                MIX_SetTrackStereo(sdl_tracks[handle], &gains);
             } // else
         } // if
         else
@@ -609,8 +738,7 @@ static int doSetPan(int handle, int vol, int left,
             } // if
             else
             {
-                // volume must be from 0-128, so the ">> 1" converts.
-                Mix_Volume(handle, vol >> 1);
+                MIX_SetTrackGain(sdl_tracks[handle], (float)vol / 255.0f);
             } // else
         } // else
 
@@ -649,10 +777,11 @@ int FX_SetFrequency(int handle, int frequency)
 //  and you should bail.
 // size added by SBF for ROTT
 static int setupVocPlayback(char *ptr, int size, int priority, unsigned long callbackval,
-                            int *chan, Mix_Chunk **chunk)
+                            int *chan, MIX_Audio **audio)
 {
-    SDL_RWops *rw;
+    int resolved_size = size;
 
+    snddebug("setupVocPlayback: size=%d priority=%d callback=%lu", size, priority, callbackval);
     *chan = grabMixerChannel(priority);
     if (*chan == -1)
     {
@@ -660,33 +789,34 @@ static int setupVocPlayback(char *ptr, int size, int priority, unsigned long cal
         return(FX_Error);
     } // if
 
-    if (size == -1) {
-        // !!! FIXME: This could be a problem...SDL/SDL_mixer wants a RWops, which
-        // !!! FIXME:  is an i/o abstraction. Since we already have the VOC data
-        // !!! FIXME:  in memory, we fake it with a memory-based RWops. None of
-        // !!! FIXME:  this is a problem, except the RWops wants to know how big
-        // !!! FIXME:  its memory block is (so it can do things like seek on an
-        // !!! FIXME:  offset from the end of the block), and since we don't have
-        // !!! FIXME:  this information, we have to give it SOMETHING. My VOC
-        // !!! FIXME:  decoder never does seeks from EOF, nor checks for
-        // !!! FIXME:  end-of-file, so we should be fine. However, we've got a
-        // !!! FIXME:  limit of 10 megs for one file. I hope that'll cover it. :)
-
-        rw = SDL_RWFromMem((void *) ptr, (10 * 1024) * 1024);  /* yikes. */
-    } else {
-        // A valid file size! Excellent.
-        rw = SDL_RWFromMem((void *) ptr, size);
+    if (resolved_size == -1) {
+        resolved_size = Z_GetSize(ptr);
+        snddebug("setupVocPlayback: resolved zone size %d", resolved_size);
     }
+
+    if (resolved_size <= 0)
+    {
+        setErrorMessage("Couldn't determine voice sample size.");
+        chaninfo[*chan].in_use = 0;
+        return(FX_Error);
+    }
+
+    snddebug("setupVocPlayback: loading audio with exact size %d", resolved_size);
+    *audio = MIX_LoadAudioNoCopy(sdl_mixer, (void *) ptr, (size_t)resolved_size, false);
     
-    *chunk = Mix_LoadWAV_RW(rw, 1);
-    if (*chunk == NULL)
+    if (*audio == NULL)
     {
         setErrorMessage("Couldn't decode voice sample.");
         chaninfo[*chan].in_use = 0;
         return(FX_Error);
     } // if
 
+    if (chaninfo[*chan].audio) {
+        MIX_DestroyAudio(chaninfo[*chan].audio);
+    }
+    chaninfo[*chan].audio = *audio;
     chaninfo[*chan].callbackval = callbackval;
+    snddebug("setupVocPlayback: audio ready on chan=%d", *chan);
     return(FX_Ok);
 } // setupVocPlayback
 
@@ -723,38 +853,70 @@ int FX_PlayVOC(char *ptr, int pitchoffset,
 {
     int rc;
     int chan;
-    Mix_Chunk *chunk;
+    MIX_Audio *audio;
 
     snddebug("Playing voice: mono (%d), left (%d), right (%d), priority (%d).\n",
                 vol, left, right, priority);
 
-    rc = setupVocPlayback(ptr, -1, priority, callbackval, &chan, &chunk);
+    if (sdl_mixer == NULL)
+    {
+        setErrorMessage("Sound system is unavailable.");
+        return(FX_Error);
+    }
+
+    rc = setupVocPlayback(ptr, -1, priority, callbackval, &chan, &audio);
     if (rc != FX_Ok)
         return(rc);
 
-    // !!! FIXME: Need to do something with pitchoffset.
+    snddebug("FX_PlayVOC3D: chan=%d after setup", chan);
+    if (!track_is_ready(chan))
+    {
+        release_channel_audio(chan);
+        chaninfo[chan].in_use = 0;
+        return(FX_Error);
+    }
+
+    if (pitchoffset) {
+        if (!MIX_SetTrackFrequencyRatio(sdl_tracks[chan], powf(2.0f, (float)pitchoffset / 1200.0f))) {
+            setErrorMessage(SDL_GetError());
+            release_channel_audio(chan);
+            chaninfo[chan].in_use = 0;
+            return(FX_Error);
+        }
+    } else {
+        if (!MIX_SetTrackFrequencyRatio(sdl_tracks[chan], 1.0f)) {
+            setErrorMessage(SDL_GetError());
+            release_channel_audio(chan);
+            chaninfo[chan].in_use = 0;
+            return(FX_Error);
+        }
+    }
 
     rc = doSetPan(chan, vol, left, right, 0);
     if (rc != FX_Ok)
     {
+        release_channel_audio(chan);
         chaninfo[chan].in_use = 0;
         return(rc);
     } // if
 
-    Mix_PlayChannel(chan, chunk, 0);
+    if (!MIX_SetTrackAudio(sdl_tracks[chan], audio))
+    {
+        setErrorMessage(SDL_GetError());
+        release_channel_audio(chan);
+        chaninfo[chan].in_use = 0;
+        return(FX_Error);
+    }
+
+    if (!MIX_PlayTrack(sdl_tracks[chan], 0))
+    {
+        setErrorMessage(SDL_GetError());
+        release_channel_audio(chan);
+        chaninfo[chan].in_use = 0;
+        return(FX_Error);
+    }
     return(HandleOffset + chan);
 } // FX_PlayVOC
-
-
-// get the size of a single sample, in bytes.
-static int getSampleSize(void)
-{
-    Uint16 format;
-    int channels;
-
-    Mix_QuerySpec(NULL, &format, &channels);
-    return( ((format & 0xFF) / 8) * channels );
-} // getSampleSize
 
 
 int FX_PlayLoopedVOC(char *ptr, long loopstart, long loopend,
@@ -763,47 +925,101 @@ int FX_PlayLoopedVOC(char *ptr, long loopstart, long loopend,
 {
     int rc;
     int chan;
-    int samplesize = getSampleSize();
-    Uint32 totalsamples;
-    Mix_Chunk *chunk;
+    MIX_Audio *audio;
 
     snddebug("Playing voice: mono (%d), left (%d), right (%d), priority (%d).\n",
                 vol, left, right, priority);
     snddebug("Looping: start (%ld), end (%ld).\n", loopstart, loopend);
 
-    rc = setupVocPlayback(ptr, -1, priority, callbackval, &chan, &chunk);
+    if (sdl_mixer == NULL)
+    {
+        setErrorMessage("Sound system is unavailable.");
+        return(FX_Error);
+    }
+
+    rc = setupVocPlayback(ptr, -1, priority, callbackval, &chan, &audio);
     if (rc != FX_Ok)
         return(rc);
 
-    // !!! FIXME: Need to do something with pitchoffset.
-
-    totalsamples = chunk->alen / samplesize;
-
-    if ((loopstart >= 0) && ((unsigned int)loopstart < totalsamples))
+    if (!track_is_ready(chan))
     {
-        if (loopend < 0) loopend = 0;
-        if ((unsigned int)loopend > totalsamples) loopend = totalsamples;
+        release_channel_audio(chan);
+        chaninfo[chan].in_use = 0;
+        return(FX_Error);
+    }
 
-        if (loopend < loopstart)
-        {
-            Mix_FreeChunk(chunk);
+    if (pitchoffset) {
+        if (!MIX_SetTrackFrequencyRatio(sdl_tracks[chan], powf(2.0f, (float)pitchoffset / 1200.0f))) {
+            setErrorMessage(SDL_GetError());
+            release_channel_audio(chan);
             chaninfo[chan].in_use = 0;
-            setErrorMessage("Loop end is before loop start.");
             return(FX_Error);
-        } // if
+        }
+    } else {
+        if (!MIX_SetTrackFrequencyRatio(sdl_tracks[chan], 1.0f)) {
+            setErrorMessage(SDL_GetError());
+            release_channel_audio(chan);
+            chaninfo[chan].in_use = 0;
+            return(FX_Error);
+        }
+    }
 
-        chunk->alen = loopend * samplesize;
-
-        if (loopstart > 0)
-        {
-            loopstart *= samplesize;
-            memcpy(chunk->abuf, ((Uint8 *) chunk->abuf) + loopstart,
-                    chunk->alen - loopstart);
-            chunk->alen -= loopstart;
-        } // if
+    rc = doSetPan(chan, vol, left, right, 0);
+    if (rc != FX_Ok)
+    {
+        release_channel_audio(chan);
+        chaninfo[chan].in_use = 0;
+        return(rc);
     } // if
 
-    Mix_PlayChannel(chan, chunk, -1);  /* -1 == looping. */
+    SDL_PropertiesID props = SDL_CreateProperties();
+    if (props == 0)
+    {
+        setErrorMessage(SDL_GetError());
+        release_channel_audio(chan);
+        chaninfo[chan].in_use = 0;
+        return(FX_Error);
+    }
+
+    Sint64 totalsamples = MIX_GetAudioDuration(audio);
+    if ((loopstart >= 0) && ((totalsamples < 0) || ((Sint64)loopstart < totalsamples)))
+    {
+        if (loopend < 0)
+            loopend = 0;
+        if ((totalsamples >= 0) && ((Sint64)loopend > totalsamples))
+            loopend = (long)totalsamples;
+        if (loopend < loopstart)
+        {
+            SDL_DestroyProperties(props);
+            setErrorMessage("Loop end is before loop start.");
+            release_channel_audio(chan);
+            chaninfo[chan].in_use = 0;
+            return(FX_Error);
+        }
+        SDL_SetNumberProperty(props, MIX_PROP_PLAY_LOOP_START_FRAME_NUMBER, (Sint64)loopstart);
+        SDL_SetNumberProperty(props, MIX_PROP_PLAY_MAX_FRAME_NUMBER, (Sint64)loopend);
+    }
+
+    SDL_SetNumberProperty(props, MIX_PROP_PLAY_LOOPS_NUMBER, -1);
+
+    if (!MIX_SetTrackAudio(sdl_tracks[chan], audio))
+    {
+        SDL_DestroyProperties(props);
+        setErrorMessage(SDL_GetError());
+        release_channel_audio(chan);
+        chaninfo[chan].in_use = 0;
+        return(FX_Error);
+    }
+
+    if (!MIX_PlayTrack(sdl_tracks[chan], props))
+    {
+        SDL_DestroyProperties(props);
+        setErrorMessage(SDL_GetError());
+        release_channel_audio(chan);
+        chaninfo[chan].in_use = 0;
+        return(FX_Error);
+    }
+    SDL_DestroyProperties(props);
     return(HandleOffset + chan);
 } // FX_PlayLoopedVOC
 
@@ -812,20 +1028,64 @@ int FX_PlayVOC3D(char *ptr, int pitchoffset, int angle, int distance,
 {
     int rc;
     int chan;
-    Mix_Chunk *chunk;
+    MIX_Audio *audio;
 
     snddebug("Playing voice at angle (%d), distance (%d), priority (%d).\n",
                 angle, distance, priority);
 
-    rc = setupVocPlayback(ptr, -1, priority, callbackval, &chan, &chunk);
+    if (sdl_mixer == NULL)
+    {
+        setErrorMessage("Sound system is unavailable.");
+        return(FX_Error);
+    }
+
+    rc = setupVocPlayback(ptr, -1, priority, callbackval, &chan, &audio);
     if (rc != FX_Ok)
         return(rc);
 
-    // !!! FIXME: Need to do something with pitchoffset.
+    if (!track_is_ready(chan))
+    {
+        release_channel_audio(chan);
+        chaninfo[chan].in_use = 0;
+        return(FX_Error);
+    }
+
+    if (pitchoffset) {
+        if (!MIX_SetTrackFrequencyRatio(sdl_tracks[chan], powf(2.0f, (float)pitchoffset / 1200.0f))) {
+            setErrorMessage(SDL_GetError());
+            release_channel_audio(chan);
+            chaninfo[chan].in_use = 0;
+            return(FX_Error);
+        }
+    } else {
+        if (!MIX_SetTrackFrequencyRatio(sdl_tracks[chan], 1.0f)) {
+            setErrorMessage(SDL_GetError());
+            release_channel_audio(chan);
+            chaninfo[chan].in_use = 0;
+            return(FX_Error);
+        }
+    }
     
+    snddebug("FX_PlayVOC3D: pitch set on chan=%d", chan);
     _FX_SetPosition(chan, angle, distance);
 
-    Mix_PlayChannel(chan, chunk, 0);
+    if (!MIX_SetTrackAudio(sdl_tracks[chan], audio))
+    {
+        setErrorMessage(SDL_GetError());
+        release_channel_audio(chan);
+        chaninfo[chan].in_use = 0;
+        return(FX_Error);
+    }
+
+    snddebug("FX_PlayVOC3D: audio attached on chan=%d", chan);
+    if (!MIX_PlayTrack(sdl_tracks[chan], 0))
+    {
+        setErrorMessage(SDL_GetError());
+        release_channel_audio(chan);
+        chaninfo[chan].in_use = 0;
+        return(FX_Error);
+    }
+    snddebug("FX_PlayVOC3D: playback started on chan=%d", chan);
     return(HandleOffset + chan);
 } // FX_PlayVOC3D
 
@@ -835,20 +1095,61 @@ int FX_PlayVOC3D_ROTT(char *ptr, int size, int pitchoffset, int angle, int dista
 {
     int rc;
     int chan;
-    Mix_Chunk *chunk;
+    MIX_Audio *audio;
 
     snddebug("Playing voice at angle (%d), distance (%d), priority (%d).\n",
                 angle, distance, priority);
 
-    rc = setupVocPlayback(ptr, size, priority, callbackval, &chan, &chunk);
+    if (sdl_mixer == NULL)
+    {
+        setErrorMessage("Sound system is unavailable.");
+        return(FX_Error);
+    }
+
+    rc = setupVocPlayback(ptr, size, priority, callbackval, &chan, &audio);
     if (rc != FX_Ok)
         return(rc);
 
-    // !!! FIXME: Need to do something with pitchoffset.
+    if (!track_is_ready(chan))
+    {
+        release_channel_audio(chan);
+        chaninfo[chan].in_use = 0;
+        return(FX_Error);
+    }
+
+    if (pitchoffset) {
+        if (!MIX_SetTrackFrequencyRatio(sdl_tracks[chan], powf(2.0f, (float)pitchoffset / 1200.0f))) {
+            setErrorMessage(SDL_GetError());
+            release_channel_audio(chan);
+            chaninfo[chan].in_use = 0;
+            return(FX_Error);
+        }
+    } else {
+        if (!MIX_SetTrackFrequencyRatio(sdl_tracks[chan], 1.0f)) {
+            setErrorMessage(SDL_GetError());
+            release_channel_audio(chan);
+            chaninfo[chan].in_use = 0;
+            return(FX_Error);
+        }
+    }
 
     _FX_SetPosition(chan, angle, distance);
 
-    Mix_PlayChannel(chan, chunk, 0);
+    if (!MIX_SetTrackAudio(sdl_tracks[chan], audio))
+    {
+        setErrorMessage(SDL_GetError());
+        release_channel_audio(chan);
+        chaninfo[chan].in_use = 0;
+        return(FX_Error);
+    }
+
+    if (!MIX_PlayTrack(sdl_tracks[chan], 0))
+    {
+        setErrorMessage(SDL_GetError());
+        release_channel_audio(chan);
+        chaninfo[chan].in_use = 0;
+        return(FX_Error);
+    }
 
     return(HandleOffset + chan);
 } // FX_PlayVOC3D_ROTT
@@ -911,7 +1212,9 @@ int FX_Pan3D(int handle, int angle, int distance)
 
     if ((handle < 0) || (handle >= numChannels))
         setWarningMessage("Invalid handle in FX_Pan3D().");
-    else if (!Mix_Playing(handle))
+    else if ((sdl_tracks == NULL) || (sdl_tracks[handle] == NULL))
+        setWarningMessage("voice is no longer available in FX_Pan3D().");
+    else if (!MIX_TrackPlaying(sdl_tracks[handle]))
         setWarningMessage("voice is no longer playing in FX_Pan3D().");
     else
     {
@@ -943,7 +1246,11 @@ int FX_SoundActive(int handle)
 
 int FX_SoundsPlaying(void)
 {
-    return(Mix_Playing(-1));
+    int count = 0;
+    for (int i = 0; i < numChannels; i++) {
+        if ((sdl_tracks != NULL) && (sdl_tracks[i] != NULL) && MIX_TrackPlaying(sdl_tracks[i])) count++;
+    }
+    return count;
 } // FX_SoundsPlaying
 
 
@@ -961,9 +1268,18 @@ int FX_StopSound(int handle)
         setWarningMessage("Invalid handle in FX_Pan3D().");
         retval = FX_Warning;
     } // if
+    else if ((sdl_tracks == NULL) || (sdl_tracks[handle] == NULL))
+    {
+        setWarningMessage("voice is no longer available in FX_StopSound().");
+        retval = FX_Warning;
+    } // else if
     else
     {
-        Mix_HaltChannel(handle);
+        if (!MIX_StopTrack(sdl_tracks[handle], 0))
+        {
+            setWarningMessage(SDL_GetError());
+            retval = FX_Warning;
+        }
     } // else
 
     return(retval);
@@ -974,7 +1290,10 @@ int FX_StopAllSounds(void)
 {
     snddebug("halting all channels.");
         // !!! FIXME: Should the user callback fire for this?
-    Mix_HaltGroup(-1);
+    if (sdl_mixer != NULL)
+    {
+        MIX_StopAllTracks(sdl_mixer, 0);
+    }
     return(FX_Ok);
 } // FX_StopAllSounds
 
@@ -1046,7 +1365,6 @@ char *MUSIC_ErrorString(int ErrorNumber)
             return("Unknown error.");
     } // switch
 
-    assert(0);    // shouldn't hit this point.
     return(NULL);
 } // MUSIC_ErrorString
 
@@ -1055,7 +1373,8 @@ static int music_initialized = 0;
 static int music_context = 0;
 static int music_loopflag = MUSIC_PlayOnce;
 static char *music_songdata = NULL;
-static Mix_Music *music_musicchunk = NULL;
+static int music_songsize = 0;
+static MIX_Audio *music_audio = NULL;
 
 int MUSIC_Init(int SoundCard, int Address)
 {
@@ -1108,7 +1427,9 @@ void MUSIC_SetMaxFMMidiChannel(int channel)
 
 void MUSIC_SetVolume(int volume)
 {
-    Mix_VolumeMusic(volume >> 1);  // convert 0-255 to 0-128.
+    if (music_track) {
+        MIX_SetTrackGain(music_track, (float)volume / 255.0f);
+    }
 } // MUSIC_SetVolume
 
 
@@ -1126,7 +1447,10 @@ void MUSIC_ResetMidiChannelVolumes(void)
 
 int MUSIC_GetVolume(void)
 {
-    return(Mix_VolumeMusic(-1) << 1);  // convert 0-128 to 0-255.
+    if (music_track) {
+        return (int)(MIX_GetTrackGain(music_track) * 255.0f);
+    }
+    return 0;
 } // MUSIC_GetVolume
 
 
@@ -1138,22 +1462,29 @@ void MUSIC_SetLoopFlag(int loopflag)
 
 int MUSIC_SongPlaying(void)
 {
-    return((Mix_PlayingMusic()) ? __FX_TRUE : __FX_FALSE);
+    if (music_track == NULL)
+        return(__FX_FALSE);
+    return((MIX_TrackPlaying(music_track)) ? __FX_TRUE : __FX_FALSE);
 } // MUSIC_SongPlaying
 
 
 void MUSIC_Continue(void)
 {
-    if (Mix_PausedMusic())
-        Mix_ResumeMusic();
-    else if (music_songdata)
-        MUSIC_PlaySong(music_songdata, MUSIC_PlayOnce);
+    if (music_track == NULL)
+        return;
+
+    if (MIX_TrackPaused(music_track))
+        MIX_ResumeTrack(music_track);
+    else if (music_songdata && (music_songsize > 0))
+        MUSIC_PlaySongROTT((unsigned char *)music_songdata, music_songsize, music_loopflag);
 } // MUSIC_Continue
 
 
 void MUSIC_Pause(void)
 {
-    Mix_PauseMusic();
+    if (music_track == NULL)
+        return;
+    MIX_PauseTrack(music_track);
 } // MUSIC_Pause
 
 
@@ -1165,14 +1496,15 @@ int MUSIC_StopSong(void)
         return(MUSIC_Error);
     } // if
 
-    if ( (Mix_PlayingMusic()) || (Mix_PausedMusic()) )
-        Mix_HaltMusic();
+    if ((music_track != NULL) && ((MIX_TrackPlaying(music_track)) || (MIX_TrackPaused(music_track))))
+        MIX_StopTrack(music_track, 0);
 
-    if (music_musicchunk)
-        Mix_FreeMusic(music_musicchunk);
+    if (music_audio)
+        MIX_DestroyAudio(music_audio);
 
     music_songdata = NULL;
-    music_musicchunk = NULL;
+    music_songsize = 0;
+    music_audio = NULL;
     return(MUSIC_Ok);
 } // MUSIC_StopSong
 
@@ -1205,27 +1537,113 @@ int MUSIC_PlaySong(unsigned char *song, int loopflag)
 // ROTT Special - SBF
 int MUSIC_PlaySongROTT(unsigned char *song, int size, int loopflag)
 {
-    char filename[MAX_PATH];
-    int handle;
-    
+    SDL_IOStream *io = NULL;
+    SDL_PropertiesID loadprops = 0;
+    const char *soundfont = NULL;
+    const char *timidity_cfg = NULL;
+    const bool have_default_timidity_cfg = (access("timidity.cfg", 0) == 0) || (access("C:\\TIMIDITY\\TIMIDITY.CFG", 0) == 0);
+
+    musdebug("MUSIC_PlaySongROTT: size=%d loop=%d", size, loopflag);
     MUSIC_StopSong();
 
-    // save the file somewhere, so SDL_mixer can load it
-    GetPathFromEnvironment(filename, ApogeePath, "tmpsong.mid");
-    handle = SafeOpenWrite(filename);
-    
-    SafeWrite(handle, song, size);
-    close(handle);
-    
-    music_songdata = song;
-
-    // finally, we can load it with SDL_mixer
-    music_musicchunk = Mix_LoadMUS(filename);
-    if (music_musicchunk == NULL) {
+    if ((sdl_mixer == NULL) || (music_track == NULL))
+    {
+        setErrorMessage("Music system is unavailable.");
+        music_songdata = NULL;
+        music_songsize = 0;
         return MUSIC_Error;
     }
+
+    music_songdata = (char *)song;
+    music_songsize = size;
+    music_loopflag = loopflag;
+
+    soundfont = SDL_getenv("ROTT_SOUNDFONT");
+    if ((soundfont == NULL) || (*soundfont == '\0'))
+        soundfont = SDL_getenv("SDL_SOUNDFONTS");
+    timidity_cfg = SDL_getenv("TIMIDITY_CFG");
+
+    if (((soundfont == NULL) || (*soundfont == '\0')) &&
+        (((timidity_cfg == NULL) || (*timidity_cfg == '\0')) && !have_default_timidity_cfg))
+    {
+        setErrorMessage("No MIDI synth data found. Set TIMIDITY_CFG or ROTT_SOUNDFONT.");
+        music_songdata = NULL;
+        music_songsize = 0;
+        return MUSIC_Error;
+    }
+
+    io = SDL_IOFromConstMem(song, (size_t)size);
+    if (io == NULL)
+    {
+        setErrorMessage(SDL_GetError());
+        music_songdata = NULL;
+        music_songsize = 0;
+        return MUSIC_Error;
+    }
+
+    // MIDI/music data needs to be decoded as a file format, not treated as raw audio.
+    // Predecode it up front so playback uses plain PCM instead of invoking the MIDI
+    // decoder on the mixer thread.
+    musdebug("MUSIC_PlaySongROTT: loading MIDI through MIX_LoadAudioWithProperties");
+    loadprops = SDL_CreateProperties();
+    if (loadprops == 0)
+    {
+        setErrorMessage(SDL_GetError());
+        SDL_CloseIO(io);
+        music_songdata = NULL;
+        music_songsize = 0;
+        return MUSIC_Error;
+    }
+    SDL_SetPointerProperty(loadprops, MIX_PROP_AUDIO_LOAD_PREFERRED_MIXER_POINTER, sdl_mixer);
+    SDL_SetPointerProperty(loadprops, MIX_PROP_AUDIO_LOAD_IOSTREAM_POINTER, io);
+    SDL_SetBooleanProperty(loadprops, MIX_PROP_AUDIO_LOAD_PREDECODE_BOOLEAN, true);
+    SDL_SetBooleanProperty(loadprops, MIX_PROP_AUDIO_LOAD_CLOSEIO_BOOLEAN, true);
+
+    if ((soundfont != NULL) && (*soundfont != '\0'))
+    {
+        musdebug("MUSIC_PlaySongROTT: requesting FLUIDSYNTH with soundfont [%s]", soundfont);
+        SDL_SetStringProperty(loadprops, MIX_PROP_AUDIO_DECODER_STRING, "FLUIDSYNTH");
+        SDL_SetStringProperty(loadprops, "SDL_mixer.decoder.fluidsynth.soundfont_path", soundfont);
+    }
+    else
+    {
+        musdebug("MUSIC_PlaySongROTT: requesting TIMIDITY decoder");
+        SDL_SetStringProperty(loadprops, MIX_PROP_AUDIO_DECODER_STRING, "TIMIDITY");
+    }
+
+    music_audio = MIX_LoadAudioWithProperties(loadprops);
+    SDL_DestroyProperties(loadprops);
+    if (music_audio == NULL) {
+        setErrorMessage(SDL_GetError());
+        music_songdata = NULL;
+        music_songsize = 0;
+        return MUSIC_Error;
+    }
+    musdebug("MUSIC_PlaySongROTT: audio loaded");
     
-    Mix_PlayMusic(music_musicchunk, (loopflag == MUSIC_PlayOnce) ? 0 : -1);
+    SDL_PropertiesID props = SDL_CreateProperties();
+    if (props == 0)
+    {
+        setErrorMessage(SDL_GetError());
+        MIX_DestroyAudio(music_audio);
+        music_audio = NULL;
+        music_songdata = NULL;
+        music_songsize = 0;
+        return MUSIC_Error;
+    }
+    SDL_SetNumberProperty(props, MIX_PROP_PLAY_LOOPS_NUMBER, (loopflag == MUSIC_PlayOnce) ? 0 : -1);
+    if ((music_track == NULL) || !MIX_SetTrackAudio(music_track, music_audio) || !MIX_PlayTrack(music_track, props))
+    {
+        setErrorMessage(SDL_GetError());
+        SDL_DestroyProperties(props);
+        MIX_DestroyAudio(music_audio);
+        music_audio = NULL;
+        music_songdata = NULL;
+        music_songsize = 0;
+        return MUSIC_Error;
+    }
+    musdebug("MUSIC_PlaySongROTT: playback started");
+    SDL_DestroyProperties(props);
 
     return(MUSIC_Ok);
 } // MUSIC_PlaySongROTT
@@ -1275,14 +1693,18 @@ void MUSIC_GetSongLength(songposition *pos)
 
 int MUSIC_FadeVolume(int tovolume, int milliseconds)
 {
-    Mix_FadeOutMusic(milliseconds);
+    if (music_track == NULL)
+        return(MUSIC_Error);
+    MIX_StopTrack(music_track, MIX_TrackMSToFrames(music_track, milliseconds));
     return(MUSIC_Ok);
 } // MUSIC_FadeVolume
 
 
 int MUSIC_FadeActive(void)
 {
-    return((Mix_FadingMusic() == MIX_FADING_OUT) ? __FX_TRUE : __FX_FALSE);
+    if (music_track == NULL)
+        return(__FX_FALSE);
+    return((MIX_GetTrackFadeFrames(music_track) < 0) ? __FX_TRUE : __FX_FALSE);
 } // MUSIC_FadeActive
 
 
@@ -1292,7 +1714,7 @@ void MUSIC_StopFade(void)
 } // MUSIC_StopFade
 
 
-void MUSIC_RerouteMidiChannel(int channel, int cdecl function( int event, int c1, int c2 ))
+void MUSIC_RerouteMidiChannel(int channel, int cdecl (*function)( int event, int c1, int c2 ))
 {
     musdebug("STUB ... MUSIC_RerouteMidiChannel().\n");
 } // MUSIC_RerouteMidiChannel

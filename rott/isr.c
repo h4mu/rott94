@@ -749,7 +749,7 @@ void I_ShutdownKeyboard (void)
 }
 #else
 
-#include "SDL.h"
+#include <SDL3/SDL.h>
 
 static int ticoffset;    /* offset for SDL_GetTicks() */
 static int ticbase;      /* game-supplied base */

@@ -18,6 +18,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 #include "rt_def.h"
+#include <stdint.h>
 #include "rt_view.h"
 #include "z_zone.h"
 #include "w_wad.h"
@@ -496,6 +497,10 @@ void SetupScreen ( bool flip )
 
 
 
+static byte *Align256(void *ptr) {
+    return (byte *)(((uintptr_t)ptr + 255) & ~0xff);
+}
+
 void LoadColorMap( void )
 {
    int i,j;
@@ -512,7 +517,7 @@ void LoadColorMap( void )
 	lump = W_GetNumForName("colormap");
 	length = W_LumpLength (lump) + 255;
 	colormap = SafeMalloc (length);
-	colormap = (byte *)( ((long)colormap + 255)&~0xff);
+	colormap = Align256(colormap);
 	W_ReadLump (lump,colormap);
 
 // Fix fire colors in colormap
@@ -526,7 +531,7 @@ void LoadColorMap( void )
 	lump = W_GetNumForName("specmaps");
 	length = W_LumpLength (lump+1) + 255;
 	redmap = SafeMalloc (length);
-	redmap = (byte *)( ((long)redmap + 255)&~0xff);
+	redmap = Align256(redmap);
 	W_ReadLump (lump+1,redmap);
    greenmap = redmap+(16*256);
 
@@ -539,7 +544,7 @@ void LoadColorMap( void )
          {
 	      length = W_LumpLength (lump+i) + 255;
 	      playermaps[i] = SafeMalloc (length);
-	      playermaps[i] = (byte *)( ((long)playermaps[i] + 255)&~0xff);
+	      playermaps[i] = Align256(playermaps[i]);
 	      W_ReadLump (lump+i,playermaps[i]);
          }
       }
