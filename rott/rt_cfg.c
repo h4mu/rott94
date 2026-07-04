@@ -192,6 +192,9 @@ char CodeName[MAXCODENAMELENGTH];
 
 void ReadScores (void)
 {
+#if PLATFORM_DREAMCAST
+   return;
+#endif
 #if USE_SDL
    SDL_RWops* file;
 #else
@@ -984,6 +987,9 @@ void SetConfigDefaultValues (void)
 //******************************************************************************
 void DeleteSoundFile ( void )
 {
+#if PLATFORM_DREAMCAST
+   return;
+#endif
    char filename[ 128 ];
 
    GetPathFromEnvironment( filename, ApogeePath, SoundName );
@@ -1074,6 +1080,9 @@ void ReadConfig (void)
 
 void CheckVendor (void)
 {
+#if PLATFORM_DREAMCAST
+   return;
+#endif
    bool saveout=false;
    int wadcrc;
    int filecrc;
@@ -1179,6 +1188,9 @@ void WriteParameterHex (int file, const char * s1, int val)
 
 void WriteScores (void)
 {
+#if PLATFORM_DREAMCAST
+   return;
+#endif
 #if USE_SDL
    SDL_RWops* file;
 #else
@@ -1209,6 +1221,9 @@ void WriteBattleConfig
    )
 
    {
+#if PLATFORM_DREAMCAST
+   return;
+#endif
 #if USE_SDL
    SDL_RWops* file;
 #else
@@ -1583,6 +1598,9 @@ void WriteSoundConfig
    )
 
    {
+#if PLATFORM_DREAMCAST
+   return;
+#endif
 #if USE_SDL
    SDL_RWops* file;
 #else
@@ -1752,6 +1770,9 @@ void WriteSoundConfig
 
 void WriteConfig (void)
 {
+#if PLATFORM_DREAMCAST
+   return;
+#endif
 #if USE_SDL
    SDL_RWops* file;
 #else

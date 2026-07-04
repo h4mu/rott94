@@ -131,7 +131,7 @@ struct find_t
 int _dos_findfirst(char *filename, int x, struct find_t *f);
 int _dos_findnext(struct find_t *f);
 
-#elif PLATFORM_UNIX
+#elif PLATFORM_UNIX || PLATFORM_DREAMCAST
 struct find_t
 {
     DIR *dir;

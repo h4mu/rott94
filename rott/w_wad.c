@@ -464,6 +464,9 @@ void W_ReadLump (int lump, void *dest)
 
 void W_WriteLump (int lump, void *src)
 {
+#if PLATFORM_DREAMCAST
+    return;
+#endif
    int        c;
    lumpinfo_t *l;
 
