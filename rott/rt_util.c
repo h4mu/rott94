@@ -634,6 +634,9 @@ SDL_RWops* SafeOpenAppend (char *_filename)
 int SafeOpenAppend (char *_filename)
 #endif
 {
+#if PLATFORM_DREAMCAST
+    return NULL;
+#endif
 #if USE_SDL
 	SDL_RWops* handle;
 #else
@@ -666,6 +669,9 @@ SDL_RWops* SafeOpenWrite (char *_filename)
 int SafeOpenWrite (char *_filename)
 #endif
 {
+#if PLATFORM_DREAMCAST
+    return NULL;
+#endif
 #if USE_SDL
 	SDL_RWops* handle;
 #else
@@ -752,6 +758,9 @@ void SafeWrite (SDL_RWops* handle, void *buffer, long count)
 void SafeWrite (int handle, void *buffer, long count)
 #endif
 {
+#if PLATFORM_DREAMCAST
+    return;
+#endif
 	unsigned	iocount;
 
 	while (count)
@@ -774,6 +783,9 @@ void SafeWriteString (SDL_RWops* handle, char * buffer)
 void SafeWriteString (int handle, char * buffer)
 #endif
 {
+#if PLATFORM_DREAMCAST
+    return;
+#endif
 	unsigned	iocount;
 
    iocount=strlen(buffer);
@@ -865,6 +877,9 @@ long	LoadFile (char *filename, void **bufferptr)
 
 void	SaveFile (char *filename, void *buffer, long count)
 {
+#if PLATFORM_DREAMCAST
+    return;
+#endif
 #if USE_SDL
 	SDL_RWops* handle;
 #else
@@ -874,16 +889,16 @@ void	SaveFile (char *filename, void *buffer, long count)
 	handle = SafeOpenWrite (filename);
 	SafeWrite (handle, buffer, count);
 #if USE_SDL
-	SDL_RWclose(handle);
+	if (handle) SDL_RWclose(handle);
 #else
-	close (handle);
+	if (handle != -1) close (handle);
 #endif
 }
 
 
 void FixFilePath(char *filename)
 {
-#if PLATFORM_UNIX
+#if PLATFORM_UNIX || PLATFORM_DREAMCAST
     char *ptr;
     char *lastsep = filename;
 
@@ -993,7 +1008,7 @@ int _dos_findnext(struct find_t *f)
     return(0);
 }
 
-#elif PLATFORM_UNIX 
+#elif PLATFORM_UNIX || PLATFORM_DREAMCAST
 int _dos_findfirst(char *filename, int x, struct find_t *f)
 {
     char *ptr;

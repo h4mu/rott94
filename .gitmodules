@@ -1,0 +1,9 @@
+[submodule "dreamcast/SDL"]
+	path = dreamcast/SDL
+	url = https://github.com/Dreamcast-Projects/SDL2
+[submodule "dreamcast/KOS"]
+	path = dreamcast/KOS
+	url = https://github.com/KallistiOS/KallistiOS
+[submodule "dreamcast/SDL_mixer"]
+	path = dreamcast/SDL_mixer
+	url = https://github.com/libsdl-org/SDL_mixer
