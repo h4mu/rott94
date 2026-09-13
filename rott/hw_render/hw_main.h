@@ -15,4 +15,7 @@ void HW_QuitDevice(void);
 // Upload the 32-bit software buffer to a texture and render it full screen.
 void HW_UpdateScreen(SDL_Surface* surface32);
 
+// Update render logical presentation for resolution changes.
+void HW_SetResolution(int w, int h);
+
 #endif
