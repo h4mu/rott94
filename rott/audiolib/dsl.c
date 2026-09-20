@@ -4,12 +4,8 @@
 #include "dsl.h"
 #include "util.h"
 
-#include "SDL.h"
-#ifdef __EMSCRIPTEN__
-#	include <SDL/SDL_mixer.h>
-#else
-#	include "SDL_mixer.h"
-#endif
+#include <SDL3/SDL.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 extern volatile int MV_MixPage;
 
@@ -24,7 +20,9 @@ static int _NumDivisions;
 static int _SampleRate;
 static int _remainder;
 
-static Mix_Chunk *blank;
+static MIX_Mixer *sdl_mixer = NULL;
+static MIX_Track *stream_track = NULL;
+static MIX_Audio *blank_audio = NULL;
 static unsigned char *blank_buf;
 
 /*
@@ -74,7 +72,7 @@ int DSL_Init( void )
 {
 	DSL_SetErrorCode(DSL_Ok);
 	
-	if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
+	if (!SDL_InitSubSystem(SDL_INIT_AUDIO)) {
 		DSL_SetErrorCode(DSL_SDLInitFailure);
 		
 		return DSL_Error;
@@ -88,15 +86,26 @@ void DSL_Shutdown( void )
 	DSL_StopPlayback();
 }
 
-static void mixer_callback(int chan, void *stream, int len, void *udata)
+static void SDLCALL mixer_callback(void *userdata, MIX_Track *track, const SDL_AudioSpec *spec, float *pcm, int samples)
 {
 	Uint8 *stptr;
 	Uint8 *fxptr;
-	int copysize;
-	
-	/* len should equal _BufferSize, else this is screwed up */
+    int copysize;
+    int bytes_per_sample = SDL_AUDIO_BYTESIZE(spec->format);
+    int total_bytes = samples * bytes_per_sample;
+    int samples_per_frame = spec->channels;
 
-	stptr = (Uint8 *)stream;
+    // We need a temporary buffer for the raw 8-bit or 16-bit PCM from ROTT
+    static Uint8 *raw_buf = NULL;
+    static int raw_buf_len = 0;
+
+    if (raw_buf_len < total_bytes) {
+        raw_buf = realloc(raw_buf, total_bytes);
+        raw_buf_len = total_bytes;
+    }
+
+    int len = total_bytes;
+	stptr = raw_buf;
 	
 	if (_remainder > 0) {
 		copysize = min(len, _remainder);
@@ -130,16 +139,25 @@ static void mixer_callback(int chan, void *stream, int len, void *udata)
 	}
 	
 	_remainder = len;
+
+    // Now convert raw_buf to floats in pcm
+    if (spec->format == SDL_AUDIO_U8) {
+        for (int i = 0; i < samples; i++) {
+            pcm[i] = ((float)raw_buf[i] - 128.0f) / 128.0f;
+        }
+    } else if (spec->format == SDL_AUDIO_S16) {
+        Sint16 *s16 = (Sint16 *)raw_buf;
+        for (int i = 0; i < samples; i++) {
+            pcm[i] = (float)s16[i] / 32768.0f;
+        }
+    }
 }
 
 int   DSL_BeginBufferedPlayback( char *BufferStart,
       int BufferSize, int NumDivisions, unsigned SampleRate,
       int MixMode, void ( *CallBackFunc )( void ) )
 {
-	Uint16 format;
-	Uint8 *tmp;
-	int channels;
-	int chunksize;
+	SDL_AudioSpec spec;
 		
 	if (mixer_initialized) {
 		DSL_SetErrorCode(DSL_MixerActive);
@@ -155,44 +173,37 @@ int   DSL_BeginBufferedPlayback( char *BufferStart,
 
 	_remainder = 0;
 	
-	format = (MixMode & SIXTEEN_BIT) ? AUDIO_S16SYS : AUDIO_U8;
-	channels = (MixMode & STEREO) ? 2 : 1;
+	SDL_zero(spec);
+    spec.format = (MixMode & SIXTEEN_BIT) ? SDL_AUDIO_S16 : SDL_AUDIO_U8;
+	spec.channels = (MixMode & STEREO) ? 2 : 1;
+    spec.freq = SampleRate;
 
-/*
-	23ms is typically ideal (11025,22050,44100)
-	46ms isn't bad
-*/
-	
-	chunksize = 512;
-	
-	if (SampleRate >= 16000) chunksize *= 2;
-	if (SampleRate >= 32000) chunksize *= 2;
-	
-/*	
-// SDL mixer does this already
-	if (MixMode & SIXTEEN_BIT) chunksize *= 2;
-	if (MixMode & STEREO) chunksize *= 2;
-*/
-	
-	if (Mix_OpenAudio(SampleRate, format, channels, chunksize) < 0) {
+    if (!MIX_Init()) {
+        DSL_SetErrorCode(DSL_MixerInitFailure);
+        return DSL_Error;
+    }
+
+    sdl_mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
+	if (sdl_mixer == NULL) {
 		DSL_SetErrorCode(DSL_MixerInitFailure);
 		
 		return DSL_Error;
 	}
 
-/*
-	Mix_SetPostMix(mixer_callback, NULL);
-*/
-	/* have to use a channel because postmix will overwrite the music... */
-	Mix_RegisterEffect(0, mixer_callback, NULL, NULL);
+    stream_track = MIX_CreateTrack(sdl_mixer);
+	MIX_SetTrackCookedCallback(stream_track, mixer_callback, NULL);
 	
 	/* create a dummy sample just to allocate that channel */
 	blank_buf = (Uint8 *)malloc(4096);
 	memset(blank_buf, 0, 4096);
 	
-	blank = Mix_QuickLoad_RAW(blank_buf, 4096);
+	blank_audio = MIX_LoadRawAudio(sdl_mixer, blank_buf, 4096, &spec);
 		
-	Mix_PlayChannel(0, blank, -1);
+    SDL_PropertiesID props = SDL_CreateProperties();
+    SDL_SetNumberProperty(props, MIX_PROP_PLAY_LOOPS_NUMBER, -1);
+    MIX_SetTrackAudio(stream_track, blank_audio);
+	MIX_PlayTrack(stream_track, props);
+    SDL_DestroyProperties(props);
 	
 	mixer_initialized = 1;
 	
@@ -202,14 +213,14 @@ int   DSL_BeginBufferedPlayback( char *BufferStart,
 void DSL_StopPlayback( void )
 {
 	if (mixer_initialized) {
-		Mix_HaltChannel(0);
+		MIX_StopTrack(stream_track, 0);
 	}
 	
-	if (blank != NULL) {
-		Mix_FreeChunk(blank);
+	if (blank_audio != NULL) {
+		MIX_DestroyAudio(blank_audio);
 	}
 	
-	blank = NULL;
+	blank_audio = NULL;
 	
 	if (blank_buf  != NULL) {
 		free(blank_buf);
@@ -218,9 +229,12 @@ void DSL_StopPlayback( void )
 	blank_buf = NULL;
 	
 	if (mixer_initialized) {
-		Mix_CloseAudio();
+		MIX_DestroyMixer(sdl_mixer);
+        MIX_Quit();
 	}
 	
+    sdl_mixer = NULL;
+    stream_track = NULL;
 	mixer_initialized = 0;
 }
 

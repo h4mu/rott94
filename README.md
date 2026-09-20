@@ -11,7 +11,14 @@ This is a source port of Apogee's DOS FPS game [Rise of the Triad](http://en.wik
 1. Enable unknown sources (and optionally debug connections for ADB support)
 2. Copy APK file to device (APKs can be downloaded from https://github.com/h4mu/rott94/releases)
 3. Open package and install it
-4. Copy game files to /sdcard/Android/data/io.github.h4mu.andrott/files/ (e.g. by using "adb push")
+4. Copy game files to `/sdcard/Android/data/io.github.h4mu.rott94/files/` for the installed flavor you are using:
+   - `io.github.h4mu.rott94.shareware`
+   - `io.github.h4mu.rott94.superrott`
+   - `io.github.h4mu.rott94.sitelicense`
+
+## Building
+The desktop and Android native code now share the same root CMake build.
+Android uses SDL3 and Gradle/CMake rather than `ndk-build`.
 
 ## Playing
 When running the game and if the game files are in the right place the intro animation should come up. Touch controls emulate the keyboard.

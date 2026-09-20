@@ -135,6 +135,7 @@ void  VL_CopyPlanarPageToMemory ( byte * src, byte * dest );
 void  XFlipPage ( void );
 void  WaitVBL( void );
 void  TurnOffTextCursor ( void );
+void  ChangeResolution ( int width, int height );
 
 #ifdef __WATCOMC__
 #pragma aux VGAWRITEMAP =      \

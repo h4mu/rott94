@@ -53,13 +53,13 @@ void  StartupSoftError ( void );
 void  ShutdownSoftError ( void );
 int   CheckParm (char *check);
 #if USE_SDL
-#include "SDL.h"
-SDL_RWops*   SafeOpenWrite (char *filename);
-SDL_RWops*   SafeOpenAppend (char *filename);
-SDL_RWops*   SafeOpenRead (char *filename);
-void  SafeRead (SDL_RWops* handle, void *buffer, long count);
-void  SafeWrite (SDL_RWops* handle, void *buffer, long count);
-void  SafeWriteString (SDL_RWops* handle, char * buffer);
+#include <SDL3/SDL.h>
+SDL_IOStream*   SafeOpenWrite (char *filename);
+SDL_IOStream*   SafeOpenAppend (char *filename);
+SDL_IOStream*   SafeOpenRead (char *filename);
+void  SafeRead (SDL_IOStream* handle, void *buffer, long count);
+void  SafeWrite (SDL_IOStream* handle, void *buffer, long count);
+void  SafeWriteString (SDL_IOStream* handle, char * buffer);
 #else
 int   SafeOpenWrite (char *filename);
 int   SafeOpenAppend (char *filename);

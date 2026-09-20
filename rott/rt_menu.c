@@ -41,7 +41,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #ifdef USE_SDL
-#include "SDL.h"
+#include <SDL3/SDL.h>
 #endif
 
 #include <sys/types.h>
@@ -774,9 +774,10 @@ CP_MenuNames ExtOptionsNames[] =
    "INVERSE MOUSE",
    "CROSS HAIR",
    "JUMPING",
-   "FULLSCREEN"
+   "FULLSCREEN",
+   "RESOLUTION"
    };
-CP_iteminfo ExtOptionsItems = { 20, MENU_Y, 5, 0, 43, ExtOptionsNames, mn_largefont };
+CP_iteminfo ExtOptionsItems = { 20, MENU_Y, 6, 0, 43, ExtOptionsNames, mn_largefont };
 
 CP_itemtype ExtOptionsMenu[] =
 {
@@ -784,7 +785,8 @@ CP_itemtype ExtOptionsMenu[] =
    {1, "", 'I', NULL},
    {1, "", 'C', NULL},
    {1, "", 'J', NULL},
-   {1, "", 'F', NULL}
+   {1, "", 'F', NULL},
+   {1, "", 'R', NULL}
 };
    
 //bna added end
@@ -5423,6 +5425,47 @@ void CP_ExtOptionsMenu (void)
                DrawExtOptionsButtons ();
             }
             break;
+         case 5:
+            {
+               struct { int w; int h; } res_list[10];
+               int num_res = 0;
+               int dev_w = 640, dev_h = 480;
+               int r, cur_idx, next_idx;
+               bool dev_found;
+
+               res_list[num_res].w = 320; res_list[num_res++].h = 200;
+               res_list[num_res].w = 640; res_list[num_res++].h = 480;
+               res_list[num_res].w = 800; res_list[num_res++].h = 600;
+               res_list[num_res].w = 1024; res_list[num_res++].h = 768;
+               res_list[num_res].w = 1280; res_list[num_res++].h = 720;
+               res_list[num_res].w = 1920; res_list[num_res++].h = 1080;
+
+               GetDeviceResolution(&dev_w, &dev_h);
+               dev_found = false;
+               for (r = 0; r < num_res; r++) {
+                  if (res_list[r].w == dev_w && res_list[r].h == dev_h) {
+                     dev_found = true;
+                     break;
+                  }
+               }
+               if (!dev_found && dev_w >= 320 && dev_h >= 200) {
+                  res_list[num_res].w = dev_w;
+                  res_list[num_res++].h = dev_h;
+               }
+
+               cur_idx = -1;
+               for (r = 0; r < num_res; r++) {
+                  if (res_list[r].w == iGLOBAL_SCREENWIDTH && res_list[r].h == iGLOBAL_SCREENHEIGHT) {
+                     cur_idx = r;
+                     break;
+                  }
+               }
+               next_idx = (cur_idx + 1) % num_res;
+               ChangeResolution(res_list[next_idx].w, res_list[next_idx].h);
+               WriteConfig();
+               DrawExtOptionsMenu();
+            }
+            break;
       }
 
 	} while (which >= 0);
@@ -5442,6 +5485,15 @@ void DrawExtOptionsButtons (void)
    for (i = 0; i < ExtOptionsItems.amount; i++)
       if (ExtOptionsMenu[i].active != CP_Active3)
       {
+         if (i == 5)
+         {
+            char res_str[32];
+            sprintf(res_str, "%dX%d", iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT);
+            IFont = (cfont_t *)W_CacheLumpName(FontNames[mn_largefont], PU_CACHE, Cvt_cfont_t, 1);
+            DrawMenuBufIString(175, ExtOptionsItems.y + i * 14 - 1, res_str, ACTIVECOLOR);
+            continue;
+         }
+
          //
          // DRAW SELECTED/NOT SELECTED GRAPHIC BUTTONS
          //

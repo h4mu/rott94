@@ -1,0 +1,189 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      publish_release:
+        description: Publish the GitHub release after a manual build
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-2022
+    env:
+      RELEASE_REF: ${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - edition: shareware
+            build_type: Shareware
+          - edition: sitelicense
+            build_type: SiteLicense
+          - edition: superrott
+            build_type: SuperROTT
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build Windows binary
+        shell: pwsh
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -File build-scripts\appveyor-windows.ps1 `
+            -BuildType ${{ matrix.build_type }} `
+            -Configuration Release `
+            -Platform Win32 `
+            -OutputDir Windows\out `
+            -CleanBuild
+
+      - name: Package Windows binary
+        shell: pwsh
+        run: |
+          $artifactName = "rott94-$env:RELEASE_REF-${{ matrix.edition }}-windows.zip"
+          $releaseDir = Join-Path $env:GITHUB_WORKSPACE "release\windows\${{ matrix.edition }}"
+          New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
+          Copy-Item -Path Windows\out\* -Destination $releaseDir -Force
+          Compress-Archive -Path (Join-Path $releaseDir '*') -DestinationPath (Join-Path $env:RUNNER_TEMP $artifactName) -Force
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rott94-${{ env.RELEASE_REF }}-${{ matrix.edition }}-windows.zip
+          path: ${{ runner.temp }}/rott94-${{ env.RELEASE_REF }}-${{ matrix.edition }}-windows.zip
+          if-no-files-found: error
+
+  build-linux:
+    runs-on: ubuntu-24.04
+    env:
+      RELEASE_REF: ${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - edition: shareware
+            cmake_args: -DROTT_SHAREWARE=ON -DROTT_SUPERROTT=OFF -DROTT_SITELICENSE=OFF -DROTT_SUFFIX=-huntbgin
+          - edition: sitelicense
+            cmake_args: -DROTT_SHAREWARE=OFF -DROTT_SUPERROTT=OFF -DROTT_SITELICENSE=ON -DROTT_SUFFIX=-sitelicense
+          - edition: superrott
+            cmake_args: -DROTT_SHAREWARE=OFF -DROTT_SUPERROTT=ON -DROTT_SITELICENSE=OFF -DROTT_SUFFIX=-rottcd
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build build-essential pkg-config
+
+      - name: Configure
+        run: >
+          cmake -S rott -B build
+          -G Ninja
+          -DCMAKE_BUILD_TYPE=Release
+          ${{ matrix.cmake_args }}
+
+      - name: Build
+        run: cmake --build build --target rott
+
+      - name: Install into staging prefix
+        run: |
+          cmake --install build --prefix "$RUNNER_TEMP/stage"
+
+      - name: Package Linux binary
+        run: |
+          artifact_name="rott94-${RELEASE_REF}-${{ matrix.edition }}-linux.tar.gz"
+          tar -C "$RUNNER_TEMP/stage" -czf "$RUNNER_TEMP/$artifact_name" .
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rott94-${{ env.RELEASE_REF }}-${{ matrix.edition }}-linux.tar.gz
+          path: ${{ runner.temp }}/rott94-${{ env.RELEASE_REF }}-${{ matrix.edition }}-linux.tar.gz
+          if-no-files-found: error
+
+  build-android:
+    runs-on: ubuntu-24.04
+    env:
+      RELEASE_REF: ${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - edition: shareware
+            gradle_task: :app:assembleSharewareRelease
+            artifact_glob: android/app/build/outputs/apk/shareware/release/*.apk
+          - edition: sitelicense
+            gradle_task: :app:assembleSitelicenseRelease
+            artifact_glob: android/app/build/outputs/apk/sitelicense/release/*.apk
+          - edition: superrott
+            gradle_task: :app:assembleSuperrottRelease
+            artifact_glob: android/app/build/outputs/apk/superrott/release/*.apk
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Build Android APK
+        working-directory: android
+        run: ./gradlew ${{ matrix.gradle_task }}
+
+      - name: Stage Android artifact
+        shell: bash
+        run: |
+          artifact_name="rott94-${RELEASE_REF}-${{ matrix.edition }}-android.apk"
+          mkdir -p release/android/${{ matrix.edition }}
+          apk=$(ls ${{ matrix.artifact_glob }} | head -n 1)
+          cp "$apk" "release/android/${{ matrix.edition }}/$artifact_name"
+
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rott94-${{ env.RELEASE_REF }}-${{ matrix.edition }}-android.apk
+          path: release/android/${{ matrix.edition }}/rott94-${{ env.RELEASE_REF }}-${{ matrix.edition }}-android.apk
+          if-no-files-found: error
+
+  publish-release:
+    runs-on: ubuntu-24.04
+    needs:
+      - build-windows
+      - build-linux
+      - build-android
+    if: github.ref_type == 'tag' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish_release))
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: release-assets/**/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false

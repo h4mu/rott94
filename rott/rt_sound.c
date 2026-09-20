@@ -368,6 +368,7 @@ int SD_PlayIt ( int sndnum, int angle, int distance, int pitch )
 {
    int voice;
    byte * snd;
+   int size;
 
 #if (DEVELOPMENT == 1)
 #if (SOUNDTEST == 1)
@@ -394,15 +395,16 @@ int SD_PlayIt ( int sndnum, int angle, int distance, int pitch )
    sounds[sndnum].count++;
 
    snd=W_CacheLumpNum(SoundNumber(sndnum),PU_STATIC, CvtNull, 1);
+   size = W_LumpLength(SoundNumber(sndnum));
 
    if ( *snd == 'C' )
       {
-      voice = FX_PlayVOC3D( (char *)snd, pitch, angle, distance,
+      voice = FX_PlayVOC3D_ROTT( (char *)snd, size, pitch, angle, distance,
          sounds[sndnum].priority, (unsigned long) sndnum );
       }
    else
       {
-      voice = FX_PlayWAV3D( (char *)snd, pitch, angle, distance,
+      voice = FX_PlayWAV3D_ROTT( (char *)snd, size, pitch, angle, distance,
          sounds[sndnum].priority, (unsigned long) sndnum );
       }
 
@@ -1166,6 +1168,7 @@ void MU_PlaySong ( int num )
 {
    int lump;
    int size;
+   int status;
    
    if (MU_Started==false)
       return;
@@ -1187,15 +1190,20 @@ void MU_PlaySong ( int num )
 
 #ifdef PLATFORM_DOS
    if (rottsongs[num].loopflag == loop_yes)
-      MUSIC_PlaySong(currentsong,size,MUSIC_LoopSong);
+      status = MUSIC_PlaySong(currentsong,size,MUSIC_LoopSong);
    else
-      MUSIC_PlaySong(currentsong,size,MUSIC_PlayOnce);
+      status = MUSIC_PlaySong(currentsong,size,MUSIC_PlayOnce);
 #else 
    if (rottsongs[num].loopflag == loop_yes)
-      MUSIC_PlaySongROTT(currentsong,size,MUSIC_LoopSong);
+      status = MUSIC_PlaySongROTT(currentsong,size,MUSIC_LoopSong);
    else
-      MUSIC_PlaySongROTT(currentsong,size,MUSIC_PlayOnce);
+      status = MUSIC_PlaySongROTT(currentsong,size,MUSIC_PlayOnce);
 #endif
+
+   if (status != MUSIC_Ok)
+      {
+      printf("MU_PlaySong: %s (%s)\n", rottsongs[num].songname, MUSIC_ErrorString(MUSIC_Error));
+      }
 
    MU_SetVolume (MUvolume);
 }

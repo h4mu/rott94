@@ -6,10 +6,7 @@ configuration:
 - Release
 - Android
 platform: Win32
-build:
-  project: Windows\Rott94.sln
-  parallel: true
-  verbosity: minimal
+build: off
 for:
 -
   matrix:
@@ -17,7 +14,17 @@ for:
       - configuration: Android
 
   build_script:
-  - pushd android && gradlew.bat connectedCheck && gradlew.bat --stop && popd
+  - pushd android && gradlew.bat assembleSharewareDebug assembleSuperrottDebug assembleSitelicenseDebug && gradlew.bat --stop && popd
+-
+  matrix:
+    except:
+      - configuration: Android
+
+  install:
+  - git submodule update --init --recursive
+
+  build_script:
+  - powershell -NoProfile -ExecutionPolicy Bypass -File build-scripts\appveyor-windows.ps1
 cache:
   - '%USERPROFILE%\.gradle -> android\build.gradle'
 artifacts:
