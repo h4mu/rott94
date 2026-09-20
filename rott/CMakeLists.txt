@@ -73,7 +73,6 @@ set(ROTT_CORE_SOURCES
   cin_main.c
   cin_util.c
   dosutil.c
-  dukemusc.c
   engine.c
   fx_man.c
   isr.c

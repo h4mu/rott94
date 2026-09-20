@@ -1,8 +1,26 @@
 /* Routines from winrott needed for the highres support for the SDL port */
 #include <stdlib.h>
 #include <string.h>
+#if USE_SDL
+#include <SDL3/SDL.h>
+#endif
 #include "WinRott.h"
 #include "modexlib.h"
+
+void GetDeviceResolution(int *width, int *height)
+{
+    *width = 640;
+    *height = 480;
+#if USE_SDL
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO)) {
+        const SDL_DisplayMode *mode = SDL_GetDesktopDisplayMode(SDL_GetPrimaryDisplay());
+        if (mode && mode->w > 0 && mode->h > 0) {
+            *width = mode->w;
+            *height = mode->h;
+        }
+    }
+#endif
+}
 
 //typedef unsigned char byte;
 

@@ -45,6 +45,17 @@ bool HW_InitDevice(SDL_Window *window)
     return true;
 }
 
+void HW_SetResolution(int w, int h)
+{
+    if (gpu_renderer) {
+        SDL_SetRenderLogicalPresentation(
+            gpu_renderer,
+            w,
+            h,
+            SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    }
+}
+
 void HW_QuitDevice(void)
 {
     if (gpu_texture) {

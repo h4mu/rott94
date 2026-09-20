@@ -534,6 +534,55 @@ void GraphicsMode(void) {
   }
 }
 
+void ChangeResolution(int width, int height) {
+  if (width <= 0 || height <= 0)
+    return;
+
+  SetRottScreenRes(width, height);
+
+  if (sdl_surface) {
+    SDL_DestroySurface(sdl_surface);
+    sdl_surface = NULL;
+  }
+  if (sdl_surface32) {
+    SDL_DestroySurface(sdl_surface32);
+    sdl_surface32 = NULL;
+  }
+
+  sdl_surface = SDL_CreateSurface(iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT,
+                                  SDL_PIXELFORMAT_INDEX8);
+  if (sdl_surface == NULL) {
+    Error("Could not create surface: %s\n", SDL_GetError());
+  }
+  EnsureSurfacePalette(sdl_surface);
+
+  sdl_surface32 = SDL_CreateSurface(iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT,
+                                    SDL_PIXELFORMAT_ARGB8888);
+  if (sdl_surface32 == NULL) {
+    Error("Could not create surface: %s\n", SDL_GetError());
+  }
+
+  if (iG_RetroRenderer) {
+    if (sdl_texture) {
+      SDL_DestroyTexture(sdl_texture);
+      sdl_texture = NULL;
+    }
+    if (sdl_renderer) {
+      SDL_SetRenderLogicalPresentation(sdl_renderer, iGLOBAL_SCREENWIDTH,
+                                       iGLOBAL_SCREENHEIGHT,
+                                       SDL_LOGICAL_PRESENTATION_LETTERBOX);
+      sdl_texture = SDL_CreateTexture(
+          sdl_renderer, SDL_PIXELFORMAT_ARGB8888,
+          SDL_TEXTUREACCESS_STREAMING, iGLOBAL_SCREENWIDTH,
+          iGLOBAL_SCREENHEIGHT);
+    }
+  } else {
+    HW_SetResolution(iGLOBAL_SCREENWIDTH, iGLOBAL_SCREENHEIGHT);
+  }
+
+  VL_SetVGAPlaneMode();
+}
+
 void blitScreen32(uint32_t *dst) {
   uint8_t *src = sdl_surface->pixels;
   SDL_Palette *palette = SDL_GetSurfacePalette(sdl_surface);

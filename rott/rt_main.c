@@ -596,6 +596,13 @@ void CheckCommandLineParameters( void )
    iG_RetroRenderer = false;
    iG_HardwareRenderer = true;
 
+   {
+      int dev_w = 640, dev_h = 480;
+      GetDeviceResolution(&dev_w, &dev_h);
+      iGLOBAL_SCREENWIDTH = dev_w;
+      iGLOBAL_SCREENHEIGHT = dev_h;
+   }
+
    modemgame=false;
    networkgame=false;
 	consoleplayer=0;
@@ -905,9 +912,7 @@ void SetupWads( void )
             {
                int width, height;
                if ( (sscanf(_argv[i], "%dx%d", &width, &height) == 2) &&
-                    ( ( (width == 320) && (height == 200) ) ||
-                      ( (width == 640) && (height == 480) ) ||
-                      ( (width == 800) && (height == 600) ) ) )
+                    (width >= 320) && (height >= 200) )
                {
                  iGLOBAL_SCREENWIDTH  = width;
                  iGLOBAL_SCREENHEIGHT = height;
